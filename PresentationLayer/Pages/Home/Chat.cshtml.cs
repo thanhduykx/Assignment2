@@ -23,7 +23,7 @@ public sealed class ChatModel : HomePageModelBase
     {
     }
 
-    public IReadOnlyList<ChatSession> ChatSessions { get; private set; } = Array.Empty<ChatSession>();
+    public IReadOnlyList<ChatSessionSummary> ChatSessions { get; private set; } = Array.Empty<ChatSessionSummary>();
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<string> SubjectOptions { get; private set; } = Array.Empty<string>();
     public string? LoadErrorMessage { get; private set; }
@@ -55,13 +55,13 @@ public sealed class ChatModel : HomePageModelBase
         try
         {
             ChatSessions = currentUser is null
-                ? Array.Empty<ChatSession>()
-                : await _repository.GetSessionsForOwnerAsync(currentUser.Id, cancellationToken);
+                ? Array.Empty<ChatSessionSummary>()
+                : await _repository.GetSessionSummariesForOwnerAsync(currentUser.Id, cancellationToken);
         }
         catch (Exception ex) when (IsDataAccessTimeout(ex))
         {
             _logger.LogWarning(ex, "Chat page could not load sessions because the database was unavailable.");
-            ChatSessions = Array.Empty<ChatSession>();
+            ChatSessions = Array.Empty<ChatSessionSummary>();
             LoadErrorMessage ??= "Database unavailable/timeout. Chat metadata could not be loaded.";
         }
 

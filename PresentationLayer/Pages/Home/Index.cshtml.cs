@@ -12,6 +12,7 @@ namespace PresentationLayer.Pages.Home;
 public sealed class IndexModel : HomePageModelBase
 {
     private readonly IEmbeddingService _embeddingService;
+    private readonly ITextChunker _chunker;
 
     public IndexModel(
         ILogger<HomePageModelBase> logger,
@@ -22,10 +23,12 @@ public sealed class IndexModel : HomePageModelBase
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue,
-        IEmbeddingService embeddingService)
+        IEmbeddingService embeddingService,
+        ITextChunker chunker)
         : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
         _embeddingService = embeddingService;
+        _chunker = chunker;
     }
 
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
@@ -78,6 +81,7 @@ public sealed class IndexModel : HomePageModelBase
                 staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
                     _embeddingService.ModelName,
                     _embeddingService.Dimensions,
+                    _chunker.StrategyName,
                     scope,
                     cancellationToken);
             }
@@ -325,6 +329,7 @@ public sealed class IndexModel : HomePageModelBase
         var staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
             _embeddingService.ModelName,
             _embeddingService.Dimensions,
+            _chunker.StrategyName,
             BuildDocumentAccessScope(DocumentAccessMode.DocumentUi),
             cancellationToken);
 

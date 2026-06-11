@@ -49,8 +49,8 @@ public sealed class RagChatServiceTests
             language: "vi",
             allowedSubjects: new[] { "DBA103 - Nhac cu truyen thong - Dan Bau" });
 
-        Assert.StartsWith("M\u00ecnh xem trong t\u00e0i li\u1ec7u r\u1ed3i:", answer.Answer);
-        Assert.Contains("DBA103 c\u00f3 3 t\u00edn ch\u1ec9", answer.Answer);
+        Assert.StartsWith("Mình xem trong tài liệu rồi:", answer.Answer);
+        Assert.Contains("DBA103 có 3 tín chỉ", answer.Answer);
         Assert.Single(answer.Citations);
         Assert.Equal(1, answer.Citations[0].ChunkIndex);
         Assert.Contains("NoCredit: 3", answer.Citations[0].Excerpt);
@@ -144,8 +144,8 @@ public sealed class RagChatServiceTests
             language: "vi",
             allowedSubjects: new[] { "DBA103 - Nhac cu truyen thong - Dan Bau", "PRU - UNITY" });
 
-        Assert.StartsWith("M\u00ecnh xem trong t\u00e0i li\u1ec7u r\u1ed3i:", answer.Answer);
-        Assert.Contains("DBA103 c\u00f3 3 t\u00edn ch\u1ec9", answer.Answer);
+        Assert.StartsWith("Mình xem trong tài liệu rồi:", answer.Answer);
+        Assert.Contains("DBA103 có 3 tín chỉ", answer.Answer);
         Assert.Single(answer.Citations);
         Assert.Equal("DBA103 - Nhac cu truyen thong - Dan Bau", answer.Citations[0].Subject);
     }
@@ -241,8 +241,8 @@ public sealed class RagChatServiceTests
             language: "vi",
             allowedSubjects: new[] { "DBA103 - Nhac cu truyen thong - Dan Bau", "IOT102 - Internet of Things" });
 
-        Assert.StartsWith("M\u00ecnh xem trong t\u00e0i li\u1ec7u r\u1ed3i:", answer.Answer);
-        Assert.Contains("DBA103 c\u00f3 3 t\u00edn ch\u1ec9", answer.Answer);
+        Assert.StartsWith("Mình xem trong tài liệu rồi:", answer.Answer);
+        Assert.Contains("DBA103 có 3 tín chỉ", answer.Answer);
         Assert.Single(answer.Citations);
         Assert.Equal("DBA103 - Nhac cu truyen thong - Dan Bau", answer.Citations[0].Subject);
         Assert.Equal("FLM-Syllabus-11835-DBA103.txt", answer.Citations[0].FileName);
@@ -313,7 +313,7 @@ public sealed class RagChatServiceTests
             language: "vi",
             allowedSubjects: new[] { "DBA103 - Nhac cu truyen thong - Dan Bau" });
 
-        Assert.Contains("t\u00e0i li\u1ec7u", answer.Answer);
+        Assert.Contains("tài liệu", answer.Answer);
         Assert.Empty(answer.Citations);
         Assert.Equal(0, repository.GetChunksCallCount);
     }
@@ -335,7 +335,7 @@ public sealed class RagChatServiceTests
 
         Assert.Empty(answer.Citations);
         Assert.Equal(0, repository.GetChunksCallCount);
-        Assert.Contains("tr\u1ef1c kho t\u00e0i li\u1ec7u", answer.Answer);
+        Assert.Contains("trực kho tài liệu", answer.Answer);
     }
 
     [Fact]
@@ -435,7 +435,7 @@ public sealed class RagChatServiceTests
         Assert.False(answer.HasDirectCitation);
         Assert.Null(answer.FallbackModel);
         Assert.Empty(answer.Citations);
-        Assert.Equal("M\u00ecnh kh\u00f4ng \u0111\u1ee7 d\u1eef li\u1ec7u trong t\u00e0i li\u1ec7u \u0111\u1ec3 tr\u1ea3 l\u1eddi c\u00e2u h\u1ecfi n\u00e0y.", answer.Answer);
+        Assert.Equal("Mình không đủ dữ liệu trong tài liệu để trả lời câu hỏi này.", answer.Answer);
     }
 
     [Fact]
@@ -690,7 +690,7 @@ public sealed class RagChatServiceTests
         public Task<IReadOnlyList<IndexedDocument>> GetDocumentsByStatusAsync(string status, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(DocumentAccessScope scope, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(string embeddingModel, int embeddingDimensions, DocumentAccessScope scope, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(string embeddingModel, int embeddingDimensions, string? chunkingStrategy, DocumentAccessScope scope, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddDocumentAsync(IndexedDocument document, IReadOnlyList<DocumentChunk> chunks, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task MarkDocumentIndexProcessingAsync(Guid documentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task CompleteDocumentIndexAsync(Guid documentId, IReadOnlyList<DocumentChunk> chunks, string embeddingModel, int embeddingDimensions, string chunkingStrategy, CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -704,6 +704,7 @@ public sealed class RagChatServiceTests
         public Task DeleteChapterAsync(Guid chapterId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<ChatSession>> GetSessionsAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<ChatSession>> GetSessionsForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<ChatSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<ChatSession?> GetSessionForOwnerAsync(Guid sessionId, Guid ownerUserId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<ChatSession?> RenameSessionAsync(Guid sessionId, string title, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null) => throw new NotSupportedException();

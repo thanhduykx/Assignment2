@@ -29,6 +29,16 @@ internal static class TextEncodingHelper
         return RepairMojibakeIfLikely(decoded).Normalize(NormalizationForm.FormC);
     }
 
+    public static string NormalizeForIndexing(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        return RepairMojibakeIfLikely(text).Normalize(NormalizationForm.FormC);
+    }
+
     public static string Decode(Stream stream, string? declaredCharset = null)
     {
         using var memory = new MemoryStream();
@@ -133,7 +143,7 @@ internal static class TextEncodingHelper
             var recovered = StrictUtf8.GetString(mojibakeBytes);
             var originalMojibakeSignals = MojibakeSignalRegex.Matches(text).Count;
             var recoveredMojibakeSignals = MojibakeSignalRegex.Matches(recovered).Count;
-            if (!recovered.Contains('\uFFFD') && recoveredMojibakeSignals < originalMojibakeSignals)
+            if (!recovered.Contains((char)0xFFFD) && recoveredMojibakeSignals < originalMojibakeSignals)
             {
                 return recovered;
             }
@@ -156,7 +166,7 @@ internal static class TextEncodingHelper
         for (var index = 0; index < text.Length; index++)
         {
             var character = text[index];
-            if (character <= '\u00FF')
+            if (character <= (char)0x00FF)
             {
                 buffer[index] = (byte)character;
                 continue;
@@ -179,33 +189,33 @@ internal static class TextEncodingHelper
     {
         value = character switch
         {
-            '\u20AC' => 0x80,
-            '\u201A' => 0x82,
-            '\u0192' => 0x83,
-            '\u201E' => 0x84,
-            '\u2026' => 0x85,
-            '\u2020' => 0x86,
-            '\u2021' => 0x87,
-            '\u02C6' => 0x88,
-            '\u2030' => 0x89,
-            '\u0160' => 0x8A,
-            '\u2039' => 0x8B,
-            '\u0152' => 0x8C,
-            '\u017D' => 0x8E,
-            '\u2018' => 0x91,
-            '\u2019' => 0x92,
-            '\u201C' => 0x93,
-            '\u201D' => 0x94,
-            '\u2022' => 0x95,
-            '\u2013' => 0x96,
-            '\u2014' => 0x97,
-            '\u02DC' => 0x98,
-            '\u2122' => 0x99,
-            '\u0161' => 0x9A,
-            '\u203A' => 0x9B,
-            '\u0153' => 0x9C,
-            '\u017E' => 0x9E,
-            '\u0178' => 0x9F,
+            (char)0x20AC => 0x80,
+            (char)0x201A => 0x82,
+            (char)0x0192 => 0x83,
+            (char)0x201E => 0x84,
+            (char)0x2026 => 0x85,
+            (char)0x2020 => 0x86,
+            (char)0x2021 => 0x87,
+            (char)0x02C6 => 0x88,
+            (char)0x2030 => 0x89,
+            (char)0x0160 => 0x8A,
+            (char)0x2039 => 0x8B,
+            (char)0x0152 => 0x8C,
+            (char)0x017D => 0x8E,
+            (char)0x2018 => 0x91,
+            (char)0x2019 => 0x92,
+            (char)0x201C => 0x93,
+            (char)0x201D => 0x94,
+            (char)0x2022 => 0x95,
+            (char)0x2013 => 0x96,
+            (char)0x2014 => 0x97,
+            (char)0x02DC => 0x98,
+            (char)0x2122 => 0x99,
+            (char)0x0161 => 0x9A,
+            (char)0x203A => 0x9B,
+            (char)0x0153 => 0x9C,
+            (char)0x017E => 0x9E,
+            (char)0x0178 => 0x9F,
             _ => 0
         };
 
@@ -214,7 +224,7 @@ internal static class TextEncodingHelper
 
     private static int TextQualityScore(string text)
     {
-        var replacementCharacters = text.Count(character => character == '\uFFFD');
+        var replacementCharacters = text.Count(character => character == (char)0xFFFD);
         var mojibakeSignals = MojibakeSignalRegex.Matches(text).Count;
         var vietnameseCharacters = text.Count(IsVietnameseCharacter);
         return (vietnameseCharacters * 3) - (mojibakeSignals * 8) - (replacementCharacters * 12);

@@ -113,7 +113,8 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
         Directory.CreateDirectory(uploadsRoot);
         var safeSourceName = MakeSafeSourceName(sourceName);
         var storedPath = Path.Combine(uploadsRoot, $"{Guid.NewGuid():N}.txt");
-        await File.WriteAllTextAsync(storedPath, text, Encoding.UTF8, cancellationToken);
+        var normalizedText = TextEncodingHelper.NormalizeForIndexing(text);
+        await File.WriteAllTextAsync(storedPath, normalizedText, Encoding.UTF8, cancellationToken);
 
         var document = CreateProcessingDocument(
             safeSourceName,
@@ -121,7 +122,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             subject,
             chapter,
             storedPath,
-            Encoding.UTF8.GetByteCount(text),
+            Encoding.UTF8.GetByteCount(normalizedText),
             uploader);
 
         await _repository.AddDocumentAsync(document, Array.Empty<DocumentChunk>(), cancellationToken);
@@ -139,7 +140,8 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
         if (document.Status == DocumentIndexStatus.Indexed
             && document.ChunkCount > 0
             && document.EmbeddingModel.Equals(_embeddingService.ModelName, StringComparison.Ordinal)
-            && document.EmbeddingDimensions == _embeddingService.Dimensions)
+            && document.EmbeddingDimensions == _embeddingService.Dimensions
+            && document.ChunkingStrategy.Equals(_chunker.StrategyName, StringComparison.Ordinal))
         {
             return;
         }
@@ -155,7 +157,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
         string extractedText;
         await using (var stream = File.OpenRead(storedPath))
         {
-            extractedText = await _extractor.ExtractAsync(stream, document.FileName, cancellationToken);
+            extractedText = TextEncodingHelper.NormalizeForIndexing(await _extractor.ExtractAsync(stream, document.FileName, cancellationToken));
         }
 
         if (string.IsNullOrWhiteSpace(extractedText))

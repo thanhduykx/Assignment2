@@ -53,6 +53,19 @@ public abstract class HomePageModelBase : PageModel
             };
         }
 
+        protected static object ToSessionSummary(ChatSessionSummary session)
+        {
+            return new
+            {
+                id = session.Id,
+                title = GetSessionTitle(session),
+                isStarred = session.IsStarred,
+                createdAt = session.CreatedAt,
+                updatedAt = session.UpdatedAt,
+                messageCount = session.MessageCount
+            };
+        }
+
         protected string CurrentRole()
         {
             return AppRoles.Normalize(User.FindFirstValue(ClaimTypes.Role));
@@ -673,6 +686,22 @@ public abstract class HomePageModelBase : PageModel
                 ?.Content
                 .Trim();
 
+            if (string.IsNullOrWhiteSpace(firstQuestion))
+            {
+                return "Phiên chưa có câu hỏi";
+            }
+
+            return firstQuestion.Length <= 56 ? firstQuestion : $"{firstQuestion[..56]}...";
+        }
+
+        protected static string GetSessionTitle(ChatSessionSummary session)
+        {
+            if (!string.IsNullOrWhiteSpace(session.Title))
+            {
+                return session.Title.Trim();
+            }
+
+            var firstQuestion = session.FirstUserMessagePreview?.Trim();
             if (string.IsNullOrWhiteSpace(firstQuestion))
             {
                 return "Phiên chưa có câu hỏi";

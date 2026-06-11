@@ -136,7 +136,7 @@
             {
                 foreach (var session in Model.ChatSessions)
                 {
-                    var firstQuestion = session.Messages.FirstOrDefault(message => message.Role == "user")?.Content?.Trim();
+                    var firstQuestion = session.FirstUserMessagePreview?.Trim();
                     var title = !string.IsNullOrWhiteSpace(session.Title)
                         ? session.Title.Trim()
                         : string.IsNullOrWhiteSpace(firstQuestion)
@@ -152,7 +152,7 @@
                                 }
                                 @title
                             </span>
-                            <small>@session.UpdatedAt.ToLocalTime().ToString("dd/MM HH:mm") / @session.Messages.Count messages</small>
+                            <small>@session.UpdatedAt.ToLocalTime().ToString("dd/MM HH:mm") / @session.MessageCount messages</small>
                         </button>
                         <button type="button" class="chat-session-menu-button" data-session-menu-toggle data-session-id="@session.Id" aria-label="Session actions">
                             <span class="material-symbols-outlined" aria-hidden="true">more_vert</span>

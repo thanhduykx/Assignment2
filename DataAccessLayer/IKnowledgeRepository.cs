@@ -19,6 +19,7 @@ public interface IKnowledgeRepository
     Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
         string embeddingModel,
         int embeddingDimensions,
+        string? chunkingStrategy,
         DocumentAccessScope scope,
         CancellationToken cancellationToken = default);
     Task AddDocumentAsync(IndexedDocument document, IReadOnlyList<DocumentChunk> chunks, CancellationToken cancellationToken = default);
@@ -40,6 +41,7 @@ public interface IKnowledgeRepository
     Task DeleteChapterAsync(Guid chapterId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ChatSession>> GetSessionsAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ChatSession>> GetSessionsForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
     Task<ChatSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
     Task<ChatSession?> GetSessionForOwnerAsync(Guid sessionId, Guid ownerUserId, CancellationToken cancellationToken = default);
     Task<ChatSession> GetOrCreateSessionAsync(Guid sessionId, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null);

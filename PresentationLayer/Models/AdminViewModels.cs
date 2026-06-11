@@ -38,12 +38,6 @@ public sealed class UpdateUserRoleViewModel
     public string Role { get; set; } = string.Empty;
 }
 
-public sealed class AssignLecturerSubjectViewModel
-{
-    public Guid UserId { get; set; }
-    public Guid SubjectId { get; set; }
-}
-
 public sealed class CreateAdminSubjectViewModel
 {
     [Required(ErrorMessage = "Subject code is required.")]
@@ -56,15 +50,6 @@ public sealed class CreateAdminSubjectViewModel
 
     [StringLength(1000, ErrorMessage = "Description must be 1000 characters or fewer.")]
     public string Description { get; set; } = string.Empty;
-}
-
-public sealed class UpdateUserNameViewModel
-{
-    public Guid UserId { get; set; }
-
-    [Required(ErrorMessage = "Full name is required.")]
-    [StringLength(120, ErrorMessage = "Full name must be 120 characters or fewer.")]
-    public string FullName { get; set; } = string.Empty;
 }
 
 public sealed class CreateAdminUserViewModel
@@ -84,4 +69,6 @@ public sealed class CreateAdminUserViewModel
 
     [Required(ErrorMessage = "Role is required.")]
     public string Role { get; set; } = PresentationLayer.Security.AppRoles.Student;
+
+    public List<Guid> SubjectIds { get; set; } = new();
 }

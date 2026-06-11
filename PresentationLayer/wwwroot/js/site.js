@@ -99,102 +99,102 @@ const translations = {
     ]
   },
   vi: {
-    "nav.documents": "T\u00e0i li\u1ec7u",
-    "nav.chat": "H\u1ecfi \u0111\u00e1p",
-    "nav.logout": "\u0110\u0103ng xu\u1ea5t",
-    "nav.login": "\u0110\u0103ng nh\u1eadp",
-    "nav.register": "T\u1ea1o t\u00e0i kho\u1ea3n",
-    "shell.portal": "C\u1ed5ng h\u1ecdc t\u1eadp",
+    "nav.documents": "Tài liệu",
+    "nav.chat": "Hỏi đáp",
+    "nav.logout": "Đăng xuất",
+    "nav.login": "Đăng nhập",
+    "nav.register": "Tạo tài khoản",
+    "shell.portal": "Cổng học tập",
     "shell.chatbot": "Chatbot",
-    "shell.documents": "Kho t\u00e0i li\u1ec7u",
-    "shell.help": "Tr\u1ee3 gi\u00fap",
-    "shell.search": "T\u00ecm ki\u1ebfm trong h\u1ec7 th\u1ed1ng...",
-    "shell.notifications": "Th\u00f4ng b\u00e1o",
-    "shell.history": "L\u1ecbch s\u1eed",
-    "documents.shellTitle": "Kho t\u00e0i li\u1ec7u",
-    "documents.manageTitle": "Qu\u1ea3n l\u00fd kho t\u00e0i li\u1ec7u",
-    "documents.manageSubtitle": "Upload t\u00e0i li\u1ec7u h\u1ecdc t\u1eadp, tr\u00edch xu\u1ea5t n\u1ed9i dung v\u00e0 index \u0111\u1ec3 chatbot tr\u1ea3 l\u1eddi c\u00f3 ngu\u1ed3n.",
+    "shell.documents": "Kho tài liệu",
+    "shell.help": "Trợ giúp",
+    "shell.search": "Tìm kiếm trong hệ thống...",
+    "shell.notifications": "Thông báo",
+    "shell.history": "Lịch sử",
+    "documents.shellTitle": "Kho tài liệu",
+    "documents.manageTitle": "Quản lý kho tài liệu",
+    "documents.manageSubtitle": "Upload tài liệu học tập, trích xuất nội dung và index để chatbot trả lời có nguồn.",
     "documents.uploadKicker": "Upload",
-    "documents.dropTitle": "K\u00e9o th\u1ea3 t\u00e0i li\u1ec7u v\u00e0o \u0111\u00e2y",
-    "documents.chooseFile": "Ch\u1ecdn t\u1ec7p ho\u1eb7c k\u00e9o th\u1ea3 v\u00e0o \u0111\u00e2y",
-    "documents.urlRenderHint": "Trang SPA/React/Vue s\u1ebd \u0111\u01b0\u1ee3c render tr\u01b0\u1edbc khi tr\u00edch xu\u1ea5t DOM.",
-    "documents.storage": "L\u01b0u tr\u1eef",
-    "documents.uploadedSize": "Dung l\u01b0\u1ee3ng \u0111\u00e3 upload",
-    "documents.totalUploaded": "T\u1ed5ng \u0111\u00e3 upload",
-    "documents.documentList": "Danh s\u00e1ch t\u00e0i li\u1ec7u",
-    "documents.showing": "Hi\u1ec3n th\u1ecb",
-    "documents.fileName": "T\u00ean file",
-    "documents.status": "Tr\u1ea1ng th\u00e1i",
-    "documents.uploadDate": "Ng\u00e0y upload",
-    "documents.indexedStatus": "\u0110\u00e3 Index",
-    "documents.emptyTitle": "Ch\u01b0a c\u00f3 t\u00e0i li\u1ec7u.",
-    "documents.emptyHint": "Upload gi\u00e1o tr\u00ecnh ho\u1eb7c URL b\u00e0i gi\u1ea3ng \u0111\u1ec3 b\u1eaft \u0111\u1ea7u h\u1ecfi \u0111\u00e1p theo ngu\u1ed3n.",
-    "assistant.open": "M\u1edf trang chat",
-    "assistant.hidden": "Ch\u00e0o b\u1ea1n, m\u00ecnh l\u00e0 chatbot h\u1ed7 tr\u1ee3 t\u00ecm ki\u1ebfm th\u00f4ng tin nhanh h\u01a1n.",
-    "documents.title": "Kho t\u00e0i li\u1ec7u m\u00f4n h\u1ecdc",
-    "documents.subtitle": "Qu\u1ea3n l\u00fd t\u00e0i li\u1ec7u \u0111\u00e3 upload, tr\u00edch xu\u1ea5t n\u1ed9i dung v\u00e0 l\u1eadp ch\u1ec9 m\u1ee5c cho trang h\u1ecfi \u0111\u00e1p ri\u00eang.",
-    "documents.openChat": "M\u1edf trang chat",
-    "documents.statsAria": "Th\u1ed1ng k\u00ea kho t\u00e0i li\u1ec7u",
-    "documents.statsDocuments": "T\u00e0i li\u1ec7u",
-    "documents.statsIndexed": "\u0110\u00e3 index",
-    "documents.statsProcessing": "\u0110ang x\u1eed l\u00fd",
-    "documents.uploadTitle": "Upload t\u00e0i li\u1ec7u",
-    "documents.uploadSubtitle": "PDF, DOCX, PPTX, TXT ho\u1eb7c URL trang b\u00e0i gi\u1ea3ng s\u1ebd \u0111\u01b0\u1ee3c tr\u00edch xu\u1ea5t, chunk v\u00e0 embed t\u1ef1 \u0111\u1ed9ng.",
-    "documents.subject": "M\u00f4n h\u1ecdc",
-    "documents.chapter": "Ch\u01b0\u01a1ng",
-    "documents.source": "Ngu\u1ed3n",
-    "documents.subjectPlaceholder": "VD: M\u00e3 m\u00f4n - T\u00ean m\u00f4n",
-    "documents.chapterPlaceholder": "VD: Ch\u01b0\u01a1ng 1 ho\u1eb7c Tu\u1ea7n 1",
-    "documents.dropzoneTitle": "K\u00e9o th\u1ea3 t\u00e0i li\u1ec7u ho\u1eb7c b\u1ea5m \u0111\u1ec3 ch\u1ecdn file",
-    "documents.dropzoneDefault": "H\u1ed7 tr\u1ee3 PDF, DOCX, PPTX, TXT",
-    "documents.or": "ho\u1eb7c",
-    "documents.url": "URL trang b\u00e0i gi\u1ea3ng",
+    "documents.dropTitle": "Kéo thả tài liệu vào đây",
+    "documents.chooseFile": "Chọn tệp hoặc kéo thả vào đây",
+    "documents.urlRenderHint": "Trang SPA/React/Vue sẽ được render trước khi trích xuất DOM.",
+    "documents.storage": "Lưu trữ",
+    "documents.uploadedSize": "Dung lượng đã upload",
+    "documents.totalUploaded": "Tổng đã upload",
+    "documents.documentList": "Danh sách tài liệu",
+    "documents.showing": "Hiển thị",
+    "documents.fileName": "Tên file",
+    "documents.status": "Trạng thái",
+    "documents.uploadDate": "Ngày upload",
+    "documents.indexedStatus": "Đã Index",
+    "documents.emptyTitle": "Chưa có tài liệu.",
+    "documents.emptyHint": "Upload giáo trình hoặc URL bài giảng để bắt đầu hỏi đáp theo nguồn.",
+    "assistant.open": "Mở trang chat",
+    "assistant.hidden": "Chào bạn, mình là chatbot hỗ trợ tìm kiếm thông tin nhanh hơn.",
+    "documents.title": "Kho tài liệu môn học",
+    "documents.subtitle": "Quản lý tài liệu đã upload, trích xuất nội dung và lập chỉ mục cho trang hỏi đáp riêng.",
+    "documents.openChat": "Mở trang chat",
+    "documents.statsAria": "Thống kê kho tài liệu",
+    "documents.statsDocuments": "Tài liệu",
+    "documents.statsIndexed": "Đã index",
+    "documents.statsProcessing": "Đang xử lý",
+    "documents.uploadTitle": "Upload tài liệu",
+    "documents.uploadSubtitle": "PDF, DOCX, PPTX, TXT hoặc URL trang bài giảng sẽ được trích xuất, chunk và embed tự động.",
+    "documents.subject": "Môn học",
+    "documents.chapter": "Chương",
+    "documents.source": "Nguồn",
+    "documents.subjectPlaceholder": "VD: Mã môn - Tên môn",
+    "documents.chapterPlaceholder": "VD: Chương 1 hoặc Tuần 1",
+    "documents.dropzoneTitle": "Kéo thả tài liệu hoặc bấm để chọn file",
+    "documents.dropzoneDefault": "Hỗ trợ PDF, DOCX, PPTX, TXT",
+    "documents.or": "hoặc",
+    "documents.url": "URL trang bài giảng",
     "documents.urlPlaceholder": "https://example.com/bai-giang-react-vue",
-    "documents.urlHint": "Trang SPA/React/Vue s\u1ebd \u0111\u01b0\u1ee3c render b\u1eb1ng Playwright tr\u01b0\u1edbc khi tr\u00edch xu\u1ea5t DOM.",
-    "documents.submit": "T\u1ea3i l\u00ean v\u00e0 index",
-    "documents.indexedTitle": "T\u00e0i li\u1ec7u \u0111\u00e3 l\u1eadp ch\u1ec9 m\u1ee5c",
+    "documents.urlHint": "Trang SPA/React/Vue sẽ được render bằng Playwright trước khi trích xuất DOM.",
+    "documents.submit": "Tải lên và index",
+    "documents.indexedTitle": "Tài liệu đã lập chỉ mục",
     "documents.filesUnit": "file",
-    "documents.empty": "Ch\u01b0a c\u00f3 t\u00e0i li\u1ec7u n\u00e0o. H\u00e3y t\u1ea3i t\u00e0i li\u1ec7u m\u00f4n h\u1ecdc \u0111\u1ec3 b\u1eaft \u0111\u1ea7u h\u1ecfi \u0111\u00e1p theo ngu\u1ed3n.",
+    "documents.empty": "Chưa có tài liệu nào. Hãy tải tài liệu môn học để bắt đầu hỏi đáp theo nguồn.",
     "documents.view": "Xem",
-    "chat.sessionsAria": "L\u1ecbch s\u1eed phi\u00ean chat",
-    "chat.documents": "Kho t\u00e0i li\u1ec7u",
-    "chat.newSession": "Phi\u00ean m\u1edbi",
-    "chat.history": "L\u1ecbch s\u1eed phi\u00ean",
-    "chat.sessionsUnit": "phi\u00ean",
+    "chat.sessionsAria": "Lịch sử phiên chat",
+    "chat.documents": "Kho tài liệu",
+    "chat.newSession": "Phiên mới",
+    "chat.history": "Lịch sử phiên",
+    "chat.sessionsUnit": "phiên",
     "chat.messagesUnit": "tin",
-    "chat.noSessions": "Ch\u01b0a c\u00f3 phi\u00ean n\u00e0o.",
-    "chat.mainAria": "Chat theo t\u00e0i li\u1ec7u",
-    "chat.title": "Chat t\u00e0i li\u1ec7u",
-    "chat.subtitle": "H\u1ecfi theo kho t\u00e0i li\u1ec7u \u0111\u00e3 index. C\u00e2u h\u1ecfi ngo\u00e0i ph\u1ea1m vi t\u00e0i li\u1ec7u s\u1ebd \u0111\u01b0\u1ee3c b\u00e1o kh\u00f4ng \u0111\u1ee7 d\u1eef li\u1ec7u.",
-    "chat.headerKicker": "Tr\u1ee3 l\u00fd m\u00f4n h\u1ecdc",
-    "chat.headerTitle": "Nh\u1eadp m\u00f4n AI",
-    "chat.headerSubtitle": "H\u1ecfi \u0111\u00e1p d\u1ef1a tr\u00ean t\u00e0i li\u1ec7u \u0111\u00e3 index. N\u1ebfu d\u1eef li\u1ec7u kh\u00f4ng \u0111\u1ee7, chatbot ph\u1ea3i b\u00e1o thi\u1ebfu ngu\u1ed3n thay v\u00ec \u0111o\u00e1n.",
-    "chat.currentSession": "Phi\u00ean hi\u1ec7n t\u1ea1i",
-    "chat.emptyTitle": "B\u1eaft \u0111\u1ea7u b\u1eb1ng m\u1ed9t c\u00e2u h\u1ecfi c\u1ee5 th\u1ec3",
-    "chat.emptyText": "Ch\u1ecdn g\u1ee3i \u00fd b\u00ean d\u01b0\u1edbi ho\u1eb7c nh\u1eadp c\u00e2u h\u1ecfi c\u1ee7a b\u1ea1n. N\u1ebfu t\u00e0i li\u1ec7u kh\u00f4ng \u0111\u1ee7 d\u1eef li\u1ec7u, chatbot s\u1ebd b\u00e1o r\u00f5 thay v\u00ec \u0111o\u00e1n.",
-    "chat.suggestionsAria": "G\u1ee3i \u00fd c\u00e2u h\u1ecfi",
-    "chat.welcome": "Ch\u00e0o b\u1ea1n, h\u1ecfi m\u00ecnh v\u1ec1 t\u00e0i li\u1ec7u \u0111\u00e3 upload nh\u00e9. C\u00f3 \u0111\u1ee7 d\u1eef li\u1ec7u th\u00ec m\u00ecnh tr\u1ea3 l\u1eddi g\u1ecdn v\u00e0 k\u00e8m ngu\u1ed3n.",
-    "chat.placeholder": "H\u1ecfi v\u1ec1 m\u00f4n, ch\u01b0\u01a1ng ho\u1eb7c t\u00e0i li\u1ec7u \u0111\u00e3 index...",
-    "chat.send": "G\u1eedi",
-    "chat.relatedLabel": "C\u00e2u h\u1ecfi li\u00ean quan",
-    "chat.relatedAria": "C\u00e2u h\u1ecfi li\u00ean quan",
-    "chat.defaultSessionTitle": "Phi\u00ean ch\u01b0a c\u00f3 c\u00e2u h\u1ecfi",
-    "chat.sessionActions": "Thao t\u00e1c phi\u00ean",
+    "chat.noSessions": "Chưa có phiên nào.",
+    "chat.mainAria": "Chat theo tài liệu",
+    "chat.title": "Chat tài liệu",
+    "chat.subtitle": "Hỏi theo kho tài liệu đã index. Câu hỏi ngoài phạm vi tài liệu sẽ được báo không đủ dữ liệu.",
+    "chat.headerKicker": "Trợ lý môn học",
+    "chat.headerTitle": "Nhập môn AI",
+    "chat.headerSubtitle": "Hỏi đáp dựa trên tài liệu đã index. Nếu dữ liệu không đủ, chatbot phải báo thiếu nguồn thay vì đoán.",
+    "chat.currentSession": "Phiên hiện tại",
+    "chat.emptyTitle": "Bắt đầu bằng một câu hỏi cụ thể",
+    "chat.emptyText": "Chọn gợi ý bên dưới hoặc nhập câu hỏi của bạn. Nếu tài liệu không đủ dữ liệu, chatbot sẽ báo rõ thay vì đoán.",
+    "chat.suggestionsAria": "Gợi ý câu hỏi",
+    "chat.welcome": "Chào bạn, hỏi mình về tài liệu đã upload nhé. Có đủ dữ liệu thì mình trả lời gọn và kèm nguồn.",
+    "chat.placeholder": "Hỏi về môn, chương hoặc tài liệu đã index...",
+    "chat.send": "Gửi",
+    "chat.relatedLabel": "Câu hỏi liên quan",
+    "chat.relatedAria": "Câu hỏi liên quan",
+    "chat.defaultSessionTitle": "Phiên chưa có câu hỏi",
+    "chat.sessionActions": "Thao tác phiên",
     "chat.starSession": "Ghim",
-    "chat.unstarSession": "B\u1ecf ghim",
-    "chat.renameSession": "\u0110\u1ed5i t\u00ean",
-    "chat.deleteSession": "X\u00f3a",
-    "chat.renamePrompt": "T\u00ean phi\u00ean m\u1edbi",
-    "chat.deleteConfirm": "X\u00f3a phi\u00ean chat n\u00e0y?",
-    "chat.sessionActionError": "Kh\u00f4ng c\u1eadp nh\u1eadt \u0111\u01b0\u1ee3c phi\u00ean chat.",
-    "chat.loading": "Ch\u1edd m\u00ecnh ch\u00fat, \u0111ang d\u00f2 trong t\u00e0i li\u1ec7u...",
-    "chat.requestError": "Kh\u00f4ng x\u1eed l\u00fd \u0111\u01b0\u1ee3c c\u00e2u h\u1ecfi.",
-    "chat.connectionError": "Kh\u00f4ng k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c server. Ki\u1ec3m tra l\u1ea1i \u1ee9ng d\u1ee5ng r\u1ed3i th\u1eed ti\u1ebfp.",
+    "chat.unstarSession": "Bỏ ghim",
+    "chat.renameSession": "Đổi tên",
+    "chat.deleteSession": "Xóa",
+    "chat.renamePrompt": "Tên phiên mới",
+    "chat.deleteConfirm": "Xóa phiên chat này?",
+    "chat.sessionActionError": "Không cập nhật được phiên chat.",
+    "chat.loading": "Chờ mình chút, đang dò trong tài liệu...",
+    "chat.requestError": "Không xử lý được câu hỏi.",
+    "chat.connectionError": "Không kết nối được server. Kiểm tra lại ứng dụng rồi thử tiếp.",
     "chat.suggestions": [
-      "Hi\u1ec7n c\u00f3 nh\u1eefng m\u00f4n n\u00e0o \u0111\u00e3 index t\u00e0i li\u1ec7u?",
-      "T\u00f3m t\u1eaft c\u00e1c t\u00e0i li\u1ec7u \u0111\u00e3 upload.",
-      "T\u00f4i c\u00f3 th\u1ec3 h\u1ecfi g\u00ec t\u1eeb kho t\u00e0i li\u1ec7u?",
-      "N\u00ean \u0111\u1ecdc t\u00e0i li\u1ec7u n\u00e0o tr\u01b0\u1edbc?"
+      "Hiện có những môn nào đã index tài liệu?",
+      "Tóm tắt các tài liệu đã upload.",
+      "Tôi có thể hỏi gì từ kho tài liệu?",
+      "Nên đọc tài liệu nào trước?"
     ]
   }
 };
@@ -493,7 +493,7 @@ function bindSubjectSuggestionButtons() {
 function normalizeQuestionForMemory(question) {
   return (question || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
@@ -586,87 +586,87 @@ function buildSubjectQuestionItems(subject) {
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-credits`,
       en: `How many credits does ${trimmedSubject} have?`,
-      vi: `${trimmedSubject} c\u00f3 bao nhi\u00eau t\u00edn ch\u1ec9?`
+      vi: `${trimmedSubject} có bao nhiêu tín chỉ?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-about`,
       en: `What is ${trimmedSubject} about?`,
-      vi: `${trimmedSubject} l\u00e0 m\u00f4n g\u00ec?`
+      vi: `${trimmedSubject} là môn gì?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-contents`,
       en: `What are the main contents of ${trimmedSubject}?`,
-      vi: `N\u1ed9i dung ch\u00ednh c\u1ee7a ${trimmedSubject} g\u1ed3m nh\u1eefng g\u00ec?`
+      vi: `Nội dung chính của ${trimmedSubject} gồm những gì?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-assessment`,
       en: `How is ${trimmedSubject} assessed?`,
-      vi: `${trimmedSubject} \u0111\u01b0\u1ee3c \u0111\u00e1nh gi\u00e1 nh\u01b0 th\u1ebf n\u00e0o?`
+      vi: `${trimmedSubject} được đánh giá như thế nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-outcomes`,
       en: `What learning outcomes does ${trimmedSubject} mention?`,
-      vi: `${trimmedSubject} c\u00f3 chu\u1ea9n \u0111\u1ea7u ra n\u00e0o?`
+      vi: `${trimmedSubject} có chuẩn đầu ra nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-materials`,
       en: `What materials or resources are used in ${trimmedSubject}?`,
-      vi: `${trimmedSubject} d\u00f9ng t\u00e0i li\u1ec7u ho\u1eb7c ngu\u1ed3n h\u1ecdc n\u00e0o?`
+      vi: `${trimmedSubject} dùng tài liệu hoặc nguồn học nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-student-tasks`,
       en: `What does the syllabus say students need to do in ${trimmedSubject}?`,
-      vi: `Sinh vi\u00ean c\u1ea7n l\u00e0m g\u00ec trong ${trimmedSubject}?`
+      vi: `Sinh viên cần làm gì trong ${trimmedSubject}?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-exams`,
       en: `What exam or assessment percentages are listed for ${trimmedSubject}?`,
-      vi: `${trimmedSubject} c\u00f3 t\u1ef7 l\u1ec7 thi ho\u1eb7c \u0111\u00e1nh gi\u00e1 n\u00e0o?`
+      vi: `${trimmedSubject} có tỷ lệ thi hoặc đánh giá nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-chapters`,
       en: `Which chapters or sections are indexed for ${trimmedSubject}?`,
-      vi: `${trimmedSubject} \u0111\u00e3 index nh\u1eefng ch\u01b0\u01a1ng ho\u1eb7c ph\u1ea7n n\u00e0o?`
+      vi: `${trimmedSubject} đã index những chương hoặc phần nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-objectives`,
       en: `What are the objectives of ${trimmedSubject}?`,
-      vi: `M\u1ee5c ti\u00eau c\u1ee7a ${trimmedSubject} l\u00e0 g\u00ec?`
+      vi: `Mục tiêu của ${trimmedSubject} là gì?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-prerequisites`,
       en: `Does ${trimmedSubject} mention any prerequisites?`,
-      vi: `${trimmedSubject} c\u00f3 y\u00eau c\u1ea7u ti\u00ean quy\u1ebft n\u00e0o kh\u00f4ng?`
+      vi: `${trimmedSubject} có yêu cầu tiên quyết nào không?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-schedule`,
       en: `What study schedule or weekly plan is listed for ${trimmedSubject}?`,
-      vi: `${trimmedSubject} c\u00f3 l\u1ecbch h\u1ecdc ho\u1eb7c k\u1ebf ho\u1ea1ch tu\u1ea7n n\u00e0o?`
+      vi: `${trimmedSubject} có lịch học hoặc kế hoạch tuần nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-activities`,
       en: `What learning activities are mentioned in ${trimmedSubject}?`,
-      vi: `${trimmedSubject} c\u00f3 nh\u1eefng ho\u1ea1t \u0111\u1ed9ng h\u1ecdc t\u1eadp n\u00e0o?`
+      vi: `${trimmedSubject} có những hoạt động học tập nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-tools`,
       en: `What tools or platforms are used in ${trimmedSubject}?`,
-      vi: `${trimmedSubject} s\u1eed d\u1ee5ng c\u00f4ng c\u1ee5 ho\u1eb7c n\u1ec1n t\u1ea3ng n\u00e0o?`
+      vi: `${trimmedSubject} sử dụng công cụ hoặc nền tảng nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-completion`,
       en: `What completion criteria are listed for ${trimmedSubject}?`,
-      vi: `${trimmedSubject} c\u00f3 ti\u00eau ch\u00ed ho\u00e0n th\u00e0nh n\u00e0o?`
+      vi: `${trimmedSubject} có tiêu chí hoàn thành nào?`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-summary`,
       en: `Summarize the indexed syllabus for ${trimmedSubject}.`,
-      vi: `T\u00f3m t\u1eaft syllabus \u0111\u00e3 index c\u1ee7a ${trimmedSubject}.`
+      vi: `Tóm tắt syllabus đã index của ${trimmedSubject}.`
     },
     {
       id: `${normalizeSubjectForCompare(trimmedSubject)}-important-notes`,
       en: `What important notes should students remember for ${trimmedSubject}?`,
-      vi: `Sinh vi\u00ean c\u1ea7n l\u01b0u \u00fd g\u00ec khi h\u1ecdc ${trimmedSubject}?`
+      vi: `Sinh viên cần lưu ý gì khi học ${trimmedSubject}?`
     }
   ];
 }
@@ -686,27 +686,27 @@ function buildRecoveryQuestionItems(subject) {
     {
       id: `${subjectKey}-recovery-teacher-expectations`,
       en: `What does the lecturer expect students to prepare for ${trimmedSubject}?`,
-      vi: `Gi\u1ea3ng vi\u00ean y\u00eau c\u1ea7u sinh vi\u00ean chu\u1ea9n b\u1ecb g\u00ec cho ${trimmedSubject}?`
+      vi: `Giảng viên yêu cầu sinh viên chuẩn bị gì cho ${trimmedSubject}?`
     },
     {
       id: `${subjectKey}-recovery-output-products`,
       en: `What products, assignments, or submissions are required in ${trimmedSubject}?`,
-      vi: `${trimmedSubject} y\u00eau c\u1ea7u b\u00e0i t\u1eadp, s\u1ea3n ph\u1ea9m ho\u1eb7c b\u00e0i n\u1ed9p n\u00e0o?`
+      vi: `${trimmedSubject} yêu cầu bài tập, sản phẩm hoặc bài nộp nào?`
     },
     {
       id: `${subjectKey}-recovery-study-resources`,
       en: `Which links, files, or learning resources are mentioned for ${trimmedSubject}?`,
-      vi: `${trimmedSubject} c\u00f3 link, file ho\u1eb7c ngu\u1ed3n h\u1ecdc n\u00e0o \u0111\u01b0\u1ee3c nh\u1eafc \u0111\u1ebfn?`
+      vi: `${trimmedSubject} có link, file hoặc nguồn học nào được nhắc đến?`
     },
     {
       id: `${subjectKey}-recovery-grading-guide`,
       en: `What grading guide or rubrics are mentioned for ${trimmedSubject}?`,
-      vi: `${trimmedSubject} c\u00f3 h\u01b0\u1edbng d\u1eabn ch\u1ea5m \u0111i\u1ec3m ho\u1eb7c rubric n\u00e0o?`
+      vi: `${trimmedSubject} có hướng dẫn chấm điểm hoặc rubric nào?`
     },
     {
       id: `${subjectKey}-recovery-first-read`,
       en: `What should I read first in the indexed material for ${trimmedSubject}?`,
-      vi: `N\u00ean \u0111\u1ecdc ph\u1ea7n n\u00e0o tr\u01b0\u1edbc trong t\u00e0i li\u1ec7u \u0111\u00e3 index c\u1ee7a ${trimmedSubject}?`
+      vi: `Nên đọc phần nào trước trong tài liệu đã index của ${trimmedSubject}?`
     }
   ];
 }
@@ -719,7 +719,7 @@ function updateRelatedQuestionsLabel(selectedSubject) {
 
   label.textContent = selectedSubject
     ? t("chat.relatedLabel")
-    : (getLanguage() === "vi" ? "C\u00e2u h\u1ecfi g\u1ee3i \u00fd" : "Suggested questions");
+    : (getLanguage() === "vi" ? "Câu hỏi gợi ý" : "Suggested questions");
 }
 
 function renderRelatedQuestions() {
