@@ -16,6 +16,10 @@
         {
             <div class="alert alert-danger">@error</div>
         }
+        @if (TempData["AuthSuccess"] is string success)
+        {
+            <div class="alert alert-success">@success</div>
+        }
 
         <form asp-page="/Account/Login" method="post" class="auth-form">
             @Html.AntiForgeryToken()
@@ -33,6 +37,8 @@
             </label>
             <button type="submit" class="btn btn-primary">Đăng nhập</button>
         </form>
+
+        <p class="auth-switch"><a asp-page="/Account/ForgotPassword">Quên mật khẩu?</a></p>
 
         @if (Model.IsGoogleLoginEnabled)
         {
