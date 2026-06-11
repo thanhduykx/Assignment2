@@ -136,6 +136,10 @@
                         </div>
                         @if (isAuthenticated)
                         {
+                            <a class="rbl-account-button" asp-page="/Account/ChangePassword">
+                                <span class="material-symbols-outlined" aria-hidden="true">lock_reset</span>
+                                <span>Đổi mật khẩu</span>
+                            </a>
                             <form asp-page="/Account/Logout" method="post" class="rbl-account-form">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="rbl-account-button">
@@ -200,6 +204,9 @@
                             </li>
                             @if (isAuthenticated)
                             {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Account/ChangePassword">Đổi mật khẩu</a>
+                                </li>
                                 <li class="nav-item user-chip">@User.FindFirstValue(ClaimTypes.Email) / @currentRole</li>
                                 <li class="nav-item">
                                     <form asp-page="/Account/Logout" method="post">
