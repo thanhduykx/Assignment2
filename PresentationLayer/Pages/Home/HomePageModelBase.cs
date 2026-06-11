@@ -74,6 +74,15 @@ public abstract class HomePageModelBase : PageModel
             return IsAdmin() || IsLecturer();
         }
 
+        protected DocumentAccessScope BuildDocumentAccessScope(DocumentAccessMode mode)
+        {
+            return new DocumentAccessScope(
+                CurrentRole(),
+                CurrentUserId(),
+                User.FindFirstValue(ClaimTypes.Email),
+                mode);
+        }
+
         protected Guid? CurrentUserId()
         {
             return Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
@@ -170,14 +179,7 @@ public abstract class HomePageModelBase : PageModel
             if (IsLecturer())
             {
                 return documents
-                    .Where(document => FindSubjectForDocumentSubject(catalog, document.Subject)?.OwnerUserId == currentUser.Id)
-                    .ToList();
-            }
-
-            if (CurrentRole() == AppRoles.Student)
-            {
-                return documents
-                    .Where(document => document.Status == DocumentIndexStatus.Indexed)
+                    .Where(DocumentBelongsToCurrentUser)
                     .ToList();
             }
 
@@ -219,18 +221,35 @@ public abstract class HomePageModelBase : PageModel
 
         protected async Task<bool> CanManageDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
         {
-            return await CanManageSubjectAsync(document.Subject, cancellationToken);
+            await Task.CompletedTask;
+            return IsAdmin() || (IsLecturer() && DocumentBelongsToCurrentUser(document));
         }
 
         protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
         {
-            if (CanManageDocuments())
+            return await CanManageDocumentAsync(document, cancellationToken);
+        }
+
+        protected bool DocumentBelongsToCurrentUser(IndexedDocument document)
+        {
+            if (CurrentUserId() is { } userId && document.UploadedByUserId == userId)
             {
-                return await CanManageDocumentAsync(document, cancellationToken);
+                return true;
             }
 
-            return CurrentRole() == AppRoles.Student
-                   && document.Status == DocumentIndexStatus.Indexed;
+            var currentEmail = User.FindFirstValue(ClaimTypes.Email);
+            return !document.UploadedByUserId.HasValue
+                   && !string.IsNullOrWhiteSpace(currentEmail)
+                   && document.UploadedByEmail.Equals(currentEmail.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        protected static bool IsDataAccessTimeout(Exception exception)
+        {
+            return exception is TaskCanceledException or TimeoutException
+                   || exception.InnerException is not null && IsDataAccessTimeout(exception.InnerException)
+                   || exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
+                   || exception.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase)
+                   || exception.GetType().FullName?.Contains("SqlException", StringComparison.OrdinalIgnoreCase) == true;
         }
 
         protected async Task<bool> CanManageChapterAsync(Guid chapterId, CancellationToken cancellationToken)

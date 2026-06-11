@@ -33,6 +33,26 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         }
     }
 
+    public async Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(
+        DocumentAccessScope scope,
+        DocumentListQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            return ApplyDocumentListQuery(
+                    ApplyDocumentScope((await LoadAsync(cancellationToken)).Documents, scope),
+                    query)
+                .OrderByDescending(document => document.UploadedAt)
+                .ToList();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task<IndexedDocument?> GetDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
@@ -83,6 +103,32 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         }
     }
 
+    public async Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(
+        DocumentAccessScope scope,
+        IReadOnlyCollection<string>? allowedSubjects = null,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var store = await LoadAsync(cancellationToken);
+            var indexedDocuments = ApplyDocumentScope(store.Documents, scope)
+                .Where(document => document.Status.Equals(DocumentIndexStatus.Indexed, StringComparison.OrdinalIgnoreCase))
+                .ToDictionary(document => document.Id);
+            var subjects = NormalizeSubjectFilters(allowedSubjects);
+            return store.Chunks
+                .Where(chunk => indexedDocuments.ContainsKey(chunk.DocumentId))
+                .Where(chunk => subjects.Count == 0 || subjects.Contains(chunk.Subject))
+                .OrderBy(chunk => chunk.DocumentId)
+                .ThenBy(chunk => chunk.ChunkIndex)
+                .ToList();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
@@ -91,6 +137,52 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
             return (await LoadAsync(cancellationToken)).Chunks
                 .Where(chunk => chunk.DocumentId == documentId)
                 .OrderBy(chunk => chunk.ChunkIndex)
+                .ToList();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(
+        DocumentAccessScope scope,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            return ApplyDocumentScope((await LoadAsync(cancellationToken)).Documents, scope)
+                .Where(document => document.Status.Equals(DocumentIndexStatus.Indexed, StringComparison.OrdinalIgnoreCase))
+                .Select(document => document.Subject)
+                .Where(subject => !string.IsNullOrWhiteSpace(subject))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(subject => subject)
+                .ToList();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
+        string embeddingModel,
+        int embeddingDimensions,
+        DocumentAccessScope scope,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var normalizedModel = (embeddingModel ?? string.Empty).Trim();
+            return ApplyDocumentScope((await LoadAsync(cancellationToken)).Documents, scope)
+                .Where(document => document.Status.Equals(DocumentIndexStatus.Indexed, StringComparison.OrdinalIgnoreCase))
+                .Where(document => document.ChunkCount == 0
+                                   || !document.EmbeddingModel.Equals(normalizedModel, StringComparison.Ordinal)
+                                   || document.EmbeddingDimensions != embeddingDimensions)
+                .OrderBy(document => document.UploadedAt)
+                .Select(document => document.Id)
                 .ToList();
         }
         finally
@@ -658,6 +750,126 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         }
 
         return normalized;
+    }
+
+    private static IEnumerable<IndexedDocument> ApplyDocumentScope(
+        IEnumerable<IndexedDocument> documents,
+        DocumentAccessScope scope)
+    {
+        if (scope.IsAdmin)
+        {
+            return documents;
+        }
+
+        if (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent)
+        {
+            return documents;
+        }
+
+        if (scope.IsLecturer && scope.UserId is { } userId)
+        {
+            var email = scope.NormalizedEmail;
+            return documents.Where(document =>
+                document.UploadedByUserId == userId
+                || (!document.UploadedByUserId.HasValue
+                    && !string.IsNullOrWhiteSpace(email)
+                    && document.UploadedByEmail.Equals(email, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return Array.Empty<IndexedDocument>();
+    }
+
+    private static IEnumerable<IndexedDocument> ApplyDocumentListQuery(
+        IEnumerable<IndexedDocument> documents,
+        DocumentListQuery? query)
+    {
+        if (!string.IsNullOrWhiteSpace(query?.Query))
+        {
+            var search = query.Query.Trim();
+            documents = documents.Where(document =>
+                Contains(document.FileName, search)
+                || Contains(document.Subject, search)
+                || Contains(document.Chapter, search)
+                || Contains(document.UploadedByName, search)
+                || Contains(document.UploadedByEmail, search)
+                || Contains(document.ContentType, search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query?.SubjectFilter))
+        {
+            var subjectFilter = query.SubjectFilter.Trim();
+            documents = documents.Where(document => SubjectMatchesFilter(document.Subject, subjectFilter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query?.StatusFilter))
+        {
+            var status = query.StatusFilter.Trim();
+            documents = documents.Where(document => document.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return documents;
+    }
+
+    private static HashSet<string> NormalizeSubjectFilters(IReadOnlyCollection<string>? subjects)
+    {
+        return subjects is null
+            ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            : subjects
+                .Where(subject => !string.IsNullOrWhiteSpace(subject))
+                .Select(subject => subject.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static bool Contains(string value, string search)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+               && value.Contains(search, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool SubjectMatchesFilter(string documentSubject, string subjectFilter)
+    {
+        var normalizedDocumentSubject = (documentSubject ?? string.Empty).Trim();
+        var normalizedSubjectFilter = (subjectFilter ?? string.Empty).Trim();
+        if (normalizedDocumentSubject.Equals(normalizedSubjectFilter, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var documentCode = ParseSubjectCode(normalizedDocumentSubject);
+        var filterCode = ParseSubjectCode(normalizedSubjectFilter);
+        return !string.IsNullOrWhiteSpace(documentCode)
+               && documentCode.Equals(filterCode, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ParseSubjectCode(string subject)
+    {
+        var trimmed = (subject ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return string.Empty;
+        }
+
+        var separatorIndex = trimmed.IndexOf(" - ", StringComparison.Ordinal);
+        if (separatorIndex < 0)
+        {
+            separatorIndex = trimmed.IndexOf('-', StringComparison.Ordinal);
+        }
+
+        var candidate = separatorIndex > 0
+            ? trimmed[..separatorIndex]
+            : trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? trimmed;
+
+        return NormalizeCatalogCode(candidate);
+    }
+
+    private static string NormalizeCatalogCode(string code)
+    {
+        return new string((code ?? string.Empty)
+            .Trim()
+            .ToUpperInvariant()
+            .Where(character => char.IsLetterOrDigit(character) || character is '_' or '.')
+            .Take(32)
+            .ToArray());
     }
 
     private static bool IsUserMessage(ChatMessage message)

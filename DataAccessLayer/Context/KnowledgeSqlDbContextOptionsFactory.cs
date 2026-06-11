@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccessLayer.Context;
@@ -11,8 +12,14 @@ internal static class KnowledgeSqlDbContextOptionsFactory
             throw new InvalidOperationException("DefaultConnection is not configured.");
         }
 
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        if (builder.ConnectTimeout <= 0 || builder.ConnectTimeout > 5)
+        {
+            builder.ConnectTimeout = 5;
+        }
+
         return new DbContextOptionsBuilder<KnowledgeSqlDbContext>()
-            .UseSqlServer(connectionString)
+            .UseSqlServer(builder.ConnectionString, options => options.CommandTimeout(15))
             .Options;
     }
 }

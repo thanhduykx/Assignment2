@@ -3,10 +3,24 @@ namespace DataAccessLayer;
 public interface IKnowledgeRepository
 {
     Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(
+        DocumentAccessScope scope,
+        DocumentListQuery? query = null,
+        CancellationToken cancellationToken = default);
     Task<IndexedDocument?> GetDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<IndexedDocument>> GetDocumentsByStatusAsync(string status, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(
+        DocumentAccessScope scope,
+        IReadOnlyCollection<string>? allowedSubjects = null,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(DocumentAccessScope scope, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
+        string embeddingModel,
+        int embeddingDimensions,
+        DocumentAccessScope scope,
+        CancellationToken cancellationToken = default);
     Task AddDocumentAsync(IndexedDocument document, IReadOnlyList<DocumentChunk> chunks, CancellationToken cancellationToken = default);
     Task MarkDocumentIndexProcessingAsync(Guid documentId, CancellationToken cancellationToken = default);
     Task CompleteDocumentIndexAsync(

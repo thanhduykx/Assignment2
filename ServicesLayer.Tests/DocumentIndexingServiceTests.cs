@@ -120,6 +120,11 @@ public sealed class DocumentIndexingServiceTests
             return Task.FromResult<IReadOnlyList<IndexedDocument>>(_documents.Values.ToList());
         }
 
+        public Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(DocumentAccessScope scope, DocumentListQuery? query = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<IndexedDocument>>(_documents.Values.ToList());
+        }
+
         public Task<IndexedDocument?> GetDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
         {
             _documents.TryGetValue(documentId, out var document);
@@ -142,10 +147,37 @@ public sealed class DocumentIndexingServiceTests
                     .ToList());
         }
 
+        public Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(DocumentAccessScope scope, IReadOnlyCollection<string>? allowedSubjects = null, CancellationToken cancellationToken = default)
+        {
+            return GetChunksAsync(cancellationToken);
+        }
+
         public Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IReadOnlyList<DocumentChunk>>(
                 _chunksByDocument.TryGetValue(documentId, out var chunks) ? chunks.ToList() : []);
+        }
+
+        public Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(DocumentAccessScope scope, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<string>>(
+                _documents.Values
+                    .Where(document => document.Status == DocumentIndexStatus.Indexed)
+                    .Select(document => document.Subject)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList());
+        }
+
+        public Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(string embeddingModel, int embeddingDimensions, DocumentAccessScope scope, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<Guid>>(
+                _documents.Values
+                    .Where(document => document.Status == DocumentIndexStatus.Indexed)
+                    .Where(document => document.ChunkCount == 0
+                                       || document.EmbeddingModel != embeddingModel
+                                       || document.EmbeddingDimensions != embeddingDimensions)
+                    .Select(document => document.Id)
+                    .ToList());
         }
 
         public Task AddDocumentAsync(IndexedDocument document, IReadOnlyList<DocumentChunk> chunks, CancellationToken cancellationToken = default)

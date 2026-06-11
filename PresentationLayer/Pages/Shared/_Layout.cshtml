@@ -12,8 +12,8 @@
     var currentRole = AppRoles.Normalize(User.FindFirstValue(ClaimTypes.Role));
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var canChat = isAuthenticated;
-    var canViewDocuments = isAuthenticated;
     var canManageDocuments = currentRole == AppRoles.Lecturer || currentRole == AppRoles.Admin;
+    var canViewDocuments = canManageDocuments;
     var canManageUsers = currentRole == AppRoles.Admin;
     var homePage = currentRole == AppRoles.Student ? "/Home/Chat" : "/Home/Index";
     
