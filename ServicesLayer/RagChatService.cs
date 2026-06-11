@@ -37,7 +37,7 @@ public sealed class RagChatService : IRagChatService
     private const int MaxBatchQuestions = 50;
     private const double MinimumScore = 0.42;
     private const double MinimumLocalRerankScore = 0.48;
-    private const double MinimumGeminiRerankScore = 0.55;
+    private const double MinimumLlmRerankScore = 0.55;
     private const double MinimumAnswerGroundingRatio = 0.42;
     private const string OutOfScopeAnswer = "Mình không đủ dữ liệu trong tài liệu để trả lời câu hỏi này.";
 
@@ -1252,13 +1252,13 @@ public sealed class RagChatService : IRagChatService
             }
 
             var candidate = candidates[candidateIndex];
-            var geminiConfidence = Math.Clamp(decision.Score, 0, 1);
-            if (geminiConfidence < MinimumGeminiRerankScore)
+            var llmConfidence = Math.Clamp(decision.Score, 0, 1);
+            if (llmConfidence < MinimumLlmRerankScore)
             {
                 continue;
             }
 
-            var boostedScore = Math.Round(Math.Max(candidate.Score, 0.82 + (geminiConfidence * 0.18)), 3);
+            var boostedScore = Math.Round(Math.Max(candidate.Score, 0.82 + (llmConfidence * 0.18)), 3);
             selected.Add(candidate with { Score = boostedScore });
             if (selected.Count == TopK)
             {

@@ -61,7 +61,7 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
                 throw new InvalidOperationException("HuggingFace embedding response did not contain vector values.");
             }
 
-            return GeminiEmbeddingService.NormalizeDenseEmbedding(values);
+            return EmbeddingVector.NormalizeDenseEmbedding(values);
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

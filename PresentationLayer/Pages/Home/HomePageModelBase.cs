@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using DataAccessLayer;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PresentationLayer.Models;
@@ -525,75 +524,6 @@ public abstract class HomePageModelBase : PageModel
             var filterCode = ParseSubjectForCatalog(normalizedSubjectFilter).Code;
             return !string.IsNullOrWhiteSpace(documentCode)
                 && documentCode.Equals(filterCode, StringComparison.OrdinalIgnoreCase);
-        }
-
-        protected IReadOnlyList<ChatQuestionSuggestionViewModel> LoadFineTunedQuestionSuggestions(IReadOnlyList<string> subjectOptions)
-        {
-            var path = Path.Combine(_environment.ContentRootPath, "App_Data", "fine-tuned-chat-examples.json");
-            if (!System.IO.File.Exists(path))
-            {
-                return Array.Empty<ChatQuestionSuggestionViewModel>();
-            }
-
-            var allowedCodes = subjectOptions
-                .Select(subject => ParseSubjectForCatalog(subject).Code)
-                .Where(code => !string.IsNullOrWhiteSpace(code))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            if (allowedCodes.Count == 0)
-            {
-                return Array.Empty<ChatQuestionSuggestionViewModel>();
-            }
-
-            try
-            {
-                using var stream = System.IO.File.OpenRead(path);
-                using var document = JsonDocument.Parse(stream);
-                if (!document.RootElement.TryGetProperty("examples", out var examples)
-                    || examples.ValueKind != JsonValueKind.Array)
-                {
-                    return Array.Empty<ChatQuestionSuggestionViewModel>();
-                }
-
-                var suggestions = new List<ChatQuestionSuggestionViewModel>();
-                foreach (var item in examples.EnumerateArray())
-                {
-                    var question = ReadJsonString(item, "question");
-                    if (string.IsNullOrWhiteSpace(question))
-                    {
-                        continue;
-                    }
-
-                    var subject = ReadJsonString(item, "subject") ?? string.Empty;
-                    var subjectCode = ParseSubjectForCatalog(subject).Code;
-                    if (string.IsNullOrWhiteSpace(subjectCode)
-                        || !allowedCodes.Contains(subjectCode))
-                    {
-                        continue;
-                    }
-
-                    suggestions.Add(new ChatQuestionSuggestionViewModel
-                    {
-                        Question = question.Trim(),
-                        Subject = subjectCode
-                    });
-                }
-
-                return suggestions;
-            }
-            catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
-            {
-                _logger.LogWarning(ex, "Could not load fine-tuned chat suggestions.");
-                return Array.Empty<ChatQuestionSuggestionViewModel>();
-            }
-        }
-
-        protected static string? ReadJsonString(JsonElement item, string propertyName)
-        {
-            return item.ValueKind == JsonValueKind.Object
-                   && item.TryGetProperty(propertyName, out var value)
-                   && value.ValueKind == JsonValueKind.String
-                ? value.GetString()
-                : null;
         }
 
         protected static string NormalizeCatalogCode(string code)

@@ -12,9 +12,8 @@ EduVietRAG la web app ASP.NET MVC cho phep sinh vien upload tai lieu mon hoc, in
 - Tra loi co citation ve tai lieu/chunk nguon.
 - Gioi han cau tra loi trong pham vi tai lieu; neu khong du can cu thi tu choi tra loi.
 - Luu lich su hoi thoai theo phien.
-- Module RBL de benchmark RAG theo embedding model, chunking strategy, local fine-tuned baseline va endpoint ngoai tuy chon.
-- Dashboard hien thi Faithfulness, Answer Relevancy, Context Precision, Context Recall va RAGAS score.
-- Xuat bao cao RBL dang PDF.
+- Chi su dung RAG cho hoi dap; khong dung baseline train rieng.
+- HuggingFace la provider AI cho chat completion va embedding.
 
 ## Cau truc project
 
@@ -37,32 +36,14 @@ README.md             Tai lieu nop bai, audit yeu cau va test set 50 cau
 8. He thong kiem tra cau tra loi co bam context hay khong; neu khong, fallback ve cau tra loi trich xuat hoac tu choi.
 9. Cau tra loi va citation duoc luu vao SQL Server.
 
-## RBL benchmark
+## AI provider
 
-Module RBL tao experiment gom:
+Ung dung chi dung RAG:
 
-- Bo cau hoi benchmark va ground truth.
-- Nhieu chunking strategy: fixed, sliding window, paragraph, semantic-lite.
-- Nhieu embedding model trong catalog, gom Gemini va HuggingFace `vinai/phobert-base`.
-- Fine-tuned baseline local duoc train tu QA pairs trong experiment, hoac endpoint ngoai neu co.
-
-Moi run luu:
-
-- Generated answer.
-- Retrieved chunks.
-- Faithfulness.
-- Answer Relevancy.
-- Context Precision.
-- Context Recall.
-- RAGAS score.
-- Latency.
-
-Fine-tuned local baseline:
-
-- Khi tao experiment, bat `Train local supervised QA baseline`.
-- Neu khong nhap training set rieng, baseline train tu QA pairs cua experiment va benchmark theo leave-one-out de tranh copy dung cau dang cham.
-- Artifact model duoc luu trong DB `rbl_fine_tuned_models.ConfigJson`.
-- Day la supervised QA baseline noi bo de so sanh voi RAG. Neu can fine-tune LLM that, can provider/API rieng.
+- Embedding: HuggingFace `Qwen/Qwen3-Embedding-0.6B` mac dinh.
+- Chat completion: HuggingFace OpenAI-compatible endpoint voi `Qwen/Qwen2.5-7B-Instruct:fastest` mac dinh.
+- Chunking: paragraph-aware chunker noi bo.
+- Khong co baseline train rieng hoac endpoint phu ngoai pipeline RAG.
 
 ## Audit de bai
 
@@ -76,9 +57,9 @@ Fine-tuned local baseline:
 | Citation nguon tai lieu goc | Dat |
 | Gioi han tra loi trong pham vi tai lieu | Dat sau toi uu: retrieval can bang chung text va co answer-grounding guard |
 | Lich su hoi thoai theo phien | Dat |
-| So sanh RAG vs fine-tuned | Dat: co RAG runs, local supervised fine-tuned baseline va endpoint ngoai tuy chon |
+| So sanh RAG voi baseline train rieng | Khong ap dung: project chi dung RAG |
 | Benchmark nhieu chunking strategy | Dat |
-| Benchmark nhieu embedding model | Dat: Gemini + HuggingFace `vinai/phobert-base`/PhoBERT-base; chua co local e5/bge-m3 |
+| Benchmark nhieu embedding model | Khong ap dung trong ban hien tai: dung HuggingFace embedding cho RAG |
 | Dashboard/Bang RAGAS | Dat ve code/UI; so lieu that can chay benchmark voi DB/API key |
 
 ## Bo test set 50 cau DBA103
@@ -142,8 +123,7 @@ Yeu cau:
 
 - .NET SDK 9.x.
 - SQL Server LocalDB/Express/Developer.
-- Gemini API key neu dung upload, chat hoac RBL voi Gemini.
-- HuggingFace API key neu chay RBL voi `vinai/phobert-base`/PhoBERT-base.
+- HuggingFace token trong bien moi truong `HF_TOKEN` de index/chat bang RAG.
 
 Lenh chay nhanh:
 
@@ -154,7 +134,7 @@ dotnet build Group7_SE1950.sln
 dotnet run --project PresentationLayer\Group07MVC.csproj --urls http://localhost:5097
 ```
 
-Connection string, Google auth va Gemini API key duoc giu trong `PresentationLayer/appsettings.json` cho demo. Co the override bang User Secrets/env vars neu can, nhung khong bat buoc.
+Connection string va Google auth duoc cau hinh trong `PresentationLayer/appsettings.json` cho demo. `HF_TOKEN` nen dat bang bien moi truong/User Secrets, khong commit token that.
 Google callback khong tu tao user moi; email Google phai trung voi tai khoan da duoc admin cap.
 
 Mo web:
@@ -169,6 +149,5 @@ http://localhost:5097
 - Cau tra loi theo tai lieu phai co citation.
 - Cau hoi ngoai pham vi tai lieu phai tra ve thong bao khong du du lieu.
 - Sinh vien khong tu dang ky; admin cap tai khoan. Neu khong co tai khoan, man dang nhap bao lien he Nha truong de xin cap tai khoan.
-- RBL score chi co y nghia khi co test set va ground truth duoc chuan bi truoc.
-- PhoBERT-base duoc goi qua HuggingFace feature-extraction va mean-pooling de tao vector so sanh; day khong phai native sentence embedding model nen can doc ket qua benchmark theo huong tham khao thuc nghiem.
+- Tai lieu da index bang model embedding cu can re-index sau khi doi sang HuggingFace.
 - Neu chia se public repo, nen thay API key/OAuth secret demo bang gia tri rieng cua moi moi truong.

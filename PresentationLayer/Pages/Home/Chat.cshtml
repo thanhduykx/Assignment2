@@ -13,13 +13,7 @@
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(subject => subject)
         .ToList();
-    var benchmarkQuestionItems = Model.BenchmarkQuestions
-        .Where(item => !string.IsNullOrWhiteSpace(item.Question))
-        .Select(item => (En: item.Question.Trim(), Vi: item.Question.Trim(), Subject: item.Subject.Trim()))
-        .ToArray();
-    var suggestedQuestions = benchmarkQuestionItems.Length > 0
-        ? benchmarkQuestionItems.Take(6).ToArray()
-        : subjectOptions.Count == 0
+    var suggestedQuestions = subjectOptions.Count == 0
         ? new (string En, string Vi, string Subject)[]
         {
             ("Which subjects have indexed documents?", "Hiện có những môn nào đã index tài liệu?", string.Empty),
@@ -36,9 +30,7 @@
             })
             .Select(item => (item.En, item.Vi, item.Subject))
             .ToArray();
-    var relatedQuestions = benchmarkQuestionItems.Length > 0
-        ? benchmarkQuestionItems
-        : subjectOptions.Count == 0
+    var relatedQuestions = subjectOptions.Count == 0
         ? Array.Empty<(string En, string Vi, string Subject)>()
         : subjectOptions
             .Take(12)
