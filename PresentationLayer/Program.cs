@@ -85,7 +85,17 @@ namespace PresentationLayer
                 huggingFaceTimeoutSeconds,
                 huggingFaceSection["ChatBaseUrl"] ?? "https://router.huggingface.co/v1/chat/completions",
                 huggingFaceSection["EmbeddingBaseUrl"] ?? "https://router.huggingface.co/hf-inference/models");
+            var smtpSection = builder.Configuration.GetSection("Smtp");
+            var smtpOptions = new PresentationLayer.Services.SmtpOptions(
+                smtpSection["Host"] ?? string.Empty,
+                int.TryParse(smtpSection["Port"], out var smtpPort) ? smtpPort : 587,
+                !bool.TryParse(smtpSection["EnableSsl"], out var smtpEnableSsl) || smtpEnableSsl,
+                FirstConfigured(smtpSection["FromEmail"], builder.Configuration["SMTP_FROM_EMAIL"], Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL")),
+                smtpSection["FromName"] ?? "CPMS",
+                FirstConfigured(smtpSection["UserName"], builder.Configuration["SMTP_USERNAME"], Environment.GetEnvironmentVariable("SMTP_USERNAME")),
+                FirstConfigured(smtpSection["Password"], builder.Configuration["SMTP_PASSWORD"], Environment.GetEnvironmentVariable("SMTP_PASSWORD")));
             builder.Services.AddSingleton(huggingFaceOptions);
+            builder.Services.AddSingleton(smtpOptions);
             builder.Services.AddSingleton<DataAccessLayer.IKnowledgeRepository>(_ =>
             {
                 var repository = new DataAccessLayer.Repositories.SqlKnowledgeRepository(
@@ -137,6 +147,7 @@ namespace PresentationLayer
             builder.Services.AddSingleton<ServicesLayer.IDocumentTextExtractor, ServicesLayer.DocumentTextExtractor>();
             builder.Services.AddSingleton<ServicesLayer.ITextChunker, ServicesLayer.ParagraphAwareTextChunker>();
             builder.Services.AddSingleton<ServicesLayer.IDocumentIndexJobQueue, ServicesLayer.DocumentIndexJobQueue>();
+            builder.Services.AddSingleton<PresentationLayer.Services.IAccountEmailSender, PresentationLayer.Services.SmtpAccountEmailSender>();
             builder.Services.AddSingleton<ServicesLayer.IWebPageTextExtractor>(_ =>
                 new ServicesLayer.WebPageTextExtractor(new HttpClient
                 {
