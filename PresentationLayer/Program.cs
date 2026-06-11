@@ -144,19 +144,8 @@ namespace PresentationLayer
             builder.Services.AddSingleton(smtpOptions);
             builder.Services.AddSingleton<DataAccessLayer.IKnowledgeRepository>(_ =>
             {
-                var repository = new DataAccessLayer.Repositories.SqlKnowledgeRepository(
+                return new DataAccessLayer.Repositories.SqlKnowledgeRepository(
                     builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty);
-                try
-                {
-                    repository.ImportFromJsonIfEmptyAsync(
-                        Path.Combine(builder.Environment.ContentRootPath, "App_Data", "rag-store.json")).GetAwaiter().GetResult();
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Knowledge repository import skipped: {ex.Message}");
-                }
-
-                return repository;
             });
             builder.Services.AddSingleton<PresentationLayer.Services.IUserAccountStore>(_ =>
             {
