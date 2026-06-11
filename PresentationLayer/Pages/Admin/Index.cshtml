@@ -13,6 +13,10 @@
         .ToList();
     var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Query)
         || !string.IsNullOrWhiteSpace(Model.RoleFilter);
+    var unassignedSubjects = Model.SubjectOptions
+        .Where(subject => !subject.OwnerUserId.HasValue)
+        .OrderBy(subject => subject.DisplayName)
+        .ToList();
 
     string DisplayName(PresentationLayer.Models.AdminUserRowViewModel user)
     {
@@ -36,16 +40,6 @@
         return source[..1].ToUpperInvariant();
     }
 
-    string RoleClass(string role)
-    {
-        return role switch
-        {
-            PresentationLayer.Security.AppRoles.Admin => "ops-role--admin",
-            PresentationLayer.Security.AppRoles.Lecturer => "ops-role--lecturer",
-            PresentationLayer.Security.AppRoles.Student => "ops-role--student",
-            _ => "ops-role--muted"
-        };
-    }
 }
 
 <section class="ops-page ops-admin-page">
@@ -158,7 +152,6 @@
                                 <th>Created</th>
                                 <th>Role / Vai trò</th>
                                 <th>Subjects</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -166,17 +159,13 @@
                         {
                             <tr>
                                 <td data-label="User">
-                                    <form asp-page-handler="UpdateName" method="post" class="ops-user-cell">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="UserId" value="@user.Id" />
+                                    <div class="ops-user-cell">
                                         <span class="ops-avatar">@Initials(user)</span>
-                                        <label class="ops-inline-field">
-                                            <span class="visually-hidden">Full name</span>
-                                            <input name="FullName" value="@user.FullName" maxlength="120" autocomplete="name" />
+                                        <div class="ops-user-identity">
+                                            <strong>@DisplayName(user)</strong>
                                             <small>@user.Email</small>
-                                        </label>
-                                        <button type="submit" class="ops-mini-button">Save</button>
-                                    </form>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td data-label="Provider">
                                     <span class="ops-chip">@user.Provider</span>
@@ -188,7 +177,6 @@
                                     <form asp-page-handler="UpdateRole" method="post" class="ops-role-form">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="UserId" value="@user.Id" />
-                                        <span class="ops-role-dot @RoleClass(user.Role)" aria-hidden="true"></span>
                                         <select name="Role" disabled="@user.IsLastAdmin">
                                             @foreach (var role in Model.Roles)
                                             {
@@ -208,41 +196,18 @@
                                 <td data-label="Subjects">
                                     @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)
                                     {
-                                        <div class="ops-subject-cell">
-                                            <div class="ops-chip-list">
-                                                @if (user.AssignedSubjects.Count == 0)
+                                        <div class="ops-chip-list">
+                                            @if (user.AssignedSubjects.Count == 0)
+                                            {
+                                                <span class="ops-chip ops-chip--muted">No subjects set</span>
+                                            }
+                                            else
+                                            {
+                                                foreach (var subject in user.AssignedSubjects)
                                                 {
-                                                    <span class="ops-chip ops-chip--muted">No owned subjects</span>
+                                                    <span class="ops-chip">@subject</span>
                                                 }
-                                                else
-                                                {
-                                                    foreach (var subject in user.AssignedSubjects)
-                                                    {
-                                                        <span class="ops-chip">@subject</span>
-                                                    }
-                                                }
-                                            </div>
-                                            <form asp-page-handler="AssignLecturerSubject" method="post" class="ops-assign-form">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="UserId" value="@user.Id" />
-                                                <select name="SubjectId" disabled="@(Model.SubjectOptions.Count == 0)">
-                                                    @if (Model.SubjectOptions.Count == 0)
-                                                    {
-                                                        <option value="">No subjects</option>
-                                                    }
-                                                    else
-                                                    {
-                                                        foreach (var subject in Model.SubjectOptions)
-                                                        {
-                                                            var ownerLabel = string.IsNullOrWhiteSpace(subject.OwnerName)
-                                                                ? "Unassigned"
-                                                                : $"Owner: {subject.OwnerName}";
-                                                            <option value="@subject.Id">@subject.DisplayName (@ownerLabel)</option>
-                                                        }
-                                                    }
-                                                </select>
-                                                <button type="submit" class="ops-mini-button" disabled="@(Model.SubjectOptions.Count == 0)">Assign</button>
-                                            </form>
+                                            }
                                         </div>
                                     }
                                     else if (user.Role == PresentationLayer.Security.AppRoles.Student)
@@ -252,16 +217,6 @@
                                     else
                                     {
                                         <span class="ops-chip ops-chip--muted">Not applicable</span>
-                                    }
-                                </td>
-                                <td data-label="Status">
-                                    @if (user.IsLastAdmin)
-                                    {
-                                        <span class="rbl-status is-success">Last admin</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="ops-muted">Active</span>
                                     }
                                 </td>
                             </tr>
@@ -306,6 +261,25 @@
                             }
                         </select>
                     </label>
+                    <fieldset class="ops-field ops-subject-picker">
+                        <legend>Subjects for lecturer</legend>
+                        @if (unassignedSubjects.Count == 0)
+                        {
+                            <span class="ops-muted">No unassigned subjects</span>
+                        }
+                        else
+                        {
+                            <div class="ops-subject-options">
+                                @foreach (var subject in unassignedSubjects)
+                                {
+                                    <label class="ops-subject-option">
+                                        <input type="checkbox" name="SubjectIds" value="@subject.Id" />
+                                        <span>@subject.DisplayName</span>
+                                    </label>
+                                }
+                            </div>
+                        }
+                    </fieldset>
                     <button type="submit" class="ops-button ops-button--primary">
                         <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
                         Create user

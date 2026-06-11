@@ -169,6 +169,7 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
     public async Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
         string embeddingModel,
         int embeddingDimensions,
+        string? chunkingStrategy,
         DocumentAccessScope scope,
         CancellationToken cancellationToken = default)
     {
@@ -176,11 +177,14 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         try
         {
             var normalizedModel = (embeddingModel ?? string.Empty).Trim();
+            var normalizedChunkingStrategy = (chunkingStrategy ?? string.Empty).Trim();
             return ApplyDocumentScope((await LoadAsync(cancellationToken)).Documents, scope)
                 .Where(document => document.Status.Equals(DocumentIndexStatus.Indexed, StringComparison.OrdinalIgnoreCase))
                 .Where(document => document.ChunkCount == 0
                                    || !document.EmbeddingModel.Equals(normalizedModel, StringComparison.Ordinal)
-                                   || document.EmbeddingDimensions != embeddingDimensions)
+                                   || document.EmbeddingDimensions != embeddingDimensions
+                                   || (!string.IsNullOrWhiteSpace(normalizedChunkingStrategy)
+                                       && !document.ChunkingStrategy.Equals(normalizedChunkingStrategy, StringComparison.Ordinal)))
                 .OrderBy(document => document.UploadedAt)
                 .Select(document => document.Id)
                 .ToList();
@@ -510,6 +514,24 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
                 .Where(session => session.OwnerUserId == ownerUserId)
                 .OrderByDescending(session => session.IsStarred)
                 .ThenByDescending(session => session.UpdatedAt)
+                .ToList();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            return (await LoadAsync(cancellationToken)).Sessions
+                .Where(session => session.OwnerUserId == ownerUserId)
+                .OrderByDescending(session => session.IsStarred)
+                .ThenByDescending(session => session.UpdatedAt)
+                .Select(ToSessionSummary)
                 .ToList();
         }
         finally
@@ -881,6 +903,24 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
     {
         var normalized = NormalizeSessionTitle(content);
         return normalized.Length <= 56 ? normalized : $"{normalized[..56]}...";
+    }
+
+    private static ChatSessionSummary ToSessionSummary(ChatSession session)
+    {
+        return new ChatSessionSummary
+        {
+            Id = session.Id,
+            Title = session.Title,
+            IsStarred = session.IsStarred,
+            CreatedAt = session.CreatedAt,
+            UpdatedAt = session.UpdatedAt,
+            MessageCount = session.Messages.Count,
+            FirstUserMessagePreview = session.Messages
+                .OrderBy(message => message.CreatedAt)
+                .FirstOrDefault(IsUserMessage)
+                ?.Content
+                ?.Trim() ?? string.Empty
+        };
     }
 
     private static string NormalizeSessionTitle(string title)

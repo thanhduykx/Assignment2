@@ -168,14 +168,16 @@ public sealed class DocumentIndexingServiceTests
                     .ToList());
         }
 
-        public Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(string embeddingModel, int embeddingDimensions, DocumentAccessScope scope, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(string embeddingModel, int embeddingDimensions, string? chunkingStrategy, DocumentAccessScope scope, CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IReadOnlyList<Guid>>(
                 _documents.Values
                     .Where(document => document.Status == DocumentIndexStatus.Indexed)
                     .Where(document => document.ChunkCount == 0
                                        || document.EmbeddingModel != embeddingModel
-                                       || document.EmbeddingDimensions != embeddingDimensions)
+                                       || document.EmbeddingDimensions != embeddingDimensions
+                                       || (!string.IsNullOrWhiteSpace(chunkingStrategy)
+                                           && document.ChunkingStrategy != chunkingStrategy))
                     .Select(document => document.Id)
                     .ToList());
         }
@@ -267,6 +269,11 @@ public sealed class DocumentIndexingServiceTests
         }
 
         public Task<IReadOnlyList<ChatSession>> GetSessionsForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

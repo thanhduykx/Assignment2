@@ -605,14 +605,14 @@ jQuery.contains = function( a, b ) {
 
 // CSS string/identifier serialization
 // https://drafts.csswg.org/cssom/#common-serializing-idioms
-var rcssescape = /([\0-\x1f\x7f]|^-?\d)|^-$|[^\x80-\uFFFF\w-]/g;
+var rcssescape = /([\0-\x1f\x7f]|^-?\d)|^-$|[^\x80-￿\w-]/g;
 
 function fcssescape( ch, asCodePoint ) {
 	if ( asCodePoint ) {
 
 		// U+0000 NULL becomes U+FFFD REPLACEMENT CHARACTER
 		if ( ch === "\0" ) {
-			return "\uFFFD";
+			return "�";
 		}
 
 		// Control characters and (dependent upon position) numbers get escaped as code points
@@ -10588,7 +10588,7 @@ jQuery.each(
 // Make sure we trim BOM and NBSP
 // Require that the "whitespace run" starts from a non-whitespace
 // to avoid O(N^2) behavior when the engine would try matching "\s+$" at each space position.
-var rtrim = /^[\s\uFEFF\xA0]+|([^\s\uFEFF\xA0])[\s\uFEFF\xA0]+$/g;
+var rtrim = /^[\s﻿\xA0]+|([^\s﻿\xA0])[\s﻿\xA0]+$/g;
 
 // Bind a function to a context, optionally partially applying any
 // arguments.

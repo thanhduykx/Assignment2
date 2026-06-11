@@ -24,7 +24,7 @@ public sealed class DocumentTextExtractor : IDocumentTextExtractor
             _ => throw new InvalidOperationException("Only PDF, DOCX, PPTX, and TXT files are supported.")
         };
 
-        return Task.FromResult(NormalizeWhitespace(text));
+        return Task.FromResult(NormalizeWhitespace(TextEncodingHelper.NormalizeForIndexing(text)));
     }
 
     private static string ExtractPdf(Stream stream)

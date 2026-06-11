@@ -131,7 +131,7 @@ public sealed class HashingEmbeddingService : IEmbeddingService
         {
             if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
             {
-                builder.Append(character == '\u0111' || character == '\u0110' ? 'd' : character);
+                builder.Append(character == 'đ' || character == 'Đ' ? 'd' : character);
             }
         }
 

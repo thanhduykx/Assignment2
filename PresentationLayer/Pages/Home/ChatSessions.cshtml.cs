@@ -27,8 +27,8 @@ public sealed class ChatSessionsModel : HomePageModelBase
     {
         var currentUser = await GetCurrentUserAccountAsync(cancellationToken);
         var sessions = currentUser is null
-            ? Array.Empty<ChatSession>()
-            : await _repository.GetSessionsForOwnerAsync(currentUser.Id, cancellationToken);
+            ? Array.Empty<ChatSessionSummary>()
+            : await _repository.GetSessionSummariesForOwnerAsync(currentUser.Id, cancellationToken);
         return new JsonResult(sessions.Select(ToSessionSummary));
     }
 }

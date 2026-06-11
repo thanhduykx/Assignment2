@@ -127,16 +127,20 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
     public async Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
         string embeddingModel,
         int embeddingDimensions,
+        string? chunkingStrategy,
         DocumentAccessScope scope,
         CancellationToken cancellationToken = default)
     {
         var normalizedModel = (embeddingModel ?? string.Empty).Trim();
+        var normalizedChunkingStrategy = (chunkingStrategy ?? string.Empty).Trim();
         await using var context = CreateContext();
         return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope)
             .Where(document => document.Status == DocumentIndexStatus.Indexed)
             .Where(document => document.ChunkCount == 0
                                || document.EmbeddingModel != normalizedModel
-                               || document.EmbeddingDimensions != embeddingDimensions)
+                               || document.EmbeddingDimensions != embeddingDimensions
+                               || (normalizedChunkingStrategy != string.Empty
+                                   && document.ChunkingStrategy != normalizedChunkingStrategy))
             .OrderBy(document => document.UploadedAt)
             .Select(document => document.Id)
             .ToListAsync(cancellationToken);
@@ -430,6 +434,31 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
             .ToListAsync(cancellationToken);
 
         return sessions.Select(KnowledgeSqlMapper.ToModel).ToList();
+    }
+
+    public async Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        return await context.Sessions
+            .AsNoTracking()
+            .Where(session => session.OwnerUserId == ownerUserId)
+            .OrderByDescending(session => session.IsStarred)
+            .ThenByDescending(session => session.UpdatedAt)
+            .Select(session => new ChatSessionSummary
+            {
+                Id = session.Id,
+                Title = session.Title ?? string.Empty,
+                IsStarred = session.IsStarred,
+                CreatedAt = session.CreatedAt,
+                UpdatedAt = session.UpdatedAt,
+                MessageCount = session.Messages.Count,
+                FirstUserMessagePreview = session.Messages
+                    .Where(message => message.Role == "user")
+                    .OrderBy(message => message.CreatedAt)
+                    .Select(message => message.Content)
+                    .FirstOrDefault() ?? string.Empty
+            })
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<ChatSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)

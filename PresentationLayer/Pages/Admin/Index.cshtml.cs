@@ -58,13 +58,28 @@ public sealed class IndexModel : PageModel
 
         try
         {
+            var role = AppRoles.Normalize(model.Role);
+            var selectedSubjects = await ResolveSubjectsForNewUserAsync(role, model.SubjectIds, cancellationToken);
             var user = await _users.CreateLocalForAdminAsync(
                 model.FullName,
                 model.Email,
                 model.Password,
-                model.Role,
+                role,
                 cancellationToken);
 
+            var assignedSubjectCount = 0;
+            var warnings = new List<string>();
+            try
+            {
+                assignedSubjectCount = await AssignSubjectsToNewLecturerAsync(user, selectedSubjects, cancellationToken);
+            }
+            catch (Exception assignmentEx)
+            {
+                _logger.LogWarning(assignmentEx, "Created user {Email}, but lecturer subjects could not be assigned.", user.Email);
+                warnings.Add("User was created, but lecturer subjects could not be assigned.");
+            }
+
+            var emailSent = false;
             try
             {
                 await _emailSender.SendWelcomeEmailAsync(
@@ -72,13 +87,22 @@ public sealed class IndexModel : PageModel
                     model.Password,
                     BuildLoginUrl(),
                     cancellationToken);
-                TempData["Success"] = $"Created {user.Email} as {user.Role}. Welcome email sent.";
+                emailSent = true;
             }
             catch (Exception emailEx)
             {
                 _logger.LogWarning(emailEx, "Created user {Email}, but welcome email could not be sent.", user.Email);
-                TempData["Success"] = $"Created {user.Email} as {user.Role}.";
-                TempData["Error"] = "User was created, but the welcome email could not be sent. Check SMTP configuration.";
+                warnings.Add("Welcome email could not be sent. Check SMTP configuration.");
+            }
+
+            var subjectSummary = assignedSubjectCount > 0
+                ? $" Assigned {assignedSubjectCount} subject(s)."
+                : string.Empty;
+            var emailSummary = emailSent ? " Welcome email sent." : string.Empty;
+            TempData["Success"] = $"Created {user.Email} as {user.Role}.{subjectSummary}{emailSummary}";
+            if (warnings.Count > 0)
+            {
+                TempData["Error"] = string.Join(" ", warnings);
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException)
@@ -92,6 +116,69 @@ public sealed class IndexModel : PageModel
         }
 
         return RedirectToPage("/Admin/Index");
+    }
+
+    private async Task<IReadOnlyList<CourseSubject>> ResolveSubjectsForNewUserAsync(
+        string role,
+        IEnumerable<Guid>? subjectIds,
+        CancellationToken cancellationToken)
+    {
+        if (role != AppRoles.Lecturer)
+        {
+            return Array.Empty<CourseSubject>();
+        }
+
+        var selectedIds = (subjectIds ?? Array.Empty<Guid>())
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToList();
+        if (selectedIds.Count == 0)
+        {
+            return Array.Empty<CourseSubject>();
+        }
+
+        var subjects = await _knowledge.GetCourseCatalogAsync(cancellationToken);
+        var selectedSubjects = selectedIds
+            .Select(id => subjects.FirstOrDefault(subject => subject.Id == id))
+            .ToList();
+        if (selectedSubjects.Any(subject => subject is null))
+        {
+            throw new InvalidOperationException("Subject not found.");
+        }
+
+        var alreadyAssigned = selectedSubjects.FirstOrDefault(subject => subject!.OwnerUserId.HasValue);
+        if (alreadyAssigned is not null)
+        {
+            throw new InvalidOperationException("Subject is already assigned.");
+        }
+
+        return selectedSubjects
+            .OfType<CourseSubject>()
+            .ToList();
+    }
+
+    private async Task<int> AssignSubjectsToNewLecturerAsync(
+        UserAccount user,
+        IReadOnlyList<CourseSubject> selectedSubjects,
+        CancellationToken cancellationToken)
+    {
+        if (user.Role != AppRoles.Lecturer || selectedSubjects.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var subject in selectedSubjects)
+        {
+            await _knowledge.UpsertSubjectAsync(
+                subject.Id,
+                subject.Code,
+                subject.Name,
+                subject.Description,
+                cancellationToken,
+                new SubjectOwnerInfo(user.Id, user.FullName, user.Email));
+        }
+
+        return selectedSubjects.Count;
     }
 
     private string BuildLoginUrl()
@@ -136,37 +223,6 @@ public sealed class IndexModel : PageModel
         return RedirectToPage("/Admin/Index");
     }
 
-    public async Task<IActionResult> OnPostUpdateNameAsync([FromForm] UpdateUserNameViewModel model, CancellationToken cancellationToken)
-    {
-        if (!ModelState.IsValid)
-        {
-            TempData["Error"] = FirstModelError("Could not update this user name.");
-            return RedirectToPage("/Admin/Index");
-        }
-
-        try
-        {
-            var user = await _users.UpdateFullNameAsync(model.UserId, model.FullName, cancellationToken);
-            TempData["Success"] = $"Updated {user.Email}'s name.";
-
-            if (IsCurrentUser(user.Id))
-            {
-                await RefreshCurrentUserClaimsAsync(user);
-            }
-        }
-        catch (Exception ex) when (ex is InvalidOperationException)
-        {
-            TempData["Error"] = ToAdminUserError(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not update user name for {UserId}", model.UserId);
-            TempData["Error"] = "Could not update this user name.";
-        }
-
-        return RedirectToPage("/Admin/Index");
-    }
-
     public async Task<IActionResult> OnPostUpdateRoleAsync([FromForm] UpdateUserRoleViewModel model, CancellationToken cancellationToken)
     {
         try
@@ -188,45 +244,6 @@ public sealed class IndexModel : PageModel
         {
             _logger.LogWarning(ex, "Could not update user role for {UserId}", model.UserId);
             TempData["Error"] = "Could not update this user role.";
-        }
-
-        return RedirectToPage("/Admin/Index");
-    }
-
-    public async Task<IActionResult> OnPostAssignLecturerSubjectAsync([FromForm] AssignLecturerSubjectViewModel model, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var user = (await _users.GetAllAsync(cancellationToken))
-                .FirstOrDefault(item => item.Id == model.UserId)
-                ?? throw new InvalidOperationException("User not found.");
-            if (user.Role != AppRoles.Lecturer)
-            {
-                throw new InvalidOperationException("Only lecturers can be assigned to subjects.");
-            }
-
-            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
-                .FirstOrDefault(item => item.Id == model.SubjectId)
-                ?? throw new InvalidOperationException("Subject not found.");
-
-            await _knowledge.UpsertSubjectAsync(
-                subject.Id,
-                subject.Code,
-                subject.Name,
-                subject.Description,
-                cancellationToken,
-                new SubjectOwnerInfo(user.Id, user.FullName, user.Email));
-
-            TempData["Success"] = $"Assigned {subject.DisplayName} to {user.FullName}.";
-        }
-        catch (Exception ex) when (ex is InvalidOperationException)
-        {
-            TempData["Error"] = ToAdminUserError(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not assign subject {SubjectId} to lecturer {UserId}", model.SubjectId, model.UserId);
-            TempData["Error"] = "Could not assign this subject.";
         }
 
         return RedirectToPage("/Admin/Index");
@@ -332,26 +349,6 @@ public sealed class IndexModel : PageModel
                && currentUserId == userId;
     }
 
-    private async Task RefreshCurrentUserClaimsAsync(UserAccount user)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.FullName),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, AppRoles.Normalize(user.Role))
-        };
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
-            new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
-            });
-    }
-
     private string FirstModelError(string fallback)
     {
         return ModelState.Values
@@ -376,6 +373,11 @@ public sealed class IndexModel : PageModel
         if (message.Contains("Subject not found", StringComparison.OrdinalIgnoreCase))
         {
             return "Subject not found.";
+        }
+
+        if (message.Contains("Subject is already assigned", StringComparison.OrdinalIgnoreCase))
+        {
+            return "This subject is already assigned to another lecturer.";
         }
 
         if (message.Contains("Subject code is required", StringComparison.OrdinalIgnoreCase)
