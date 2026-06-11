@@ -11,13 +11,12 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly DbContextOptions<KnowledgeSqlDbContext> _options;
+    private readonly object _schemaGate = new();
+    private bool _schemaEnsured;
 
     public SqlKnowledgeRepository(string connectionString)
     {
         _options = KnowledgeSqlDbContextOptionsFactory.Create(connectionString);
-
-        using var context = CreateContext();
-        KnowledgeSqlSchemaInitializer.EnsureTablesCreated(context);
     }
 
     public async Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(CancellationToken cancellationToken = default)
@@ -25,6 +24,21 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         await using var context = CreateContext();
         return await context.Documents
             .AsNoTracking()
+            .OrderByDescending(document => document.UploadedAt)
+            .Select(document => KnowledgeSqlMapper.ToModel(document))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(
+        DocumentAccessScope scope,
+        DocumentListQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var documents = ApplyDocumentScope(context.Documents.AsNoTracking(), scope);
+        documents = ApplyDocumentListQuery(documents, query);
+
+        return await documents
             .OrderByDescending(document => document.UploadedAt)
             .Select(document => KnowledgeSqlMapper.ToModel(document))
             .ToListAsync(cancellationToken);
@@ -60,6 +74,31 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(
+        DocumentAccessScope scope,
+        IReadOnlyCollection<string>? allowedSubjects = null,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var chunks = context.Chunks
+            .AsNoTracking()
+            .Where(chunk => chunk.Document.Status == DocumentIndexStatus.Indexed);
+
+        chunks = ApplyChunkScope(chunks, scope);
+
+        var subjects = NormalizeSubjectFilters(allowedSubjects);
+        if (subjects.Count > 0)
+        {
+            chunks = chunks.Where(chunk => subjects.Contains(chunk.Subject));
+        }
+
+        return await chunks
+            .OrderBy(chunk => chunk.DocumentId)
+            .ThenBy(chunk => chunk.ChunkIndex)
+            .Select(chunk => KnowledgeSqlMapper.ToModel(chunk))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         await using var context = CreateContext();
@@ -68,6 +107,38 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
             .Where(chunk => chunk.DocumentId == documentId)
             .OrderBy(chunk => chunk.ChunkIndex)
             .Select(chunk => KnowledgeSqlMapper.ToModel(chunk))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(
+        DocumentAccessScope scope,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope)
+            .Where(document => document.Status == DocumentIndexStatus.Indexed
+                               && document.Subject != string.Empty)
+            .Select(document => document.Subject)
+            .Distinct()
+            .OrderBy(subject => subject)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
+        string embeddingModel,
+        int embeddingDimensions,
+        DocumentAccessScope scope,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedModel = (embeddingModel ?? string.Empty).Trim();
+        await using var context = CreateContext();
+        return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope)
+            .Where(document => document.Status == DocumentIndexStatus.Indexed)
+            .Where(document => document.ChunkCount == 0
+                               || document.EmbeddingModel != normalizedModel
+                               || document.EmbeddingDimensions != embeddingDimensions)
+            .OrderBy(document => document.UploadedAt)
+            .Select(document => document.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -595,9 +666,156 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         return normalized.Length <= 200 ? normalized : normalized[..200];
     }
 
+    private static IQueryable<KnowledgeSqlDocument> ApplyDocumentScope(
+        IQueryable<KnowledgeSqlDocument> query,
+        DocumentAccessScope scope)
+    {
+        if (scope.IsAdmin)
+        {
+            return query;
+        }
+
+        if (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent)
+        {
+            return query;
+        }
+
+        if (scope.IsLecturer && scope.UserId is { } userId)
+        {
+            var email = scope.NormalizedEmail;
+            return query.Where(document =>
+                document.UploadedByUserId == userId
+                || (!document.UploadedByUserId.HasValue
+                    && email != string.Empty
+                    && document.UploadedByEmail == email));
+        }
+
+        return query.Where(_ => false);
+    }
+
+    private static IQueryable<KnowledgeSqlChunk> ApplyChunkScope(
+        IQueryable<KnowledgeSqlChunk> query,
+        DocumentAccessScope scope)
+    {
+        if (scope.IsAdmin || (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent))
+        {
+            return query;
+        }
+
+        if (scope.IsLecturer && scope.UserId is { } userId)
+        {
+            var email = scope.NormalizedEmail;
+            return query.Where(chunk =>
+                chunk.Document.UploadedByUserId == userId
+                || (!chunk.Document.UploadedByUserId.HasValue
+                    && email != string.Empty
+                    && chunk.Document.UploadedByEmail == email));
+        }
+
+        return query.Where(_ => false);
+    }
+
+    private static IQueryable<KnowledgeSqlDocument> ApplyDocumentListQuery(
+        IQueryable<KnowledgeSqlDocument> query,
+        DocumentListQuery? listQuery)
+    {
+        if (!string.IsNullOrWhiteSpace(listQuery?.Query))
+        {
+            var search = listQuery.Query.Trim();
+            query = query.Where(document =>
+                document.FileName.Contains(search)
+                || document.Subject.Contains(search)
+                || document.Chapter.Contains(search)
+                || (document.UploadedByName ?? string.Empty).Contains(search)
+                || (document.UploadedByEmail ?? string.Empty).Contains(search)
+                || document.ContentType.Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(listQuery?.SubjectFilter))
+        {
+            var subjectFilter = listQuery.SubjectFilter.Trim();
+            var subjectCode = ParseSubjectCode(subjectFilter);
+            query = query.Where(document =>
+                document.Subject == subjectFilter
+                || (subjectCode != string.Empty
+                    && (document.Subject == subjectCode || document.Subject.StartsWith(subjectCode + " -"))));
+        }
+
+        if (!string.IsNullOrWhiteSpace(listQuery?.StatusFilter))
+        {
+            var status = listQuery.StatusFilter.Trim();
+            query = query.Where(document => document.Status == status);
+        }
+
+        return query;
+    }
+
+    private static List<string> NormalizeSubjectFilters(IReadOnlyCollection<string>? subjects)
+    {
+        return subjects is null
+            ? new List<string>()
+            : subjects
+                .Where(subject => !string.IsNullOrWhiteSpace(subject))
+                .Select(subject => subject.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+    }
+
+    private static string ParseSubjectCode(string subject)
+    {
+        var trimmed = (subject ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return string.Empty;
+        }
+
+        var separatorIndex = trimmed.IndexOf(" - ", StringComparison.Ordinal);
+        if (separatorIndex < 0)
+        {
+            separatorIndex = trimmed.IndexOf('-', StringComparison.Ordinal);
+        }
+
+        var candidate = separatorIndex > 0
+            ? trimmed[..separatorIndex]
+            : trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? trimmed;
+
+        return NormalizeCatalogCode(candidate);
+    }
+
+    private static string NormalizeCatalogCode(string code)
+    {
+        return new string((code ?? string.Empty)
+            .Trim()
+            .ToUpperInvariant()
+            .Where(character => char.IsLetterOrDigit(character) || character is '_' or '.')
+            .Take(32)
+            .ToArray());
+    }
+
     private KnowledgeSqlDbContext CreateContext()
     {
+        EnsureSchema();
         return new KnowledgeSqlDbContext(_options);
+    }
+
+    private void EnsureSchema()
+    {
+        if (_schemaEnsured)
+        {
+            return;
+        }
+
+        lock (_schemaGate)
+        {
+            if (_schemaEnsured)
+            {
+                return;
+            }
+
+            using var context = new KnowledgeSqlDbContext(_options);
+            KnowledgeSqlSchemaInitializer.EnsureTablesCreated(context);
+            _schemaEnsured = true;
+        }
     }
 
     private static void EnsureSessionOwner(KnowledgeSqlChatSession session, ChatSessionOwnerInfo? ownerInfo)

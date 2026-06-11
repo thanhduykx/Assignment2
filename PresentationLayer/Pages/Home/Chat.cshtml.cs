@@ -27,26 +27,45 @@ public sealed class ChatModel : HomePageModelBase
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<string> SubjectOptions { get; private set; } = Array.Empty<string>();
     public IReadOnlyList<ChatQuestionSuggestionViewModel> BenchmarkQuestions { get; private set; } = Array.Empty<ChatQuestionSuggestionViewModel>();
+    public string? LoadErrorMessage { get; private set; }
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
-        var documents = await _indexingService.GetDocumentsAsync(cancellationToken);
-        var courseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
         var currentUser = await GetCurrentUserAccountAsync(cancellationToken);
-        var allIndexedDocuments = documents
-            .Where(document => document.Status == DocumentIndexStatus.Indexed)
-            .ToList();
-        var indexedDocuments = FilterDocumentsForCurrentUser(allIndexedDocuments, courseCatalog, currentUser).ToList();
-        var subjectOptions = indexedDocuments
-            .Select(document => document.Subject)
-            .Where(subject => !string.IsNullOrWhiteSpace(subject))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(subject => subject)
-            .ToList();
+        var chatScope = BuildDocumentAccessScope(DocumentAccessMode.Chat);
+        IReadOnlyList<string> subjectOptions;
+        IReadOnlyList<IndexedDocument> indexedDocuments;
+        try
+        {
+            subjectOptions = await _repository.GetIndexedSubjectsAsync(chatScope, cancellationToken);
+            indexedDocuments = CurrentRole() == AppRoles.Student
+                ? Array.Empty<IndexedDocument>()
+                : await _repository.GetDocumentsAsync(
+                    chatScope,
+                    new DocumentListQuery(StatusFilter: DocumentIndexStatus.Indexed),
+                    cancellationToken);
+        }
+        catch (Exception ex) when (IsDataAccessTimeout(ex))
+        {
+            _logger.LogWarning(ex, "Chat page could not load indexed subject metadata because the database was unavailable.");
+            subjectOptions = Array.Empty<string>();
+            indexedDocuments = Array.Empty<IndexedDocument>();
+            LoadErrorMessage = "Database unavailable/timeout. Chat metadata could not be loaded.";
+        }
 
-        ChatSessions = currentUser is null
-            ? Array.Empty<ChatSession>()
-            : await _repository.GetSessionsForOwnerAsync(currentUser.Id, cancellationToken);
+        try
+        {
+            ChatSessions = currentUser is null
+                ? Array.Empty<ChatSession>()
+                : await _repository.GetSessionsForOwnerAsync(currentUser.Id, cancellationToken);
+        }
+        catch (Exception ex) when (IsDataAccessTimeout(ex))
+        {
+            _logger.LogWarning(ex, "Chat page could not load sessions because the database was unavailable.");
+            ChatSessions = Array.Empty<ChatSession>();
+            LoadErrorMessage ??= "Database unavailable/timeout. Chat metadata could not be loaded.";
+        }
+
         Documents = indexedDocuments;
         SubjectOptions = subjectOptions;
         BenchmarkQuestions = LoadFineTunedQuestionSuggestions(subjectOptions);

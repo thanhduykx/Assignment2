@@ -57,6 +57,41 @@ public sealed class RagChatServiceTests
     }
 
     [Fact]
+    public async Task AskAsync_UsesScopedChunkQuery_WhenAccessScopeProvided()
+    {
+        var documentId = Guid.NewGuid();
+        var repository = new InMemoryChatKnowledgeRepository(new[]
+        {
+            new DocumentChunk
+            {
+                DocumentId = documentId,
+                FileName = "lecturer-a.txt",
+                Subject = "DBA103 - Nhac cu truyen thong",
+                Chapter = "Tong Quan",
+                ChunkIndex = 1,
+                Text = "Subject Code: DBA103 NoCredit: 3",
+                Embedding = new Dictionary<int, double> { [1] = 1 }
+            }
+        });
+        var service = new RagChatService(
+            repository,
+            new HashingEmbeddingService(),
+            new NoOpChatCompletionService());
+
+        var answer = await service.AskAsync(
+            Guid.NewGuid(),
+            "DBA103 co bao nhieu tin chi?",
+            language: "vi",
+            allowedSubjects: new[] { "DBA103 - Nhac cu truyen thong" },
+            accessScope: new DocumentAccessScope("Lecturer", Guid.NewGuid(), "lecturer@example.com", DocumentAccessMode.Chat));
+
+        Assert.Single(answer.Citations);
+        Assert.Equal(0, repository.GetChunksCallCount);
+        Assert.Equal(1, repository.GetScopedChunksCallCount);
+        Assert.Equal("Lecturer", repository.LastScope?.Role);
+    }
+
+    [Fact]
     public async Task AskAsync_UsesOriginalQuestion_WhenRewriteDropsCourseCode()
     {
         var dbaDocumentId = Guid.NewGuid();
@@ -666,11 +701,28 @@ public sealed class RagChatServiceTests
         }
 
         public int GetChunksCallCount { get; private set; }
+        public int GetScopedChunksCallCount { get; private set; }
+        public DocumentAccessScope? LastScope { get; private set; }
 
         public Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(CancellationToken cancellationToken = default)
         {
             GetChunksCallCount++;
             return Task.FromResult(_chunks);
+        }
+
+        public Task<IReadOnlyList<DocumentChunk>> GetChunksAsync(
+            DocumentAccessScope scope,
+            IReadOnlyCollection<string>? allowedSubjects = null,
+            CancellationToken cancellationToken = default)
+        {
+            GetScopedChunksCallCount++;
+            LastScope = scope;
+            var subjects = allowedSubjects?
+                .Where(subject => !string.IsNullOrWhiteSpace(subject))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return Task.FromResult<IReadOnlyList<DocumentChunk>>(subjects is null || subjects.Count == 0
+                ? _chunks
+                : _chunks.Where(chunk => subjects.Contains(chunk.Subject)).ToList());
         }
 
         public Task<ChatSession> GetOrCreateSessionAsync(
@@ -701,9 +753,12 @@ public sealed class RagChatServiceTests
         }
 
         public Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(DocumentAccessScope scope, DocumentListQuery? query = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IndexedDocument?> GetDocumentAsync(Guid documentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<IndexedDocument>> GetDocumentsByStatusAsync(string status, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(DocumentAccessScope scope, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(string embeddingModel, int embeddingDimensions, DocumentAccessScope scope, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddDocumentAsync(IndexedDocument document, IReadOnlyList<DocumentChunk> chunks, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task MarkDocumentIndexProcessingAsync(Guid documentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task CompleteDocumentIndexAsync(Guid documentId, IReadOnlyList<DocumentChunk> chunks, string embeddingModel, int embeddingDimensions, string chunkingStrategy, CancellationToken cancellationToken = default) => throw new NotSupportedException();

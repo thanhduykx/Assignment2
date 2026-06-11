@@ -26,6 +26,7 @@ public interface IRagChatService
         string? language = null,
         IReadOnlyCollection<string>? allowedSubjects = null,
         ChatSessionOwnerInfo? ownerInfo = null,
+        DocumentAccessScope? accessScope = null,
         CancellationToken cancellationToken = default);
 }
 
@@ -176,6 +177,7 @@ public sealed class RagChatService : IRagChatService
         string? language = null,
         IReadOnlyCollection<string>? allowedSubjects = null,
         ChatSessionOwnerInfo? ownerInfo = null,
+        DocumentAccessScope? accessScope = null,
         CancellationToken cancellationToken = default)
     {
         var trimmedQuestion = question.Trim();
@@ -202,7 +204,7 @@ public sealed class RagChatService : IRagChatService
         var questionBatch = SplitQuestionBatch(trimmedQuestion);
         if (questionBatch.Count > 1)
         {
-            var scopedChunks = await GetScopedChunksAsync(allowedSubjects, cancellationToken);
+            var scopedChunks = await GetScopedChunksAsync(allowedSubjects, accessScope, cancellationToken);
             var questionsToAnswer = questionBatch.Take(MaxBatchQuestions).ToList();
             var answers = new List<SingleQuestionAnswer>(questionsToAnswer.Count);
 
@@ -216,6 +218,7 @@ public sealed class RagChatService : IRagChatService
                     subjectFilter,
                     allowedSubjects,
                     scopedChunks,
+                    accessScope,
                     cancellationToken));
             }
 
@@ -232,6 +235,7 @@ public sealed class RagChatService : IRagChatService
             subjectFilter,
             allowedSubjects,
             scopedChunks: null,
+            accessScope,
             cancellationToken);
 
         return await SaveAssistantAnswer(
@@ -256,6 +260,7 @@ public sealed class RagChatService : IRagChatService
         string? subjectFilter,
         IReadOnlyCollection<string>? allowedSubjects,
         IReadOnlyList<DocumentChunk>? scopedChunks,
+        DocumentAccessScope? accessScope,
         CancellationToken cancellationToken)
     {
         if (IsBotIdentityQuestion(question))
@@ -297,7 +302,7 @@ public sealed class RagChatService : IRagChatService
                                ?? question;
         var retrievalQuestion = string.Join("\n", retrievalQueries);
 
-        scopedChunks ??= await GetScopedChunksAsync(allowedSubjects, cancellationToken);
+        scopedChunks ??= await GetScopedChunksAsync(allowedSubjects, accessScope, cancellationToken);
         if (scopedChunks.Count == 0)
         {
             return await BuildInsufficientAnswerAsync(
@@ -451,9 +456,9 @@ public sealed class RagChatService : IRagChatService
 
     private async Task<IReadOnlyList<DocumentChunk>> GetScopedChunksAsync(
         IReadOnlyCollection<string>? allowedSubjects,
+        DocumentAccessScope? accessScope,
         CancellationToken cancellationToken)
     {
-        var chunks = await _repository.GetChunksAsync(cancellationToken);
         var normalizedAllowedSubjects = allowedSubjects?
             .Where(subject => !string.IsNullOrWhiteSpace(subject))
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -462,6 +467,13 @@ public sealed class RagChatService : IRagChatService
         {
             return Array.Empty<DocumentChunk>();
         }
+
+        if (accessScope is not null)
+        {
+            return await _repository.GetChunksAsync(accessScope, normalizedAllowedSubjects, cancellationToken);
+        }
+
+        var chunks = await _repository.GetChunksAsync(cancellationToken);
 
         return chunks
             .Where(chunk => normalizedAllowedSubjects.Any(subject => SubjectMatches(chunk.Subject, subject)))

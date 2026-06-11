@@ -43,16 +43,8 @@ public sealed class AskModel : HomePageModelBase
         try
         {
             var currentUser = await GetCurrentUserAccountAsync(cancellationToken);
-            var courseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
-            var indexedDocuments = (await _indexingService.GetDocumentsAsync(cancellationToken))
-                .Where(document => document.Status == DocumentIndexStatus.Indexed)
-                .ToList();
-            var accessibleDocuments = FilterDocumentsForCurrentUser(indexedDocuments, courseCatalog, currentUser).ToList();
-            var allowedSubjects = accessibleDocuments
-                .Select(document => document.Subject)
-                .Where(subject => !string.IsNullOrWhiteSpace(subject))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            var chatScope = BuildDocumentAccessScope(DocumentAccessMode.Chat);
+            var allowedSubjects = await _repository.GetIndexedSubjectsAsync(chatScope, cancellationToken);
             var displayName = User.FindFirstValue(ClaimTypes.Name)
                 ?? User.FindFirstValue(ClaimTypes.Email)?.Split('@')[0];
             if (currentUser is not null)
@@ -72,13 +64,14 @@ public sealed class AskModel : HomePageModelBase
                 request.Language,
                 allowedSubjects,
                 BuildChatSessionOwnerInfo(),
+                chatScope,
                 cancellationToken);
 
             return new JsonResult(new
             {
                 sessionId,
                 answer = answer.Answer,
-                citations = answer.Citations,
+                citations = RedactCitationsForCurrentRole(answer.Citations),
                 resolvedSubject = answer.ResolvedSubject,
                 needsClarification = answer.NeedsClarification,
                 subjectOptions = answer.SubjectOptions,
@@ -87,10 +80,32 @@ public sealed class AskModel : HomePageModelBase
                 fallbackModel = answer.FallbackModel
             });
         }
+        catch (Exception ex) when (IsDataAccessTimeout(ex))
+        {
+            Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return new JsonResult(new { error = "Database unavailable/timeout. Vui long thu lai sau vai giay." });
+        }
         catch (Exception ex)
         {
             Response.StatusCode = StatusCodes.Status400BadRequest;
             return new JsonResult(new { error = ex.Message });
         }
+    }
+
+    private object RedactCitationsForCurrentRole(IReadOnlyList<SourceCitation> citations)
+    {
+        if (CurrentRole() != AppRoles.Student)
+        {
+            return citations;
+        }
+
+        return citations
+            .Select(citation => new
+            {
+                subject = citation.Subject,
+                chapter = citation.Chapter,
+                score = citation.Score
+            })
+            .ToList();
     }
 }

@@ -136,7 +136,10 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             return;
         }
 
-        if (document.Status == DocumentIndexStatus.Indexed && document.ChunkCount > 0)
+        if (document.Status == DocumentIndexStatus.Indexed
+            && document.ChunkCount > 0
+            && document.EmbeddingModel.Equals(_embeddingService.ModelName, StringComparison.Ordinal)
+            && document.EmbeddingDimensions == _embeddingService.Dimensions)
         {
             return;
         }

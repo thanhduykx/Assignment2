@@ -8,7 +8,7 @@ using ServicesLayer;
 
 namespace PresentationLayer.Pages.Home;
 
-[Authorize(Policy = AuthorizationPolicies.DocumentRead)]
+[Authorize(Policy = AuthorizationPolicies.DocumentManagement)]
 public sealed class ViewDocumentModel : HomePageModelBase
 {
     public ViewDocumentModel(

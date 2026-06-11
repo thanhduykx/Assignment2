@@ -61,7 +61,7 @@ namespace PresentationLayer
                 options.AddPolicy(AuthorizationPolicies.ChatAccess, policy =>
                     policy.RequireRole(AppRoles.Student, AppRoles.Lecturer, AppRoles.Admin));
                 options.AddPolicy(AuthorizationPolicies.DocumentRead, policy =>
-                    policy.RequireRole(AppRoles.Student, AppRoles.Lecturer, AppRoles.Admin));
+                    policy.RequireRole(AppRoles.Lecturer, AppRoles.Admin));
                 options.AddPolicy(AuthorizationPolicies.DocumentManagement, policy =>
                     policy.RequireRole(AppRoles.Lecturer, AppRoles.Admin));
                 options.AddPolicy(AuthorizationPolicies.AdminOnly, policy =>
@@ -85,6 +85,25 @@ namespace PresentationLayer
             var geminiTimeoutSeconds = int.TryParse(geminiSection["TimeoutSeconds"], out var parsedGeminiTimeout)
                 ? parsedGeminiTimeout
                 : 120;
+            var huggingFaceSection = builder.Configuration.GetSection("HuggingFace");
+            var huggingFaceToken = FirstConfigured(
+                Environment.GetEnvironmentVariable("HF_TOKEN"),
+                builder.Configuration["HF_TOKEN"],
+                huggingFaceSection["Token"]);
+            var huggingFaceEnabled = !bool.TryParse(huggingFaceSection["Enabled"], out var parsedHuggingFaceEnabled)
+                                     || parsedHuggingFaceEnabled;
+            var huggingFaceTimeoutSeconds = int.TryParse(huggingFaceSection["TimeoutSeconds"], out var parsedHuggingFaceTimeout)
+                ? parsedHuggingFaceTimeout
+                : 60;
+            var huggingFaceOptions = new ServicesLayer.HuggingFaceOptions(
+                huggingFaceEnabled,
+                huggingFaceToken,
+                huggingFaceSection["ChatModel"] ?? "Qwen/Qwen2.5-7B-Instruct:fastest",
+                huggingFaceSection["EmbeddingModel"] ?? "Qwen/Qwen3-Embedding-0.6B",
+                huggingFaceTimeoutSeconds,
+                huggingFaceSection["ChatBaseUrl"] ?? "https://router.huggingface.co/v1/chat/completions",
+                huggingFaceSection["EmbeddingBaseUrl"] ?? "https://router.huggingface.co/hf-inference/models");
+            var useHuggingFace = huggingFaceOptions.Enabled && !string.IsNullOrWhiteSpace(huggingFaceOptions.Token);
             var semanticChunkingEnabled = bool.TryParse(
                     builder.Configuration["SemanticChunking:Enabled"] ?? geminiSection["EnableSemanticChunking"],
                     out var parsedSemanticChunkingEnabled)
@@ -124,6 +143,7 @@ namespace PresentationLayer
                 geminiEmbeddingModel,
                 geminiEmbeddingDimensions,
                 geminiEnabled));
+            builder.Services.AddSingleton(huggingFaceOptions);
             builder.Services.AddSingleton(new ServicesLayer.FineTunedChatOptions(
                 fineTunedChatEnabled,
                 fineTunedChatSection["Provider"] ?? "local://supervised-qa",
@@ -134,8 +154,16 @@ namespace PresentationLayer
             {
                 var repository = new DataAccessLayer.Repositories.SqlKnowledgeRepository(
                     builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty);
-                repository.ImportFromJsonIfEmptyAsync(
-                    Path.Combine(builder.Environment.ContentRootPath, "App_Data", "rag-store.json")).GetAwaiter().GetResult();
+                try
+                {
+                    repository.ImportFromJsonIfEmptyAsync(
+                        Path.Combine(builder.Environment.ContentRootPath, "App_Data", "rag-store.json")).GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Knowledge repository import skipped: {ex.Message}");
+                }
+
                 return repository;
             });
             builder.Services.AddSingleton<PresentationLayer.Services.IUserAccountStore>(_ =>
@@ -159,6 +187,16 @@ namespace PresentationLayer
                     ? parsedTimeout
                     : 120;
 
+                if (useHuggingFace)
+                {
+                    return new ServicesLayer.HuggingFaceEmbeddingService(
+                        new HttpClient
+                        {
+                            Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
+                        },
+                        huggingFaceOptions);
+                }
+
                 var geminiEmbeddingService = new ServicesLayer.GeminiEmbeddingService(
                     new HttpClient
                     {
@@ -178,6 +216,16 @@ namespace PresentationLayer
             });
             builder.Services.AddSingleton<ServicesLayer.ILocalChatCompletionService>(_ =>
             {
+                if (useHuggingFace)
+                {
+                    return new ServicesLayer.HuggingFaceChatCompletionService(
+                        new HttpClient
+                        {
+                            Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
+                        },
+                        huggingFaceOptions);
+                }
+
                 return new ServicesLayer.GeminiChatCompletionService(
                     new HttpClient
                     {

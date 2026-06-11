@@ -37,6 +37,7 @@ public sealed class ChatSessionModel : HomePageModelBase
             return NotFound(new { error = "Chat session not found." });
         }
 
+        var redactCitations = CurrentRole() == AppRoles.Student;
         return new JsonResult(new
         {
             id = session.Id,
@@ -51,16 +52,23 @@ public sealed class ChatSessionModel : HomePageModelBase
                     role = message.Role,
                     content = message.Content,
                     createdAt = message.CreatedAt,
-                    citations = message.Citations.Select(citation => new
-                    {
-                        documentId = citation.DocumentId,
-                        fileName = citation.FileName,
-                        subject = citation.Subject,
-                        chapter = citation.Chapter,
-                        chunkIndex = citation.ChunkIndex,
-                        score = citation.Score,
-                        excerpt = citation.Excerpt
-                    })
+                    citations = message.Citations.Select(citation => redactCitations
+                        ? new
+                        {
+                            subject = citation.Subject,
+                            chapter = citation.Chapter,
+                            score = citation.Score
+                        } as object
+                        : new
+                        {
+                            documentId = citation.DocumentId,
+                            fileName = citation.FileName,
+                            subject = citation.Subject,
+                            chapter = citation.Chapter,
+                            chunkIndex = citation.ChunkIndex,
+                            score = citation.Score,
+                            excerpt = citation.Excerpt
+                        })
                 })
         });
     }

@@ -7,6 +7,29 @@ public static class DocumentIndexStatus
     public const string Failed = "Failed";
 }
 
+public enum DocumentAccessMode
+{
+    DocumentUi,
+    Chat
+}
+
+public sealed record DocumentAccessScope(
+    string Role,
+    Guid? UserId,
+    string? Email,
+    DocumentAccessMode Mode)
+{
+    public bool IsAdmin => Role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+    public bool IsLecturer => Role.Equals("Lecturer", StringComparison.OrdinalIgnoreCase);
+    public bool IsStudent => Role.Equals("Student", StringComparison.OrdinalIgnoreCase);
+    public string NormalizedEmail => (Email ?? string.Empty).Trim();
+}
+
+public sealed record DocumentListQuery(
+    string? Query = null,
+    string? SubjectFilter = null,
+    string? StatusFilter = null);
+
 public sealed class IndexedDocument
 {
     public Guid Id { get; set; } = Guid.NewGuid();

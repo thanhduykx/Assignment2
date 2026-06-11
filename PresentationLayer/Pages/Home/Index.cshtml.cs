@@ -8,9 +8,11 @@ using ServicesLayer;
 
 namespace PresentationLayer.Pages.Home;
 
-[Authorize(Policy = AuthorizationPolicies.DocumentRead)]
+[Authorize(Policy = AuthorizationPolicies.DocumentManagement)]
 public sealed class IndexModel : HomePageModelBase
 {
+    private readonly IEmbeddingService _embeddingService;
+
     public IndexModel(
         ILogger<HomePageModelBase> logger,
         IKnowledgeRepository repository,
@@ -19,9 +21,11 @@ public sealed class IndexModel : HomePageModelBase
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
-        IDocumentIndexJobQueue indexJobQueue)
+        IDocumentIndexJobQueue indexJobQueue,
+        IEmbeddingService embeddingService)
         : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
+        _embeddingService = embeddingService;
     }
 
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
@@ -42,34 +46,54 @@ public sealed class IndexModel : HomePageModelBase
     public int FailedDocumentCount { get; private set; }
     public int FilteredDocumentCount { get; private set; }
     public double AverageChunksPerIndexedDocument { get; private set; }
+    public int StaleEmbeddingDocumentCount { get; private set; }
+    public string? LoadErrorMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(string? q, string? subjectFilter, string? statusFilter, CancellationToken cancellationToken)
     {
-        var allDocuments = await _indexingService.GetDocumentsAsync(cancellationToken);
-        if (CanManageDocuments())
-        {
-            await SyncCourseCatalogFromDocumentsAsync(allDocuments, cancellationToken);
-        }
-
-        var allCourseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
-        var currentUser = await GetCurrentUserAccountAsync(cancellationToken);
-        var accessibleDocuments = FilterDocumentsForCurrentUser(allDocuments, allCourseCatalog, currentUser).ToList();
-        var courseCatalog = BuildSynchronizedCourseCatalogForView(
-            FilterCourseCatalogForCurrentUser(allCourseCatalog),
-            accessibleDocuments);
         var normalizedQuery = q?.Trim();
         var normalizedSubjectFilter = subjectFilter?.Trim();
         var normalizedStatusFilter = statusFilter?.Trim();
-        var documents = accessibleDocuments
-            .Where(document => string.IsNullOrWhiteSpace(normalizedQuery) || DocumentMatchesQuery(document, normalizedQuery))
-            .Where(document => string.IsNullOrWhiteSpace(normalizedSubjectFilter) || SubjectMatchesFilter(document.Subject, normalizedSubjectFilter))
-            .Where(document => string.IsNullOrWhiteSpace(normalizedStatusFilter) || DocumentMatchesStatus(document, normalizedStatusFilter))
-            .ToList();
+        var scope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
         var userIsAdmin = base.IsAdmin();
         var userIsLecturer = base.IsLecturer();
         var lecturers = userIsAdmin
             ? await _users.GetByRoleAsync(AppRoles.Lecturer, cancellationToken)
             : Array.Empty<UserAccount>();
+
+        IReadOnlyList<IndexedDocument> accessibleDocuments;
+        IReadOnlyList<IndexedDocument> documents;
+        IReadOnlyList<CourseSubject> allCourseCatalog;
+        IReadOnlyList<Guid> staleDocumentIds = Array.Empty<Guid>();
+        try
+        {
+            accessibleDocuments = await _repository.GetDocumentsAsync(scope, null, cancellationToken);
+            documents = await _repository.GetDocumentsAsync(
+                scope,
+                new DocumentListQuery(normalizedQuery, normalizedSubjectFilter, normalizedStatusFilter),
+                cancellationToken);
+            allCourseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            if (userIsAdmin)
+            {
+                staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
+                    _embeddingService.ModelName,
+                    _embeddingService.Dimensions,
+                    scope,
+                    cancellationToken);
+            }
+        }
+        catch (Exception ex) when (IsDataAccessTimeout(ex))
+        {
+            _logger.LogWarning(ex, "Document management page could not load because the database was unavailable.");
+            accessibleDocuments = Array.Empty<IndexedDocument>();
+            documents = Array.Empty<IndexedDocument>();
+            allCourseCatalog = Array.Empty<CourseSubject>();
+            LoadErrorMessage = "Database unavailable/timeout. Kiem tra SQL Server hoac connection string, trang da dung query nhanh de khong treo.";
+        }
+
+        var courseCatalog = BuildSynchronizedCourseCatalogForView(
+            FilterCourseCatalogForCurrentUser(allCourseCatalog),
+            accessibleDocuments);
         var indexedDocuments = accessibleDocuments
             .Where(document => document.Status == DocumentIndexStatus.Indexed)
             .ToList();
@@ -101,6 +125,7 @@ public sealed class IndexModel : HomePageModelBase
         ProcessingDocumentCount = accessibleDocuments.Count(document => document.Status == DocumentIndexStatus.Processing);
         FailedDocumentCount = accessibleDocuments.Count(document => document.Status == DocumentIndexStatus.Failed);
         FilteredDocumentCount = documents.Count;
+        StaleEmbeddingDocumentCount = staleDocumentIds.Count;
         AverageChunksPerIndexedDocument = indexedDocuments.Count == 0
             ? 0
             : indexedDocuments.Average(document => document.ChunkCount);
@@ -267,6 +292,51 @@ public sealed class IndexModel : HomePageModelBase
         await _repository.DeleteDocumentAsync(id, cancellationToken);
         TryDeleteStoredFile(document);
         TempData["Success"] = $"Đã xóa tài liệu {document.FileName}.";
+        return RedirectToPage("/Home/Index");
+    }
+
+    public async Task<IActionResult> OnPostReindexDocumentAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        if (document is null)
+        {
+            TempData["Error"] = "Khong tim thay tai lieu de re-index.";
+            return RedirectToPage("/Home/Index");
+        }
+
+        if (!await CanManageDocumentAsync(document, cancellationToken))
+        {
+            return Forbid();
+        }
+
+        await _repository.MarkDocumentIndexProcessingAsync(id, cancellationToken);
+        await _indexJobQueue.EnqueueAsync(id, cancellationToken);
+        TempData["Success"] = $"Da dua {document.FileName} vao hang doi re-index.";
+        return RedirectToPage("/Home/Index");
+    }
+
+    public async Task<IActionResult> OnPostReindexStaleEmbeddingsAsync(CancellationToken cancellationToken)
+    {
+        if (!base.IsAdmin())
+        {
+            return Forbid();
+        }
+
+        var staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
+            _embeddingService.ModelName,
+            _embeddingService.Dimensions,
+            BuildDocumentAccessScope(DocumentAccessMode.DocumentUi),
+            cancellationToken);
+
+        foreach (var documentId in staleDocumentIds)
+        {
+            await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
+            await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
+        }
+
+        TempData["Success"] = staleDocumentIds.Count == 0
+            ? "Khong co tai lieu stale embedding can re-index."
+            : $"Da dua {staleDocumentIds.Count} tai lieu stale embedding vao hang doi re-index.";
         return RedirectToPage("/Home/Index");
     }
 

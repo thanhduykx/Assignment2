@@ -69,6 +69,10 @@
          data-chat-suggestions-vi='@System.Text.Json.JsonSerializer.Serialize(suggestionsVi)'
          data-chat-subject-suggestions='@System.Text.Json.JsonSerializer.Serialize(subjectPayload)'
          data-chat-related-questions='@System.Text.Json.JsonSerializer.Serialize(relatedPayload)'>
+    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+    {
+        <div class="rbl-alert is-error">@Model.LoadErrorMessage</div>
+    }
     <main class="rbl-chat-main" aria-label="Document chat" data-i18n-aria-label="chat.mainAria">
         <div id="chatMessages" class="chat-messages codex-chat-messages rbl-chat-messages">
             <div class="chat-empty-state rbl-chat-empty">

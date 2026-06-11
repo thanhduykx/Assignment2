@@ -1281,9 +1281,11 @@ function appendCitationsToMessage(messageWrapper, citations) {
   const seenSources = new Set();
   const compactSources = [];
   for (const citation of sourceItems) {
-    const fileName = citation.fileName || citation.FileName || "Document";
+    const fileName = citation.fileName || citation.FileName || "";
+    const subject = citation.subject || citation.Subject || "";
+    const chapter = citation.chapter || citation.Chapter || "";
     const chunkIndex = citation.chunkIndex ?? citation.ChunkIndex;
-    const sourceKey = `${fileName}|${chunkIndex ?? ""}`;
+    const sourceKey = `${fileName || subject}|${chapter}|${chunkIndex ?? ""}`;
     if (seenSources.has(sourceKey)) {
       continue;
     }
@@ -1311,13 +1313,14 @@ function appendCitationsToMessage(messageWrapper, citations) {
   compactSources.forEach((citation) => {
     const item = document.createElement("span");
     item.className = "citation citation-source";
-    const fileName = citation.fileName || citation.FileName || "Document";
+    const fileName = citation.fileName || citation.FileName || "";
     const chunkIndex = citation.chunkIndex ?? citation.ChunkIndex;
     const metaValues = [
       citation.subject || citation.Subject,
       citation.chapter || citation.Chapter
     ].filter(Boolean);
-    item.textContent = chunkIndex ? `${fileName} / chunk ${chunkIndex}` : fileName;
+    const safeSource = fileName || metaValues.join(" / ") || (getLanguage() === "vi" ? "Nguồn nội bộ" : "Internal source");
+    item.textContent = fileName && chunkIndex ? `${safeSource} / chunk ${chunkIndex}` : safeSource;
     item.title = metaValues.join(" / ");
 
     list.appendChild(item);
