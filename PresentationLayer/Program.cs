@@ -16,7 +16,10 @@ namespace PresentationLayer
                 return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim() ?? string.Empty;
             }
 
-            builder.Services.AddControllersWithViews();
+            builder.Services.AddRazorPages(options =>
+            {
+                options.Conventions.AddPageRoute("/Home/Index", "");
+            });
             var authenticationBuilder = builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
@@ -268,9 +271,7 @@ namespace PresentationLayer
             app.UseAuthorization();
 
             app.MapStaticAssets();
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
+            app.MapRazorPages()
                 .WithStaticAssets();
 
             app.Run();
