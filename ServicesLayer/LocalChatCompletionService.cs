@@ -56,6 +56,14 @@ public interface ILocalChatCompletionService
         IReadOnlyList<DocumentChunk> chunks,
         string language,
         CancellationToken cancellationToken = default);
+
+    Task<string?> GenerateChunkRetrievalHintsAsync(
+        string chunkText,
+        string fileName,
+        string subject,
+        string chapter,
+        string sectionTitle,
+        CancellationToken cancellationToken = default);
 }
 
 internal static class ChatPromptBuilder

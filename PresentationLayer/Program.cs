@@ -146,6 +146,7 @@ namespace PresentationLayer
             });
             builder.Services.AddSingleton<ServicesLayer.IDocumentTextExtractor, ServicesLayer.DocumentTextExtractor>();
             builder.Services.AddSingleton<ServicesLayer.ITextChunker, ServicesLayer.FlmSyllabusAwareTextChunker>();
+            builder.Services.AddSingleton<ServicesLayer.IChunkRetrievalEnrichmentService, ServicesLayer.AiChunkRetrievalEnrichmentService>();
             builder.Services.AddSingleton<ServicesLayer.IDocumentIndexJobQueue, ServicesLayer.DocumentIndexJobQueue>();
             builder.Services.AddSingleton<PresentationLayer.Services.IAccountEmailSender, PresentationLayer.Services.SmtpAccountEmailSender>();
             builder.Services.AddSingleton<ServicesLayer.IWebPageTextExtractor>(_ =>

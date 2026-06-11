@@ -180,6 +180,48 @@ public sealed class HuggingFaceChatCompletionService : ILocalChatCompletionServi
         return ParseGroundingDecision(response);
     }
 
+    public async Task<string?> GenerateChunkRetrievalHintsAsync(
+        string chunkText,
+        string fileName,
+        string subject,
+        string chapter,
+        string sectionTitle,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsEnabled || string.IsNullOrWhiteSpace(chunkText))
+        {
+            return null;
+        }
+
+        return await CallChatAsync(
+            "You create retrieval metadata for RAG indexing. Do not add facts that are not present in the chunk. Return short plain text only.",
+            $$"""
+            Create retrieval hints for this document chunk.
+            Rules:
+            - Use only facts explicitly present in the chunk or metadata below.
+            - Do not rewrite the source text.
+            - Keep course codes, CLO numbers, assessment names, sessions, percentages, dates, tools, and names exactly.
+            - Keep Vietnamese text as normal UTF-8 text, not escaped code-point text.
+            - Plain text only. No JSON. No markdown table.
+            - Format with these labels:
+            Summary:
+            Keywords:
+            Likely questions:
+            Entities:
+
+            File: {{fileName.Trim()}}
+            Subject: {{subject.Trim()}}
+            Chapter: {{chapter.Trim()}}
+            Section: {{sectionTitle.Trim()}}
+
+            Chunk:
+            {{TrimForPrompt(chunkText, 2000)}}
+            """,
+            0.1,
+            384,
+            cancellationToken);
+    }
+
     private async Task<string?> CallChatAsync(
         string system,
         string prompt,

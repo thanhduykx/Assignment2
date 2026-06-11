@@ -13,6 +13,7 @@ public sealed class IndexModel : HomePageModelBase
 {
     private readonly IEmbeddingService _embeddingService;
     private readonly ITextChunker _chunker;
+    private readonly IChunkRetrievalEnrichmentService _chunkEnrichment;
 
     public IndexModel(
         ILogger<HomePageModelBase> logger,
@@ -24,12 +25,16 @@ public sealed class IndexModel : HomePageModelBase
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue,
         IEmbeddingService embeddingService,
-        ITextChunker chunker)
+        ITextChunker chunker,
+        IChunkRetrievalEnrichmentService chunkEnrichment)
         : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
         _embeddingService = embeddingService;
         _chunker = chunker;
+        _chunkEnrichment = chunkEnrichment;
     }
+
+    private string EffectiveChunkingStrategy => $"{_chunker.StrategyName}+{_chunkEnrichment.StrategyName}";
 
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<CourseSubject> CourseCatalog { get; private set; } = Array.Empty<CourseSubject>();
@@ -81,7 +86,7 @@ public sealed class IndexModel : HomePageModelBase
                 staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
                     _embeddingService.ModelName,
                     _embeddingService.Dimensions,
-                    _chunker.StrategyName,
+                    EffectiveChunkingStrategy,
                     scope,
                     cancellationToken);
             }
@@ -329,7 +334,7 @@ public sealed class IndexModel : HomePageModelBase
         var staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
             _embeddingService.ModelName,
             _embeddingService.Dimensions,
-            _chunker.StrategyName,
+            EffectiveChunkingStrategy,
             BuildDocumentAccessScope(DocumentAccessMode.DocumentUi),
             cancellationToken);
 

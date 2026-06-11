@@ -16,7 +16,8 @@ public sealed class DocumentIndexingServiceTests
             repository,
             new DocumentTextExtractor(),
             embeddingService,
-            new ParagraphAwareTextChunker());
+            new ParagraphAwareTextChunker(),
+            new PassthroughChunkRetrievalEnrichmentService());
 
         try
         {
@@ -52,7 +53,7 @@ public sealed class DocumentIndexingServiceTests
             Assert.Equal(chunks.Count, indexedDocument.ChunkCount);
             Assert.Equal(embeddingService.ModelName, indexedDocument.EmbeddingModel);
             Assert.Equal(embeddingService.Dimensions, indexedDocument.EmbeddingDimensions);
-            Assert.Equal("paragraph-aware-950-0", indexedDocument.ChunkingStrategy);
+            Assert.Equal("paragraph-aware-950-0+test-enrichment-v1", indexedDocument.ChunkingStrategy);
             Assert.NotNull(indexedDocument.IndexedAt);
             Assert.NotEmpty(chunks);
             Assert.All(chunks, chunk =>
@@ -79,7 +80,8 @@ public sealed class DocumentIndexingServiceTests
             repository,
             new DocumentTextExtractor(),
             new HashingEmbeddingService(),
-            new ParagraphAwareTextChunker());
+            new ParagraphAwareTextChunker(),
+            new PassthroughChunkRetrievalEnrichmentService());
 
         try
         {
@@ -108,6 +110,19 @@ public sealed class DocumentIndexingServiceTests
         var path = Path.Combine(Path.GetTempPath(), "assignment1-index-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
+    }
+
+    private sealed class PassthroughChunkRetrievalEnrichmentService : IChunkRetrievalEnrichmentService
+    {
+        public string StrategyName => "test-enrichment-v1";
+
+        public Task<ChunkRetrievalEnrichmentResult> BuildEmbeddingTextAsync(
+            TextChunk chunk,
+            ChunkRetrievalEnrichmentContext context,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new ChunkRetrievalEnrichmentResult(chunk.Text, false, StrategyName));
+        }
     }
 
     private sealed class InMemoryKnowledgeRepository : IKnowledgeRepository

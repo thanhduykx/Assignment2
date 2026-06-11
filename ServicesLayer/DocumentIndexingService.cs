@@ -37,18 +37,23 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
     private readonly IDocumentTextExtractor _extractor;
     private readonly IEmbeddingService _embeddingService;
     private readonly ITextChunker _chunker;
+    private readonly IChunkRetrievalEnrichmentService _chunkEnrichment;
 
     public DocumentIndexingService(
         IKnowledgeRepository repository,
         IDocumentTextExtractor extractor,
         IEmbeddingService embeddingService,
-        ITextChunker chunker)
+        ITextChunker chunker,
+        IChunkRetrievalEnrichmentService chunkEnrichment)
     {
         _repository = repository;
         _extractor = extractor;
         _embeddingService = embeddingService;
         _chunker = chunker;
+        _chunkEnrichment = chunkEnrichment;
     }
+
+    private string EffectiveChunkingStrategy => $"{_chunker.StrategyName}+{_chunkEnrichment.StrategyName}";
 
     public Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(CancellationToken cancellationToken = default)
     {
@@ -141,7 +146,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             && document.ChunkCount > 0
             && document.EmbeddingModel.Equals(_embeddingService.ModelName, StringComparison.Ordinal)
             && document.EmbeddingDimensions == _embeddingService.Dimensions
-            && document.ChunkingStrategy.Equals(_chunker.StrategyName, StringComparison.Ordinal))
+            && document.ChunkingStrategy.Equals(EffectiveChunkingStrategy, StringComparison.Ordinal))
         {
             return;
         }
@@ -175,6 +180,15 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
         var chunks = new List<DocumentChunk>(chunkTexts.Count);
         foreach (var chunk in chunkTexts)
         {
+            var embeddingInput = await _chunkEnrichment.BuildEmbeddingTextAsync(
+                chunk,
+                new ChunkRetrievalEnrichmentContext(
+                    document.FileName,
+                    document.Subject,
+                    document.Chapter,
+                    chunk.SectionTitle),
+                cancellationToken);
+
             chunks.Add(new DocumentChunk
             {
                 DocumentId = document.Id,
@@ -186,7 +200,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
                 SectionTitle = chunk.SectionTitle,
                 CharStart = chunk.CharStart,
                 CharEnd = chunk.CharEnd,
-                Embedding = await _embeddingService.EmbedAsync(chunk.Text, cancellationToken)
+                Embedding = await _embeddingService.EmbedAsync(embeddingInput.EmbeddingText, cancellationToken)
             });
         }
 
@@ -195,7 +209,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             chunks,
             _embeddingService.ModelName,
             _embeddingService.Dimensions,
-            chunkingResult.StrategyName,
+            EffectiveChunkingStrategy,
             cancellationToken);
     }
 
@@ -226,7 +240,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             IndexError = string.Empty,
             EmbeddingModel = _embeddingService.ModelName,
             EmbeddingDimensions = _embeddingService.Dimensions,
-            ChunkingStrategy = _chunker.StrategyName
+            ChunkingStrategy = EffectiveChunkingStrategy
         };
     }
 
