@@ -152,6 +152,7 @@
                                 <th>Created</th>
                                 <th>Role / Vai trò</th>
                                 <th>Subjects</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -174,10 +175,15 @@
                                     <span>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
                                 </td>
                                 <td data-label="Role / Vai trò">
-                                    <form asp-page-handler="UpdateRole" method="post" class="ops-role-form">
+                                    <form asp-page-handler="UpdateRole" method="post" class="ops-role-form" data-admin-role-update-form>
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="UserId" value="@user.Id" />
-                                        <select name="Role" disabled="@user.IsLastAdmin">
+                                        <select
+                                            name="Role"
+                                            disabled="@user.IsLastAdmin"
+                                            data-admin-role-update-select
+                                            data-admin-role-user="@user.Email"
+                                            title="Đổi role sẽ hỏi xác nhận và tự lưu">
                                             @foreach (var role in Model.Roles)
                                             {
                                                 if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
@@ -190,7 +196,6 @@
                                                 }
                                             }
                                         </select>
-                                        <button type="submit" class="ops-mini-button" disabled="@user.IsLastAdmin">Save</button>
                                     </form>
                                 </td>
                                 <td data-label="Subjects">
@@ -219,6 +224,31 @@
                                         <span class="ops-chip ops-chip--muted">Not applicable</span>
                                     }
                                 </td>
+                                <td data-label="Actions">
+                                    @{
+                                        var deleteDisabled = user.IsLastAdmin
+                                            || user.IsCurrentUser
+                                            || user.Role != PresentationLayer.Security.AppRoles.Student;
+                                        var deleteTitle = user.IsCurrentUser
+                                            ? "Cannot delete your own active account"
+                                            : user.IsLastAdmin
+                                                ? "Cannot delete the last admin"
+                                                : user.Role != PresentationLayer.Security.AppRoles.Student
+                                                    ? "Set role to Student before deleting"
+                                                    : "Delete user";
+                                    }
+                                    <form asp-page-handler="DeleteUser" method="post" class="ops-danger-form" data-confirm="Xóa người dùng này? Thao tác này không thể hoàn tác.">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="UserId" value="@user.Id" />
+                                        <button
+                                            type="submit"
+                                            class="ops-mini-button ops-mini-button--danger"
+                                            disabled="@deleteDisabled"
+                                            title="@deleteTitle">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         }
                         </tbody>
@@ -231,7 +261,7 @@
             <section class="ops-panel ops-command-card">
                 <span class="ops-eyebrow">Create account</span>
                 <h2>Thêm user</h2>
-                <form asp-page-handler="CreateUser" method="post" class="ops-stacked-form">
+                <form asp-page-handler="CreateUser" method="post" class="ops-stacked-form" data-admin-create-user-form>
                     @Html.AntiForgeryToken()
                     <label class="ops-field">
                         <span>Full name</span>
@@ -247,7 +277,7 @@
                     </label>
                     <label class="ops-field">
                         <span>Role</span>
-                        <select name="Role">
+                        <select name="Role" data-admin-role-select>
                             @foreach (var role in Model.Roles)
                             {
                                 if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
@@ -261,7 +291,7 @@
                             }
                         </select>
                     </label>
-                    <fieldset class="ops-field ops-subject-picker">
+                    <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
                         <legend>Subjects for lecturer</legend>
                         @if (unassignedSubjects.Count == 0)
                         {
@@ -297,8 +327,8 @@
                         <input name="Code" maxlength="32" placeholder="IOT102" autocomplete="off" />
                     </label>
                     <label class="ops-field">
-                        <span>Subject name</span>
-                        <input name="Name" maxlength="255" placeholder="Internet of Things" autocomplete="off" />
+                        <span>Subject name (optional)</span>
+                        <input name="Name" maxlength="255" placeholder="Defaults to subject code" autocomplete="off" />
                     </label>
                     <label class="ops-field">
                         <span>Description</span>

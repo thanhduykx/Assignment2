@@ -6,6 +6,21 @@ namespace DataAccessLayer.Schema;
 
 internal static class KnowledgeSqlSchemaInitializer
 {
+    private static readonly IReadOnlyList<(string Code, string Name, string Description)> DefaultCourseSubjects = new[]
+    {
+        ("IOT102", "IOT102", "Default subject option for lecturer assignment."),
+        ("DBI103", "DBI103", "Default subject option for lecturer assignment."),
+        ("PRN222", "PRN222", "Default subject option for lecturer assignment."),
+        ("PRN212", "PRN212", "Default subject option for lecturer assignment."),
+        ("PRU213", "PRU213", "Default subject option for lecturer assignment."),
+        ("EX101", "EX101", "Default subject option for lecturer assignment."),
+        ("PRJ301", "PRJ301", "Default subject option for lecturer assignment."),
+        ("SWP391", "SWP391", "Default subject option for lecturer assignment."),
+        ("ENW493C", "ENW493C", "Default subject option for lecturer assignment."),
+        ("JPD133", "JPD133", "Default subject option for lecturer assignment."),
+        ("SWE201C", "SWE201C", "Default subject option for lecturer assignment.")
+    };
+
     public static void EnsureTablesCreated(KnowledgeSqlDbContext context)
     {
         context.Database.EnsureCreated();
@@ -338,6 +353,32 @@ internal static class KnowledgeSqlSchemaInitializer
 
     private static void SeedCourseCatalog(KnowledgeSqlDbContext context)
     {
+        var changed = false;
+        foreach (var seed in DefaultCourseSubjects)
+        {
+            var code = NormalizeSubjectCode(seed.Code);
+            if (string.IsNullOrWhiteSpace(code)
+                || context.CourseSubjects.Any(item => item.Code.ToUpper() == code))
+            {
+                continue;
+            }
+
+            context.CourseSubjects.Add(new KnowledgeSqlCourseSubject
+            {
+                Id = Guid.NewGuid(),
+                Code = code,
+                Name = string.IsNullOrWhiteSpace(seed.Name) ? code : seed.Name.Trim(),
+                Description = seed.Description.Trim(),
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            changed = true;
+        }
+
+        if (changed)
+        {
+            context.SaveChanges();
+        }
+
         var subject = context.CourseSubjects.FirstOrDefault(item => item.Code == "DBA103");
         if (subject is null)
         {
@@ -364,6 +405,16 @@ internal static class KnowledgeSqlSchemaInitializer
             });
             context.SaveChanges();
         }
+    }
+
+    private static string NormalizeSubjectCode(string code)
+    {
+        return string.Join(
+            string.Empty,
+            (code ?? string.Empty)
+                .Trim()
+                .ToUpperInvariant()
+                .Where(character => !char.IsWhiteSpace(character)));
     }
 
 }
