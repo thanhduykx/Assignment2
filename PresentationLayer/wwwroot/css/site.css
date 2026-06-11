@@ -5415,8 +5415,15 @@ body.rbl-body {
 body.rbl-body .rbl-app-frame {
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
-  height: auto;
+  height: 100vh;
+  overflow: hidden;
   background: var(--rbl-bg);
+}
+
+body.rbl-body .rbl-workspace {
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 body.rbl-body .rbl-sidebar {
@@ -5529,6 +5536,10 @@ body.rbl-body .language-switch {
 
 body.rbl-body .rbl-main {
   min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px;
   background: var(--rbl-bg);
 }
@@ -6303,8 +6314,20 @@ body.rbl-body .rbl-main {
 }
 
 @media (max-width: 900px) {
+  body.rbl-body {
+    overflow-y: auto;
+  }
+
   body.rbl-body .rbl-app-frame {
     grid-template-columns: 1fr;
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  body.rbl-body .rbl-workspace {
+    height: auto;
+    overflow: visible;
   }
 
   body.rbl-body .rbl-sidebar {
@@ -6343,6 +6366,7 @@ body.rbl-body .rbl-main {
   }
 
   body.rbl-body .rbl-main {
+    overflow: visible;
     padding: 16px;
   }
 

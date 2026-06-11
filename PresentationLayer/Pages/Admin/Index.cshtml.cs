@@ -16,12 +16,18 @@ public sealed class IndexModel : PageModel
 {
     private readonly IUserAccountStore _users;
     private readonly IKnowledgeRepository _knowledge;
+    private readonly IAccountEmailSender _emailSender;
     private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(IUserAccountStore users, IKnowledgeRepository knowledge, ILogger<IndexModel> logger)
+    public IndexModel(
+        IUserAccountStore users,
+        IKnowledgeRepository knowledge,
+        IAccountEmailSender emailSender,
+        ILogger<IndexModel> logger)
     {
         _users = users;
         _knowledge = knowledge;
+        _emailSender = emailSender;
         _logger = logger;
     }
 
@@ -58,7 +64,22 @@ public sealed class IndexModel : PageModel
                 model.Password,
                 model.Role,
                 cancellationToken);
-            TempData["Success"] = $"Created {user.Email} as {user.Role}.";
+
+            try
+            {
+                await _emailSender.SendWelcomeEmailAsync(
+                    user,
+                    model.Password,
+                    BuildLoginUrl(),
+                    cancellationToken);
+                TempData["Success"] = $"Created {user.Email} as {user.Role}. Welcome email sent.";
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogWarning(emailEx, "Created user {Email}, but welcome email could not be sent.", user.Email);
+                TempData["Success"] = $"Created {user.Email} as {user.Role}.";
+                TempData["Error"] = "User was created, but the welcome email could not be sent. Check SMTP configuration.";
+            }
         }
         catch (Exception ex) when (ex is InvalidOperationException)
         {
@@ -71,6 +92,16 @@ public sealed class IndexModel : PageModel
         }
 
         return RedirectToPage("/Admin/Index");
+    }
+
+    private string BuildLoginUrl()
+    {
+        return Url.Page(
+            "/Account/Login",
+            pageHandler: null,
+            values: null,
+            protocol: Request.Scheme,
+            host: Request.Host.ToUriComponent()) ?? string.Empty;
     }
 
     public async Task<IActionResult> OnPostCreateSubjectAsync([FromForm] CreateAdminSubjectViewModel model, CancellationToken cancellationToken)
