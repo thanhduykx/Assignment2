@@ -597,6 +597,17 @@ public sealed class RagChatServiceTests
         {
             return Task.FromResult(_groundingDecision);
         }
+
+        public Task<string?> GenerateChunkRetrievalHintsAsync(
+            string chunkText,
+            string fileName,
+            string subject,
+            string chapter,
+            string sectionTitle,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<string?>(null);
+        }
     }
 
     private sealed class BiasedQueryEmbeddingService : IEmbeddingService
