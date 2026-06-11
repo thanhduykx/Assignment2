@@ -20,6 +20,7 @@ public sealed class AdminUserRowViewModel
     public string Role { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
     public bool IsLastAdmin { get; set; }
+    public bool IsCurrentUser { get; set; }
     public IReadOnlyList<string> AssignedSubjects { get; set; } = Array.Empty<string>();
 }
 
@@ -38,13 +39,17 @@ public sealed class UpdateUserRoleViewModel
     public string Role { get; set; } = string.Empty;
 }
 
+public sealed class DeleteAdminUserViewModel
+{
+    public Guid UserId { get; set; }
+}
+
 public sealed class CreateAdminSubjectViewModel
 {
     [Required(ErrorMessage = "Subject code is required.")]
     [StringLength(32, ErrorMessage = "Subject code must be 32 characters or fewer.")]
     public string Code { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Subject name is required.")]
     [StringLength(255, ErrorMessage = "Subject name must be 255 characters or fewer.")]
     public string Name { get; set; } = string.Empty;
 

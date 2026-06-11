@@ -227,8 +227,20 @@ public sealed class IndexModel : PageModel
     {
         try
         {
+            var existingUser = (await _users.GetAllAsync(cancellationToken))
+                .FirstOrDefault(user => user.Id == model.UserId)
+                ?? throw new InvalidOperationException("User not found.");
             var user = await _users.UpdateRoleAsync(model.UserId, model.Role, cancellationToken);
-            TempData["Success"] = $"Updated {user.Email} to {user.Role}.";
+            var unassignedSubjectCount = 0;
+            if (existingUser.Role == AppRoles.Lecturer && user.Role != AppRoles.Lecturer)
+            {
+                unassignedSubjectCount = await UnassignSubjectsOwnedByAsync(user.Id, cancellationToken);
+            }
+
+            var subjectSummary = unassignedSubjectCount > 0
+                ? $" Unassigned {unassignedSubjectCount} subject(s)."
+                : string.Empty;
+            TempData["Success"] = $"Updated {user.Email} to {user.Role}.{subjectSummary}";
 
             if (IsCurrentUser(user.Id) && user.Role != AppRoles.Admin)
             {
@@ -247,6 +259,64 @@ public sealed class IndexModel : PageModel
         }
 
         return RedirectToPage("/Admin/Index");
+    }
+
+    public async Task<IActionResult> OnPostDeleteUserAsync([FromForm] DeleteAdminUserViewModel model, CancellationToken cancellationToken)
+    {
+        if (IsCurrentUser(model.UserId))
+        {
+            TempData["Error"] = "You cannot delete your own active account.";
+            return RedirectToPage("/Admin/Index");
+        }
+
+        try
+        {
+            var existingUser = (await _users.GetAllAsync(cancellationToken))
+                .FirstOrDefault(user => user.Id == model.UserId)
+                ?? throw new InvalidOperationException("User not found.");
+            if (existingUser.Role != AppRoles.Student)
+            {
+                throw new InvalidOperationException("Set role to Student before deleting this user.");
+            }
+
+            var unassignedSubjectCount = await UnassignSubjectsOwnedByAsync(model.UserId, cancellationToken);
+            var deletedUser = await _users.DeleteAsync(model.UserId, cancellationToken);
+            var subjectSummary = unassignedSubjectCount > 0
+                ? $" Unassigned {unassignedSubjectCount} subject(s)."
+                : string.Empty;
+            TempData["Success"] = $"Deleted {deletedUser.Email}.{subjectSummary}";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException)
+        {
+            TempData["Error"] = ToAdminUserError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not delete user {UserId}", model.UserId);
+            TempData["Error"] = "Could not delete this user.";
+        }
+
+        return RedirectToPage("/Admin/Index");
+    }
+
+    private async Task<int> UnassignSubjectsOwnedByAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var subjectsToUnassign = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
+            .Where(subject => subject.OwnerUserId == userId)
+            .ToList();
+
+        foreach (var subject in subjectsToUnassign)
+        {
+            await _knowledge.UpsertSubjectAsync(
+                subject.Id,
+                subject.Code,
+                subject.Name,
+                subject.Description,
+                cancellationToken,
+                new SubjectOwnerInfo(null, string.Empty, string.Empty));
+        }
+
+        return subjectsToUnassign.Count;
     }
 
     private async Task LoadAsync(string? q, string? roleFilter, CancellationToken cancellationToken)
@@ -289,6 +359,7 @@ public sealed class IndexModel : PageModel
                 Role = user.Role,
                 CreatedAt = user.CreatedAt,
                 IsLastAdmin = user.Role == AppRoles.Admin && adminCount <= 1,
+                IsCurrentUser = IsCurrentUser(user.Id),
                 AssignedSubjects = ResolveAssignedSubjectLabels(user, subjects, assignedSubjectsByUser)
             })
             .ToList();
@@ -380,6 +451,11 @@ public sealed class IndexModel : PageModel
             return "This subject is already assigned to another lecturer.";
         }
 
+        if (message.Contains("Set role to Student before deleting", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Set this user role to Student before deleting.";
+        }
+
         if (message.Contains("Subject code is required", StringComparison.OrdinalIgnoreCase)
             || message.Contains("Subject code already exists", StringComparison.OrdinalIgnoreCase)
             || message.Contains("Subject name", StringComparison.OrdinalIgnoreCase)
@@ -396,6 +472,16 @@ public sealed class IndexModel : PageModel
         if (message.Contains("Only students", StringComparison.OrdinalIgnoreCase))
         {
             return "Only students can be granted subject access.";
+        }
+
+        if (message.Contains("Cannot delete the last admin", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Cannot delete the last admin.";
+        }
+
+        if (message.Contains("Cannot delete the seed admin", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Cannot delete the seed admin.";
         }
 
         if (message.Contains("last admin", StringComparison.OrdinalIgnoreCase))

@@ -231,7 +231,7 @@
             <div class="ops-panel-actions">
                 @if (isAdmin && Model.StaleEmbeddingDocumentCount > 0)
                 {
-                    <form asp-page-handler="ReindexStaleEmbeddings" method="post" onsubmit="return confirm('Re-index all stale embedding documents?');">
+                    <form asp-page-handler="ReindexStaleEmbeddings" method="post" data-confirm="Re-index tất cả tài liệu đang cần cập nhật embedding?">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="ops-button ops-button--secondary">
                             <span class="material-symbols-outlined" aria-hidden="true">sync</span>
@@ -371,12 +371,12 @@
                                     @if (canManageDocuments)
                                     {
                                         <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa / Edit</a>
-                                        <form asp-page-handler="ReindexDocument" method="post" onsubmit="return confirm('Re-index tai lieu nay?');">
+                                        <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tài liệu này?">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@document.Id" />
                                             <button type="submit" class="ops-mini-button">Re-index</button>
                                         </form>
-                                        <form asp-page-handler="DeleteDocument" method="post" onsubmit="return confirm('Xóa tài liệu này khỏi kho index?');">
+                                        <form asp-page-handler="DeleteDocument" method="post" data-confirm="Xóa tài liệu này khỏi kho index? Thao tác này không thể hoàn tác.">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@document.Id" />
                                             <button type="submit" class="ops-mini-button ops-mini-button--danger">Xóa</button>
@@ -514,7 +514,7 @@
                                             </select>
                                             <button type="submit" class="ops-mini-button">Update</button>
                                         </form>
-                                        <form asp-page-handler="DeleteSubject" method="post" class="ops-danger-form">
+                                        <form asp-page-handler="DeleteSubject" method="post" class="ops-danger-form" data-confirm="Xóa môn này và toàn bộ chương bên trong? Thao tác này không thể hoàn tác.">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@subject.Id" />
                                             <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete subject</button>
@@ -537,7 +537,7 @@
                                                     <input name="SortOrder" type="number" value="@chapter.SortOrder" />
                                                     <button type="submit" class="ops-mini-button">Update</button>
                                                 </form>
-                                                <form asp-page-handler="DeleteChapter" method="post">
+                                                <form asp-page-handler="DeleteChapter" method="post" data-confirm="Xóa chương này? Thao tác này không thể hoàn tác.">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@chapter.Id" />
                                                     <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete</button>

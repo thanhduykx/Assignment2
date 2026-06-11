@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.WebUtilities;
 using PresentationLayer.Models;
 using PresentationLayer.Security;
 
@@ -10,12 +12,28 @@ public interface IUserAccountStore
     Task<IReadOnlyList<UserAccount>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserAccount>> GetByRoleAsync(string role, CancellationToken cancellationToken = default);
     Task<bool> HasAnyUsersAsync(CancellationToken cancellationToken = default);
+    Task<UserAccount?> FindByIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<UserAccount?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<UserAccount> CreateLocalAsync(string fullName, string email, string password, CancellationToken cancellationToken = default);
     Task<UserAccount> CreateLocalForAdminAsync(string fullName, string email, string password, string role, CancellationToken cancellationToken = default);
     Task<UserAccount> GetOrCreateExternalAsync(string fullName, string email, string provider, CancellationToken cancellationToken = default);
     Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken = default);
     Task<UserAccount> UpdateRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default);
+    Task<UserAccount> DeleteAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<(UserAccount Account, string Token, DateTimeOffset ExpiresAt)?> CreatePasswordResetTokenAsync(
+        string email,
+        TimeSpan lifetime,
+        CancellationToken cancellationToken = default);
+    Task<UserAccount> ResetPasswordAsync(
+        string email,
+        string token,
+        string newPassword,
+        CancellationToken cancellationToken = default);
+    Task<UserAccount> ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken = default);
     bool VerifyPassword(UserAccount account, string password);
 }
 
@@ -96,6 +114,20 @@ public sealed class UserAccountStore : IUserAccountStore
         {
             var users = await LoadAsync(cancellationToken);
             return users.FirstOrDefault(user => string.Equals(user.Email, NormalizeEmail(email), StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<UserAccount?> FindByIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var users = await LoadAsync(cancellationToken);
+            return users.FirstOrDefault(user => user.Id == userId);
         }
         finally
         {
@@ -279,6 +311,145 @@ public sealed class UserAccountStore : IUserAccountStore
         }
     }
 
+    public async Task<UserAccount> DeleteAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var users = await LoadAsync(cancellationToken);
+            var user = users.FirstOrDefault(item => item.Id == userId)
+                ?? throw new InvalidOperationException("User not found.");
+
+            if (user.Role != AppRoles.Student)
+            {
+                throw new InvalidOperationException("Set role to Student before deleting this user.");
+            }
+
+            if (user.Role == AppRoles.Admin && users.Count(item => item.Role == AppRoles.Admin) <= 1)
+            {
+                throw new InvalidOperationException("Cannot delete the last admin.");
+            }
+
+            if (IsSeedAdminEmail(user.Email))
+            {
+                throw new InvalidOperationException("Cannot delete the seed admin.");
+            }
+
+            users.Remove(user);
+            await SaveAsync(users, cancellationToken);
+            return user;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<(UserAccount Account, string Token, DateTimeOffset ExpiresAt)?> CreatePasswordResetTokenAsync(
+        string email,
+        TimeSpan lifetime,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = NormalizeEmail(email);
+        var expiresAt = DateTimeOffset.UtcNow.Add(lifetime <= TimeSpan.Zero ? TimeSpan.FromMinutes(30) : lifetime);
+        var token = CreatePasswordResetToken();
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var users = await LoadAsync(cancellationToken);
+            var user = users.FirstOrDefault(item => string.Equals(item.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase));
+            if (user is null)
+            {
+                return null;
+            }
+
+            user.PasswordResetTokenHash = HashResetToken(token);
+            user.PasswordResetTokenExpiresAt = expiresAt;
+            await SaveAsync(users, cancellationToken);
+            return (user, token, expiresAt);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<UserAccount> ResetPasswordAsync(
+        string email,
+        string token,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        ValidatePassword(newPassword);
+        var normalizedEmail = NormalizeEmail(email);
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var users = await LoadAsync(cancellationToken);
+            var user = users.FirstOrDefault(item => string.Equals(item.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidOperationException("Password reset link is invalid or expired.");
+
+            if (string.IsNullOrWhiteSpace(user.PasswordResetTokenHash)
+                || user.PasswordResetTokenExpiresAt is null
+                || user.PasswordResetTokenExpiresAt <= DateTimeOffset.UtcNow
+                || !ResetTokenMatches(user.PasswordResetTokenHash, token))
+            {
+                throw new InvalidOperationException("Password reset link is invalid or expired.");
+            }
+
+            user.PasswordHash = HashPassword(newPassword);
+            user.PasswordResetTokenHash = null;
+            user.PasswordResetTokenExpiresAt = null;
+            user.PasswordChangedAt = DateTimeOffset.UtcNow;
+            await SaveAsync(users, cancellationToken);
+            return user;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<UserAccount> ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        ValidatePassword(newPassword);
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var users = await LoadAsync(cancellationToken);
+            var user = users.FirstOrDefault(item => item.Id == userId)
+                ?? throw new InvalidOperationException("User not found.");
+
+            if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                throw new InvalidOperationException("This account does not have a local password. Use forgot password to set one.");
+            }
+
+            if (!VerifyPassword(user, currentPassword))
+            {
+                throw new InvalidOperationException("Current password is incorrect.");
+            }
+
+            user.PasswordHash = HashPassword(newPassword);
+            user.PasswordResetTokenHash = null;
+            user.PasswordResetTokenExpiresAt = null;
+            user.PasswordChangedAt = DateTimeOffset.UtcNow;
+            await SaveAsync(users, cancellationToken);
+            return user;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public bool VerifyPassword(UserAccount account, string password)
     {
         if (string.IsNullOrWhiteSpace(account.PasswordHash))
@@ -305,6 +476,39 @@ public sealed class UserAccountStore : IUserAccountStore
         using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
         var key = pbkdf2.GetBytes(KeySize);
         return $"PBKDF2.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(key)}";
+    }
+
+    private static string CreatePasswordResetToken()
+    {
+        return WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+    }
+
+    private static string HashResetToken(string token)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+    }
+
+    private static bool ResetTokenMatches(string expectedHash, string token)
+    {
+        try
+        {
+            var expected = Convert.FromHexString(expectedHash);
+            var actual = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            return expected.Length == actual.Length
+                   && CryptographicOperations.FixedTimeEquals(actual, expected);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    private static void ValidatePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+        {
+            throw new InvalidOperationException("Password must be at least 8 characters.");
+        }
     }
 
     private async Task<List<UserAccount>> LoadAsync(CancellationToken cancellationToken)
@@ -337,6 +541,14 @@ public sealed class UserAccountStore : IUserAccountStore
                 changed = true;
             }
 
+            if (user.PasswordResetTokenExpiresAt is { } resetExpiresAt
+                && resetExpiresAt <= DateTimeOffset.UtcNow
+                && !string.IsNullOrWhiteSpace(user.PasswordResetTokenHash))
+            {
+                user.PasswordResetTokenHash = null;
+                user.PasswordResetTokenExpiresAt = null;
+                changed = true;
+            }
         }
 
         if (EnsureSeedAdmin(users))

@@ -132,7 +132,11 @@ public sealed class CourseSubject
     public string OwnerEmail { get; set; } = string.Empty;
     public List<CourseChapter> Chapters { get; set; } = new();
 
-    public string DisplayName => string.IsNullOrWhiteSpace(Code) ? Name : $"{Code} - {Name}";
+    public string DisplayName => string.IsNullOrWhiteSpace(Code)
+        ? Name
+        : Code.Equals(Name, StringComparison.OrdinalIgnoreCase)
+            ? Code
+            : $"{Code} - {Name}";
 }
 
 public sealed record SubjectOwnerInfo(Guid? UserId, string? Name, string? Email);

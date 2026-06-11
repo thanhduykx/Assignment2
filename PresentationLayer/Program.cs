@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using PresentationLayer.Security;
 
 namespace PresentationLayer
@@ -30,6 +31,51 @@ namespace PresentationLayer
                 options.LogoutPath = "/Account/Logout";
                 options.AccessDeniedPath = "/Account/AccessDenied";
                 options.Cookie.Name = "CourseAssistant.Auth";
+                options.Events = new Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationEvents
+                {
+                    OnValidatePrincipal = async context =>
+                    {
+                        var userIdValue = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                        if (!Guid.TryParse(userIdValue, out var userId))
+                        {
+                            context.RejectPrincipal();
+                            await context.HttpContext.SignOutAsync(
+                                Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                            return;
+                        }
+
+                        var users = context.HttpContext.RequestServices.GetRequiredService<PresentationLayer.Services.IUserAccountStore>();
+                        var user = await users.FindByIdAsync(userId, context.HttpContext.RequestAborted);
+                        if (user is null)
+                        {
+                            context.RejectPrincipal();
+                            await context.HttpContext.SignOutAsync(
+                                Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                            return;
+                        }
+
+                        var normalizedRole = AppRoles.Normalize(user.Role);
+                        if (context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == user.Id.ToString()
+                            && context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value == user.FullName
+                            && context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value == normalizedRole)
+                        {
+                            return;
+                        }
+
+                        var claims = new[]
+                        {
+                            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
+                            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, user.FullName),
+                            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, user.Email),
+                            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, normalizedRole)
+                        };
+                        var identity = new System.Security.Claims.ClaimsIdentity(
+                            claims,
+                            Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                        context.ReplacePrincipal(new System.Security.Claims.ClaimsPrincipal(identity));
+                        context.ShouldRenew = true;
+                    }
+                };
             });
             authenticationBuilder.AddCookie("External", options =>
             {

@@ -6271,6 +6271,10 @@ body.rbl-body .rbl-main {
   border: 0;
 }
 
+.ops-subject-picker.is-hidden {
+  display: none;
+}
+
 .ops-subject-picker legend {
   margin: 0;
   padding: 0;

@@ -22,6 +22,12 @@ public interface IAccountEmailSender
         string temporaryPassword,
         string? loginUrl,
         CancellationToken cancellationToken = default);
+
+    Task SendPasswordResetEmailAsync(
+        UserAccount account,
+        string resetUrl,
+        DateTimeOffset expiresAt,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class SmtpAccountEmailSender : IAccountEmailSender
@@ -82,6 +88,40 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
 
         message.AlternateViews.Add(htmlView);
 
+        await SendAsync(message, cancellationToken);
+    }
+
+    public async Task SendPasswordResetEmailAsync(
+        UserAccount account,
+        string resetUrl,
+        DateTimeOffset expiresAt,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateOptions();
+
+        using var message = new MailMessage
+        {
+            From = new MailAddress(_options.FromEmail, _options.FromName, Encoding.UTF8),
+            Subject = "Đặt lại mật khẩu Course Assistant",
+            SubjectEncoding = Encoding.UTF8,
+            BodyEncoding = Encoding.UTF8
+        };
+        message.To.Add(new MailAddress(account.Email, account.FullName, Encoding.UTF8));
+
+        message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(
+            BuildPasswordResetPlainText(account, resetUrl, expiresAt),
+            Encoding.UTF8,
+            MediaTypeNames.Text.Plain));
+        message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(
+            BuildPasswordResetHtml(account, resetUrl, expiresAt),
+            Encoding.UTF8,
+            MediaTypeNames.Text.Html));
+
+        await SendAsync(message, cancellationToken);
+    }
+
+    private async Task SendAsync(MailMessage message, CancellationToken cancellationToken)
+    {
         using var client = new SmtpClient(_options.Host, _options.Port)
         {
             EnableSsl = _options.EnableSsl,
@@ -130,6 +170,62 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
 
             Trân trọng,
             CPMS
+            """;
+    }
+
+    private static string BuildPasswordResetPlainText(UserAccount account, string resetUrl, DateTimeOffset expiresAt)
+    {
+        var expiryText = expiresAt.ToLocalTime().ToString("HH:mm dd/MM/yyyy");
+        return $"""
+            Đặt lại mật khẩu Course Assistant
+
+            Xin chào {account.FullName},
+
+            Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản {account.Email}.
+
+            Link đặt lại mật khẩu:
+            {resetUrl}
+
+            Link này hết hạn lúc {expiryText}. Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.
+
+            Trân trọng,
+            CPMS
+            """;
+    }
+
+    private static string BuildPasswordResetHtml(UserAccount account, string resetUrl, DateTimeOffset expiresAt)
+    {
+        var fullName = WebUtility.HtmlEncode(account.FullName);
+        var email = WebUtility.HtmlEncode(account.Email);
+        var resetLink = WebUtility.HtmlEncode(resetUrl);
+        var expiryText = WebUtility.HtmlEncode(expiresAt.ToLocalTime().ToString("HH:mm dd/MM/yyyy"));
+
+        return $$"""
+            <!doctype html>
+            <html lang="vi">
+            <body style="margin:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#102033;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:28px 12px;">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #dbe4ef;border-radius:12px;overflow:hidden;">
+                      <tr>
+                        <td style="padding:28px;">
+                          <h1 style="margin:0 0 14px;color:#0f4c81;font-size:24px;line-height:1.3;">Đặt lại mật khẩu</h1>
+                          <p style="font-size:16px;line-height:1.6;margin:0 0 16px;">Xin chào <strong>{{fullName}}</strong>,</p>
+                          <p style="font-size:15px;line-height:1.6;margin:0 0 18px;">Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>{{email}}</strong>.</p>
+                          <p style="margin:22px 0;">
+                            <a href="{{resetLink}}" style="display:inline-block;background:#0f4c81;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;">Đặt lại mật khẩu</a>
+                          </p>
+                          <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0 0 12px;">Link hết hạn lúc <strong>{{expiryText}}</strong>.</p>
+                          <p style="font-size:13px;color:#64748b;line-height:1.6;margin:0;">Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
             """;
     }
 

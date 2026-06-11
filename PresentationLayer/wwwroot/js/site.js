@@ -1621,10 +1621,84 @@ function bindSuggestionButtons() {
   });
 }
 
+function initAdminCreateUserForm() {
+  const form = document.querySelector("[data-admin-create-user-form]");
+  if (!form) {
+    return;
+  }
+
+  const roleSelect = form.querySelector("[data-admin-role-select]");
+  const subjectPicker = form.querySelector("[data-lecturer-subject-picker]");
+  if (!roleSelect || !subjectPicker) {
+    return;
+  }
+
+  const subjectInputs = Array.from(subjectPicker.querySelectorAll("input[name='SubjectIds']"));
+  const syncSubjectPicker = () => {
+    const isLecturer = (roleSelect.value || "").toLowerCase() === "lecturer";
+    subjectPicker.classList.toggle("is-hidden", !isLecturer);
+    subjectInputs.forEach((input) => {
+      input.disabled = !isLecturer;
+      if (!isLecturer) {
+        input.checked = false;
+      }
+    });
+  };
+
+  roleSelect.addEventListener("change", syncSubjectPicker);
+  syncSubjectPicker();
+}
+
+function initConfirmForms() {
+  document.querySelectorAll("form[data-confirm]").forEach((form) => {
+    if (form.dataset.confirmBound === "true") {
+      return;
+    }
+
+    form.dataset.confirmBound = "true";
+    form.addEventListener("submit", (event) => {
+      const message = form.dataset.confirm || "Are you sure you want to continue?";
+      if (!window.confirm(message)) {
+        event.preventDefault();
+      }
+    });
+  });
+}
+
+function initAdminRoleUpdateForms() {
+  document.querySelectorAll("[data-admin-role-update-select]").forEach((select) => {
+    if (select.dataset.roleUpdateBound === "true") {
+      return;
+    }
+
+    select.dataset.roleUpdateBound = "true";
+    select.dataset.previousValue = select.value || "";
+    select.addEventListener("change", () => {
+      const form = select.closest("[data-admin-role-update-form]");
+      if (!form) {
+        return;
+      }
+
+      const nextRole = select.value || "";
+      const userLabel = select.dataset.adminRoleUser || "this user";
+      if (!window.confirm(`Đổi role của ${userLabel} sang ${nextRole}?`)) {
+        select.value = select.dataset.previousValue || "";
+        return;
+      }
+
+      select.dataset.previousValue = nextRole;
+      form.requestSubmit();
+    });
+  });
+}
+
 bindSuggestionButtons();
 bindSessionButtons();
 bindSubjectFilterChips();
 bindDocumentPreviewButtons();
+initAdminCreateUserForm();
+initConfirmForms();
+initAdminRoleUpdateForms();
 initAssistantLauncherDrag();
 markActiveSession(getSessionId());
 applyLanguage();

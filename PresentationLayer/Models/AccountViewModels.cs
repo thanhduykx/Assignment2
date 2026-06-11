@@ -36,3 +36,47 @@ public sealed class RegisterViewModel
     [DataType(DataType.Password)]
     public string ConfirmPassword { get; set; } = string.Empty;
 }
+
+public sealed class ForgotPasswordViewModel
+{
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public sealed class ResetPasswordViewModel
+{
+    [Required]
+    public string Token { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "New password is required.")]
+    [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Confirm your new password.")]
+    [Compare(nameof(Password), ErrorMessage = "The confirmation password does not match.")]
+    [DataType(DataType.Password)]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public sealed class ChangePasswordViewModel
+{
+    [Required(ErrorMessage = "Current password is required.")]
+    [DataType(DataType.Password)]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "New password is required.")]
+    [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
+    [DataType(DataType.Password)]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Confirm your new password.")]
+    [Compare(nameof(NewPassword), ErrorMessage = "The confirmation password does not match.")]
+    [DataType(DataType.Password)]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
