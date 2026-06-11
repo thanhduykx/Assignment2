@@ -2,20 +2,20 @@
 @using DataAccessLayer
 @model PresentationLayer.Pages.Home.IndexModel
 @{
-    ViewData["Title"] = "Kho tài liệu";
+    ViewData["Title"] = "Kho tài liệu / Documents";
     ViewData["UseRblShell"] = true;
     ViewData["ActiveNav"] = "documents";
-    ViewData["ShellTitle"] = "Kho tài liệu";
+    ViewData["ShellTitle"] = "Kho tài liệu / Documents";
     ViewData["ShellTitleI18n"] = "documents.shellTitle";
 
     var documents = Model.Documents.OrderByDescending(item => item.UploadedAt).ToList();
     var courseCatalog = Model.CourseCatalog.OrderBy(item => item.Code).ToList();
     var lecturerOptions = Model.LecturerOptions.OrderBy(item => item.FullName).ThenBy(item => item.Email).ToList();
     var isAdmin = Model.IsAdmin;
-    var totalDocuments = Model.TotalDocumentCount > 0 ? Model.TotalDocumentCount : documents.Count;
+    var canManageDocuments = Model.IsAdmin || Model.IsLecturer;
+    var totalDocuments = Model.TotalDocumentCount;
     var visibleDocuments = documents.Count;
-    var totalChunks = Model.TotalChunkCount > 0 ? Model.TotalChunkCount : documents.Sum(item => item.ChunkCount);
-    var totalUploadedBytes = Model.TotalUploadedBytes > 0 ? Model.TotalUploadedBytes : documents.Sum(item => item.FileSizeBytes);
+    var totalChunks = Model.TotalChunkCount;
     var averageChunks = Model.AverageChunksPerIndexedDocument <= 0 ? 0 : Model.AverageChunksPerIndexedDocument;
     var documentSubjectOptions = Model.DocumentSubjectOptions
         .Where(subject => !string.IsNullOrWhiteSpace(subject))
@@ -35,7 +35,10 @@
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(chapter => chapter)
         .ToList();
-    var canManageDocuments = Model.IsAdmin || Model.IsLecturer;
+    var statusOptions = new[] { DocumentIndexStatus.Indexed, DocumentIndexStatus.Processing, DocumentIndexStatus.Failed };
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Query)
+        || !string.IsNullOrWhiteSpace(Model.SubjectFilter)
+        || !string.IsNullOrWhiteSpace(Model.StatusFilter);
 
     string FormatBytes(long bytes)
     {
@@ -95,25 +98,18 @@
     }
 }
 
-<section class="rbl-documents-page">
-    <div class="rbl-page-heading">
+<section class="ops-page ops-documents-page">
+    <header class="ops-page-header">
         <div>
-            @if (canManageDocuments)
-            {
-                <h1 data-i18n="documents.manageTitle">Quản lý kho tài liệu</h1>
-                <p data-i18n="documents.manageSubtitle">Upload tài liệu học tập, trích xuất nội dung và index để chatbot trả lời có nguồn.</p>
-            }
-            else
-            {
-                <h1>Kho tài liệu</h1>
-                <p>Xem các tài liệu đã được giảng viên upload và index.</p>
-            }
+            <span class="ops-eyebrow">Learning content operations</span>
+            <h1>Kho tài liệu / Documents</h1>
+            <p>Quản lý tài liệu, danh mục môn học và trạng thái index để chatbot trả lời đúng nguồn.</p>
         </div>
-        <a class="rbl-secondary-button" asp-page="/Home/Chat">
+        <a class="ops-button ops-button--secondary" asp-page="/Home/Chat">
             <span class="material-symbols-outlined" aria-hidden="true">chat</span>
-            <span data-i18n="documents.openChat">Open chat</span>
+            Chatbot / Hỏi đáp
         </a>
-    </div>
+    </header>
 
     @if (TempData["Success"] is string success)
     {
@@ -124,418 +120,410 @@
         <div class="rbl-alert is-error">@error</div>
     }
 
+    <section class="ops-kpi-grid" aria-label="Document metrics">
+        <article class="ops-kpi">
+            <span>Total / Tổng</span>
+            <strong>@totalDocuments</strong>
+            <small>@visibleDocuments shown</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Indexed</span>
+            <strong>@Model.IndexedDocumentCount</strong>
+            <small>Ready for chat</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Processing</span>
+            <strong>@Model.ProcessingDocumentCount</strong>
+            <small>Queued or indexing</small>
+        </article>
+        <article class="ops-kpi ops-kpi--danger">
+            <span>Failed</span>
+            <strong>@Model.FailedDocumentCount</strong>
+            <small>Needs attention</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Storage</span>
+            <strong>@FormatBytes(Model.TotalUploadedBytes)</strong>
+            <small>@totalChunks chunks, avg @averageChunks.ToString("0.#")</small>
+        </article>
+    </section>
+
     @if (canManageDocuments)
     {
-    <div class="rbl-documents-grid">
-        @if (canManageDocuments)
-        {
-            <section class="rbl-upload-panel" id="documents">
-                <div class="rbl-panel-header">
-                    <div>
-                        <span class="rbl-section-label" data-i18n="documents.uploadKicker">Upload</span>
-                        <h2 data-i18n="documents.dropTitle">Kéo thả tài liệu vào đây</h2>
-                    </div>
-                </div>
-
-                <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="rbl-upload-form">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="Language" value="vi" data-language-field />
-
-                    <div class="rbl-form-grid">
-                        <label class="rbl-field">
-                            <span data-i18n="documents.subject">Subject</span>
-                            <input name="Subject" list="subjectOptions" placeholder="Mã môn - Tên môn" />
-                        </label>
-                        <label class="rbl-field">
-                            <span data-i18n="documents.chapter">Chapter</span>
-                            <input name="Chapter" list="chapterOptions" placeholder="Chương 1 hoặc Tuần 1" />
-                        </label>
-                    </div>
-
-                    <datalist id="subjectOptions">
-                        @foreach (var subject in subjectOptions)
-                        {
-                            <option value="@subject"></option>
-                        }
-                    </datalist>
-                    <datalist id="chapterOptions">
-                        @foreach (var chapter in chapterOptions)
-                        {
-                            <option value="@chapter"></option>
-                        }
-                    </datalist>
-
-                    <label id="documentDropzone" class="rbl-dropzone dropzone" for="documentFileInput">
-                        <input id="documentFileInput" name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-                        <span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span>
-                        <strong data-i18n="documents.chooseFile">Chọn tệp hoặc kéo thả vào đây</strong>
-                        <small id="documentFileName" data-default-en="Supports PDF, DOCX, PPTX, TXT" data-default-vi="Hỗ trợ PDF, DOCX, PPTX, TXT">Hỗ trợ PDF, DOCX, PPTX, TXT</small>
-                    </label>
-
-                    <div class="rbl-divider"><span data-i18n="documents.or">or</span></div>
-
-                    <label class="rbl-field">
-                        <span data-i18n="documents.url">Lecture page URL</span>
-                        <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-                        <small data-i18n="documents.urlRenderHint">Trang SPA/React/Vue sẽ được render trước khi trích xuất DOM.</small>
-                    </label>
-
-                    <button type="submit" class="rbl-submit-button">
-                        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                        <span data-i18n="documents.submit">Upload and index</span>
-                    </button>
-                </form>
-            </section>
-        }
-
-        <section class="rbl-storage-panel" aria-label="Dung lượng tài liệu đã upload">
-            <div class="rbl-panel-header">
+        <section class="ops-panel ops-upload-panel">
+            <div class="ops-panel-head">
                 <div>
-                    <span class="rbl-section-label">Dữ liệu</span>
-                    <h2>Dữ liệu đã upload</h2>
+                    <span class="ops-eyebrow">Ingestion</span>
+                    <h2>Upload & index</h2>
                 </div>
-                <span class="material-symbols-outlined" aria-hidden="true">database</span>
+                <span class="ops-panel-note">PDF, DOCX, PPTX, TXT hoặc URL bài giảng</span>
             </div>
 
-            <div class="rbl-storage-stats">
-                <article>
-                    <span data-i18n="documents.uploadedSize">Dung lượng đã upload</span>
-                    <strong>@FormatBytes(totalUploadedBytes)</strong>
-                </article>
-                <article>
-                    <span data-i18n="documents.statsDocuments">Tài liệu</span>
-                    <strong>@totalDocuments</strong>
-                </article>
-                <article>
-                    <span>Chunks</span>
-                    <strong>@totalChunks</strong>
-                </article>
-            </div>
-        </section>
-    </div>
-    }
-
-    @if (canManageDocuments)
-    {
-    <section class="rbl-panel rbl-catalog-panel">
-        <div class="rbl-panel-header rbl-catalog-header">
-            <div>
-                <span class="rbl-section-label">Danh mục môn học</span>
-                <h2>Quản lý môn học và chương</h2>
-                <p class="rbl-catalog-help">Danh mục này tự thêm môn/chương từ Subject và Chapter của tài liệu đã upload.</p>
-            </div>
-            <span class="rbl-table-meta">@courseCatalog.Count môn học</span>
-        </div>
-
-        <div class="rbl-catalog-create-grid">
-            @if (isAdmin)
-            {
-                <form asp-page-handler="SaveSubject" method="post" class="rbl-catalog-form">
-                    @Html.AntiForgeryToken()
-                    <div class="rbl-catalog-form-header">
-                        <h3>Thêm môn học</h3>
-                        <p>Tạo danh mục môn để dùng lại khi upload và lọc tài liệu.</p>
-                    </div>
-                    <div class="rbl-catalog-fields rbl-catalog-fields--subject">
-                        <label class="rbl-field">
-                            <span>Mã môn</span>
-                            <input name="Code" placeholder="Mã môn" />
-                        </label>
-                        <label class="rbl-field">
-                            <span>Tên môn</span>
-                            <input name="Name" placeholder="Nhạc cụ truyền thống - Đàn Bầu" />
-                        </label>
-                        <label class="rbl-field">
-                            <span>Mô tả</span>
-                            <input name="Description" placeholder="Mô tả ngắn" />
-                        </label>
-                        <label class="rbl-field">
-                            <span>Giảng viên phụ trách</span>
-                            <select name="OwnerUserId">
-                                <option value="">Chưa phân công</option>
-                                @foreach (var lecturer in lecturerOptions)
-                                {
-                                    <option value="@lecturer.Id">@lecturer.DisplayName</option>
-                                }
-                            </select>
-                        </label>
-                        <button type="submit" class="rbl-small-button rbl-small-button--primary">Lưu môn</button>
-                    </div>
-                </form>
-            }
-
-            <form asp-page-handler="SaveChapter" method="post" class="rbl-catalog-form">
+            <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-upload-form">
                 @Html.AntiForgeryToken()
-                <div class="rbl-catalog-form-header">
-                    <h3>Thêm chương</h3>
-                    <p>Chương giúp gắn tài liệu vào đúng phần nội dung học.</p>
+                <input type="hidden" name="Language" value="vi" data-language-field />
+
+                <div class="ops-form-row">
+                    <label class="ops-field">
+                        <span>Subject / Môn học</span>
+                        <input name="Subject" list="subjectOptions" placeholder="DBA103 - Đàn Bầu" />
+                    </label>
+                    <label class="ops-field">
+                        <span>Chapter / Chương</span>
+                        <input name="Chapter" list="chapterOptions" placeholder="Chapter 1 hoặc Week 1" />
+                    </label>
                 </div>
-                <div class="rbl-catalog-fields rbl-catalog-fields--chapter">
-                    <label class="rbl-field">
-                        <span>Môn học</span>
-                        <select name="SubjectId">
-                            @foreach (var subject in courseCatalog)
-                            {
-                                <option value="@subject.Id">@subject.DisplayName</option>
-                            }
-                        </select>
+
+                <datalist id="subjectOptions">
+                    @foreach (var subject in subjectOptions)
+                    {
+                        <option value="@subject"></option>
+                    }
+                </datalist>
+                <datalist id="chapterOptions">
+                    @foreach (var chapter in chapterOptions)
+                    {
+                        <option value="@chapter"></option>
+                    }
+                </datalist>
+
+                <div class="ops-ingest-grid">
+                    <label id="documentDropzone" class="ops-dropzone dropzone" for="documentFileInput">
+                        <input id="documentFileInput" name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                        <strong>File upload</strong>
+                        <small id="documentFileName" data-default-en="PDF, DOCX, PPTX, TXT" data-default-vi="PDF, DOCX, PPTX, TXT">PDF, DOCX, PPTX, TXT</small>
                     </label>
-                    <label class="rbl-field">
-                        <span>Tên chương</span>
-                        <input name="Title" placeholder="Chương 1 hoặc Tuần 1" />
+
+                    <label class="ops-field ops-url-field">
+                        <span>Lecture URL / Link bài giảng</span>
+                        <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                        <small>SPA/React/Vue sẽ được render trước khi trích xuất nội dung.</small>
                     </label>
-                    <label class="rbl-field">
-                        <span>Thứ tự</span>
-                        <input name="SortOrder" type="number" value="1" />
-                    </label>
-                    <button type="submit" class="rbl-small-button rbl-small-button--primary">Lưu chương</button>
+
+                    <button type="submit" class="ops-button ops-button--primary ops-upload-submit">
+                        <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                        Index now
+                    </button>
                 </div>
             </form>
-        </div>
-
-        @if (courseCatalog.Count == 0)
-        {
-            <div class="rbl-empty-state compact">
-                <strong>Chưa có danh mục môn học.</strong>
-                <p>Tạo môn học trước, sau đó thêm chương để upload tài liệu theo danh mục chuẩn.</p>
-            </div>
-        }
-        else
-        {
-            <div class="rbl-catalog-list rbl-catalog-list--compact">
-                <div class="rbl-catalog-list-head" aria-hidden="true">
-                    <span>Môn học</span>
-                    <span>Phụ trách</span>
-                    <span>Chương</span>
-                    <span>Chi tiết</span>
-                </div>
-                @foreach (var subject in courseCatalog)
-                {
-                    <details class="rbl-catalog-subject rbl-catalog-subject--compact">
-                        <summary class="rbl-catalog-summary">
-                            <span class="rbl-catalog-summary-main">
-                                <span class="rbl-catalog-code">@subject.Code</span>
-                                <span class="rbl-catalog-title-block">
-                                    <strong>@subject.Name</strong>
-                                    <small>@(string.IsNullOrWhiteSpace(subject.Description) ? "Chưa có mô tả." : subject.Description)</small>
-                                </span>
-                            </span>
-                            <span class="rbl-owner-chip" title="@subject.OwnerEmail">Phụ trách: @PersonLabel(subject.OwnerName, "Chưa phân công")</span>
-                            <span class="rbl-catalog-count-chip">@subject.Chapters.Count chương</span>
-                            <span class="rbl-catalog-toggle-text">Mở</span>
-                        </summary>
-
-                        <div class="rbl-catalog-detail">
-                            @if (isAdmin)
-                            {
-                                <div class="rbl-catalog-detail-actions">
-                                    <form asp-page-handler="DeleteSubject" method="post" class="rbl-catalog-delete">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@subject.Id" />
-                                        <button type="submit" class="rbl-small-button rbl-small-button--danger">Xóa môn</button>
-                                    </form>
-                                </div>
-
-                                <form asp-page-handler="SaveSubject" method="post" class="rbl-catalog-edit">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="Id" value="@subject.Id" />
-                                    <label class="rbl-field">
-                                        <span>Mã môn</span>
-                                        <input name="Code" value="@subject.Code" />
-                                    </label>
-                                    <label class="rbl-field">
-                                        <span>Tên môn</span>
-                                        <input name="Name" value="@subject.Name" />
-                                    </label>
-                                    <label class="rbl-field">
-                                        <span>Mô tả</span>
-                                        <input name="Description" value="@subject.Description" />
-                                    </label>
-                                    <label class="rbl-field">
-                                        <span>Giảng viên phụ trách</span>
-                                        <select name="OwnerUserId">
-                                            @if (!subject.OwnerUserId.HasValue)
-                                            {
-                                                <option value="" selected>Chưa phân công</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="">Chưa phân công</option>
-                                            }
-                                            @foreach (var lecturer in lecturerOptions)
-                                            {
-                                                if (subject.OwnerUserId == lecturer.Id)
-                                                {
-                                                    <option value="@lecturer.Id" selected>@lecturer.DisplayName</option>
-                                                }
-                                                else
-                                                {
-                                                    <option value="@lecturer.Id">@lecturer.DisplayName</option>
-                                                }
-                                            }
-                                        </select>
-                                    </label>
-                                    <button type="submit" class="rbl-small-button">Cập nhật môn</button>
-                                </form>
-                            }
-
-                            <div class="rbl-chapter-section">
-                                <div class="rbl-chapter-section-head">
-                                    <span>Chương</span>
-                                    <strong>@subject.Chapters.Count chương</strong>
-                                </div>
-                                @if (subject.Chapters.Count == 0)
-                                {
-                                    <p class="rbl-catalog-muted">Môn này chưa có chương.</p>
-                                }
-                                else
-                                {
-                                    @foreach (var chapter in subject.Chapters)
-                                    {
-                                        <div class="rbl-chapter-row">
-                                            <form asp-page-handler="SaveChapter" method="post" class="rbl-chapter-edit">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="Id" value="@chapter.Id" />
-                                                <input type="hidden" name="SubjectId" value="@subject.Id" />
-                                                <label class="rbl-field rbl-chapter-title">
-                                                    <span>Tên chương</span>
-                                                    <input name="Title" value="@chapter.Title" />
-                                                </label>
-                                                <label class="rbl-field rbl-chapter-order">
-                                                    <span>Thứ tự</span>
-                                                    <input name="SortOrder" type="number" value="@chapter.SortOrder" />
-                                                </label>
-                                                <button type="submit" class="rbl-small-button">Cập nhật</button>
-                                            </form>
-                                            <form asp-page-handler="DeleteChapter" method="post" class="rbl-chapter-delete">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@chapter.Id" />
-                                                <button type="submit" class="rbl-small-button rbl-small-button--danger">Xóa</button>
-                                            </form>
-                                        </div>
-                                    }
-                                }
-                            </div>
-                        </div>
-                    </details>
-                }
-            </div>
-        }
-    </section>
+        </section>
     }
 
-    <section class="rbl-panel rbl-document-table-panel">
-        <div class="rbl-panel-header">
+    <section class="ops-panel">
+        <div class="ops-panel-head">
             <div>
-                <span class="rbl-section-label">Documents</span>
-                <h2 data-i18n="documents.documentList">Danh sách tài liệu</h2>
+                <span class="ops-eyebrow">Repository</span>
+                <h2>Danh sách tài liệu / Document table</h2>
             </div>
-            <span class="rbl-table-meta"><span data-i18n="documents.showing">Hiển thị</span> @visibleDocuments/@totalDocuments <span data-i18n="documents.statsDocuments">tài liệu</span></span>
+            <span class="ops-panel-note">@visibleDocuments/@totalDocuments documents</span>
         </div>
 
-        @if (subjectOptions.Count > 0)
-        {
-            <form asp-page="/Home/Index" method="get" class="rbl-document-filter">
-                <label class="rbl-field">
-                    <span>Lọc theo môn</span>
-                    <select name="subjectFilter">
-                        @if (string.IsNullOrWhiteSpace(Model.SubjectFilter))
+        <form asp-page="/Home/Index" method="get" class="ops-filter-bar">
+            <label class="ops-field ops-field--search">
+                <span>Search / Tìm kiếm</span>
+                <input name="q" value="@Model.Query" placeholder="File, subject, chapter, uploader..." />
+            </label>
+            <label class="ops-field">
+                <span>Subject</span>
+                <select name="subjectFilter">
+                    @if (string.IsNullOrWhiteSpace(Model.SubjectFilter))
+                    {
+                        <option value="" selected>All subjects</option>
+                    }
+                    else
+                    {
+                        <option value="">All subjects</option>
+                    }
+                    @foreach (var subject in subjectOptions)
+                    {
+                        if (subject.Equals(Model.SubjectFilter, StringComparison.OrdinalIgnoreCase))
                         {
-                            <option value="" selected>Tất cả môn</option>
+                            <option value="@subject" selected>@subject</option>
                         }
                         else
                         {
-                            <option value="">Tất cả môn</option>
+                            <option value="@subject">@subject</option>
                         }
-
-                        @foreach (var subject in subjectOptions)
+                    }
+                </select>
+            </label>
+            <label class="ops-field">
+                <span>Status</span>
+                <select name="statusFilter">
+                    @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
+                    {
+                        <option value="" selected>All status</option>
+                    }
+                    else
+                    {
+                        <option value="">All status</option>
+                    }
+                    @foreach (var status in statusOptions)
+                    {
+                        if (status.Equals(Model.StatusFilter, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (subject.Equals(Model.SubjectFilter, StringComparison.OrdinalIgnoreCase))
-                            {
-                                <option value="@subject" selected>@subject</option>
-                            }
-                            else
-                            {
-                                <option value="@subject">@subject</option>
-                            }
+                            <option value="@status" selected>@status</option>
                         }
-                    </select>
-                </label>
-                <button type="submit" class="rbl-small-button rbl-small-button--primary">Lọc</button>
-                @if (!string.IsNullOrWhiteSpace(Model.SubjectFilter))
-                {
-                    <a class="rbl-small-button" asp-page="/Home/Index">Bỏ lọc</a>
-                }
-            </form>
-        }
+                        else
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    }
+                </select>
+            </label>
+            <button type="submit" class="ops-button ops-button--secondary">Filter</button>
+            @if (hasActiveFilters)
+            {
+                <a class="ops-button ops-button--ghost" asp-page="/Home/Index">Clear</a>
+            }
+        </form>
 
         @if (documents.Count == 0)
         {
-            <div class="rbl-empty-state compact">
-                <strong data-i18n="documents.emptyTitle">Chưa có tài liệu.</strong>
-                <p data-i18n="documents.emptyHint">Upload giáo trình hoặc URL bài giảng để bắt đầu hỏi đáp theo nguồn.</p>
+            <div class="ops-empty">
+                <strong>Không có tài liệu phù hợp / No matching documents.</strong>
+                <p>Điều chỉnh bộ lọc hoặc upload tài liệu mới để bắt đầu hỏi đáp theo nguồn.</p>
             </div>
         }
         else
         {
-            <div class="rbl-document-card-grid">
-                @foreach (var document in documents)
-                {
-                    <article class="rbl-document-card">
-                        <div class="rbl-document-card-head">
-                            <span class="rbl-document-file-icon material-symbols-outlined" aria-hidden="true">description</span>
-                            <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)">@StatusLabel(document)</span>
-                        </div>
-
-                        <div class="rbl-document-card-body">
-                            <h3 title="@document.FileName">@document.FileName</h3>
-                            <p title="@document.Subject">@document.Subject</p>
-                            <span title="@document.Chapter">@document.Chapter</span>
-                        </div>
-
-                        <div class="rbl-document-card-meta">
-                            <span>
-                                <span class="material-symbols-outlined" aria-hidden="true">data_object</span>
-                                @document.ChunkCount chunks
-                            </span>
-                            <span>
-                                <span class="material-symbols-outlined" aria-hidden="true">hard_drive</span>
-                                @FormatBytes(document.FileSizeBytes)
-                            </span>
-                            <span class="rbl-document-meta-full">
-                                <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
-                                @document.UploadedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
-                            </span>
-                            <span class="rbl-document-meta-full" title="@document.UploadedByEmail">
-                                <span class="material-symbols-outlined" aria-hidden="true">person</span>
-                                <strong>Được up bởi:</strong> @PersonLabel(document.UploadedByName, "Không rõ")
-                            </span>
-                        </div>
-
-                        <div class="rbl-document-card-actions rbl-document-actions">
-                                @if (document.Status == DocumentIndexStatus.Indexed)
-                                {
-                                    <button type="button" class="rbl-small-button" data-document-preview-url="/Home/DocumentPreview/@document.Id" data-i18n="documents.view">Xem</button>
-                                }
-                                else
-                                {
-                                    <button type="button" class="rbl-small-button" disabled title="@StatusTitle(document)" data-i18n="documents.view">Xem</button>
-                                }
-                                @if (canManageDocuments)
-                                {
-                                    <a class="rbl-small-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa</a>
-                                    <form asp-page-handler="DeleteDocument" method="post" onsubmit="return confirm('Xóa tài liệu này khỏi kho index?');">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@document.Id" />
-                                        <button type="submit" class="rbl-small-button rbl-small-button--danger">Xóa</button>
-                                    </form>
-                                }
-                        </div>
-                    </article>
+            <div class="ops-table-wrap">
+                <table class="ops-table ops-document-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Subject / Chapter</th>
+                            <th>Status</th>
+                            <th>Chunks / Size</th>
+                            <th>Uploaded</th>
+                            <th class="ops-actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var document in documents)
+                    {
+                        <tr>
+                            <td data-label="File">
+                                <div class="ops-file-cell">
+                                    <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                                    <div>
+                                        <strong title="@document.FileName">@document.FileName</strong>
+                                        <small>@document.ContentType</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Subject / Chapter">
+                                <div class="ops-stack">
+                                    <strong title="@document.Subject">@document.Subject</strong>
+                                    <small title="@document.Chapter">@document.Chapter</small>
+                                </div>
+                            </td>
+                            <td data-label="Status">
+                                <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)">@StatusLabel(document)</span>
+                            </td>
+                            <td data-label="Chunks / Size">
+                                <div class="ops-stack">
+                                    <strong>@document.ChunkCount chunks</strong>
+                                    <small>@FormatBytes(document.FileSizeBytes)</small>
+                                </div>
+                            </td>
+                            <td data-label="Uploaded">
+                                <div class="ops-stack">
+                                    <strong title="@document.UploadedByEmail">@PersonLabel(document.UploadedByName, "Không rõ")</strong>
+                                    <small>@document.UploadedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
+                                </div>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="ops-row-actions">
+                                    @if (document.Status == DocumentIndexStatus.Indexed)
+                                    {
+                                        <button type="button" class="ops-mini-button" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem / View</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="ops-mini-button" disabled title="@StatusTitle(document)">View</button>
+                                    }
+                                    @if (canManageDocuments)
+                                    {
+                                        <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa / Edit</a>
+                                        <form asp-page-handler="DeleteDocument" method="post" onsubmit="return confirm('Xóa tài liệu này khỏi kho index?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@document.Id" />
+                                            <button type="submit" class="ops-mini-button ops-mini-button--danger">Xóa</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
                     }
+                    </tbody>
+                </table>
             </div>
         }
     </section>
+
+    @if (canManageDocuments)
+    {
+        <details class="ops-panel ops-catalog-panel">
+            <summary class="ops-catalog-summary">
+                <span>
+                    <span class="ops-eyebrow">Catalog</span>
+                    <strong>Danh mục môn học / Course catalog</strong>
+                </span>
+                <small>@courseCatalog.Count subjects</small>
+            </summary>
+
+            <div class="ops-catalog-body">
+                <div class="ops-command-grid">
+                    @if (isAdmin)
+                    {
+                        <form asp-page-handler="SaveSubject" method="post" class="ops-command-card">
+                            @Html.AntiForgeryToken()
+                            <h3>Thêm môn / Add subject</h3>
+                            <label class="ops-field">
+                                <span>Mã môn</span>
+                                <input name="Code" placeholder="IOT102" />
+                            </label>
+                            <label class="ops-field">
+                                <span>Tên môn</span>
+                                <input name="Name" placeholder="Internet of Things" />
+                            </label>
+                            <label class="ops-field">
+                                <span>Mô tả</span>
+                                <input name="Description" placeholder="Short description" />
+                            </label>
+                            <label class="ops-field">
+                                <span>Giảng viên phụ trách</span>
+                                <select name="OwnerUserId">
+                                    <option value="">Chưa phân công</option>
+                                    @foreach (var lecturer in lecturerOptions)
+                                    {
+                                        <option value="@lecturer.Id">@lecturer.DisplayName</option>
+                                    }
+                                </select>
+                            </label>
+                            <button type="submit" class="ops-button ops-button--primary">Save subject</button>
+                        </form>
+                    }
+
+                    <form asp-page-handler="SaveChapter" method="post" class="ops-command-card">
+                        @Html.AntiForgeryToken()
+                        <h3>Thêm chương / Add chapter</h3>
+                        <label class="ops-field">
+                            <span>Môn học</span>
+                            <select name="SubjectId">
+                                @foreach (var subject in courseCatalog)
+                                {
+                                    <option value="@subject.Id">@subject.DisplayName</option>
+                                }
+                            </select>
+                        </label>
+                        <label class="ops-field">
+                            <span>Tên chương</span>
+                            <input name="Title" placeholder="Chapter 1 hoặc Week 1" />
+                        </label>
+                        <label class="ops-field">
+                            <span>Thứ tự</span>
+                            <input name="SortOrder" type="number" value="1" />
+                        </label>
+                        <button type="submit" class="ops-button ops-button--primary">Save chapter</button>
+                    </form>
+                </div>
+
+                @if (courseCatalog.Count == 0)
+                {
+                    <div class="ops-empty">
+                        <strong>Chưa có danh mục môn học.</strong>
+                        <p>Tạo môn học trước, sau đó thêm chương để upload tài liệu theo danh mục chuẩn.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="ops-catalog-list">
+                        @foreach (var subject in courseCatalog)
+                        {
+                            <details class="ops-catalog-item">
+                                <summary>
+                                    <span class="ops-code">@subject.Code</span>
+                                    <span>
+                                        <strong>@subject.Name</strong>
+                                        <small>@(string.IsNullOrWhiteSpace(subject.Description) ? "Chưa có mô tả." : subject.Description)</small>
+                                    </span>
+                                    <span class="ops-chip">Owner: @PersonLabel(subject.OwnerName, "Unassigned")</span>
+                                    <span class="ops-chip">@subject.Chapters.Count chapters</span>
+                                </summary>
+                                <div class="ops-catalog-detail">
+                                    @if (isAdmin)
+                                    {
+                                        <form asp-page-handler="SaveSubject" method="post" class="ops-inline-edit">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@subject.Id" />
+                                            <input name="Code" value="@subject.Code" />
+                                            <input name="Name" value="@subject.Name" />
+                                            <input name="Description" value="@subject.Description" />
+                                            <select name="OwnerUserId">
+                                                @if (!subject.OwnerUserId.HasValue)
+                                                {
+                                                    <option value="" selected>Chưa phân công</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="">Chưa phân công</option>
+                                                }
+                                                @foreach (var lecturer in lecturerOptions)
+                                                {
+                                                    if (subject.OwnerUserId == lecturer.Id)
+                                                    {
+                                                        <option value="@lecturer.Id" selected>@lecturer.DisplayName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@lecturer.Id">@lecturer.DisplayName</option>
+                                                    }
+                                                }
+                                            </select>
+                                            <button type="submit" class="ops-mini-button">Update</button>
+                                        </form>
+                                        <form asp-page-handler="DeleteSubject" method="post" class="ops-danger-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@subject.Id" />
+                                            <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete subject</button>
+                                        </form>
+                                    }
+
+                                    <div class="ops-chapter-list">
+                                        @if (subject.Chapters.Count == 0)
+                                        {
+                                            <p class="ops-muted">Môn này chưa có chương.</p>
+                                        }
+                                        @foreach (var chapter in subject.Chapters)
+                                        {
+                                            <div class="ops-chapter-row">
+                                                <form asp-page-handler="SaveChapter" method="post" class="ops-inline-edit">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="Id" value="@chapter.Id" />
+                                                    <input type="hidden" name="SubjectId" value="@subject.Id" />
+                                                    <input name="Title" value="@chapter.Title" />
+                                                    <input name="SortOrder" type="number" value="@chapter.SortOrder" />
+                                                    <button type="submit" class="ops-mini-button">Update</button>
+                                                </form>
+                                                <form asp-page-handler="DeleteChapter" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@chapter.Id" />
+                                                    <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </details>
+                        }
+                    </div>
+                }
+            </div>
+        </details>
+    }
 
     <div id="documentPreviewModal" class="rbl-document-preview-modal" aria-hidden="true">
         <div class="rbl-document-preview-backdrop" data-document-preview-close></div>

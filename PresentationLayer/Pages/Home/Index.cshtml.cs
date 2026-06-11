@@ -29,7 +29,9 @@ public sealed class IndexModel : HomePageModelBase
     public IReadOnlyList<UserOptionViewModel> LecturerOptions { get; private set; } = Array.Empty<UserOptionViewModel>();
     public IReadOnlyList<string> DocumentSubjectOptions { get; private set; } = Array.Empty<string>();
     public IReadOnlyList<string> DocumentChapterOptions { get; private set; } = Array.Empty<string>();
+    public string? Query { get; private set; }
     public string? SubjectFilter { get; private set; }
+    public string? StatusFilter { get; private set; }
     public new bool IsAdmin { get; private set; }
     public new bool IsLecturer { get; private set; }
     public int TotalDocumentCount { get; private set; }
@@ -38,9 +40,10 @@ public sealed class IndexModel : HomePageModelBase
     public int IndexedDocumentCount { get; private set; }
     public int ProcessingDocumentCount { get; private set; }
     public int FailedDocumentCount { get; private set; }
+    public int FilteredDocumentCount { get; private set; }
     public double AverageChunksPerIndexedDocument { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(string? subjectFilter, CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(string? q, string? subjectFilter, string? statusFilter, CancellationToken cancellationToken)
     {
         var allDocuments = await _indexingService.GetDocumentsAsync(cancellationToken);
         if (CanManageDocuments())
@@ -54,12 +57,14 @@ public sealed class IndexModel : HomePageModelBase
         var courseCatalog = BuildSynchronizedCourseCatalogForView(
             FilterCourseCatalogForCurrentUser(allCourseCatalog),
             accessibleDocuments);
+        var normalizedQuery = q?.Trim();
         var normalizedSubjectFilter = subjectFilter?.Trim();
-        var documents = string.IsNullOrWhiteSpace(normalizedSubjectFilter)
-            ? accessibleDocuments
-            : accessibleDocuments
-                .Where(document => SubjectMatchesFilter(document.Subject, normalizedSubjectFilter))
-                .ToList();
+        var normalizedStatusFilter = statusFilter?.Trim();
+        var documents = accessibleDocuments
+            .Where(document => string.IsNullOrWhiteSpace(normalizedQuery) || DocumentMatchesQuery(document, normalizedQuery))
+            .Where(document => string.IsNullOrWhiteSpace(normalizedSubjectFilter) || SubjectMatchesFilter(document.Subject, normalizedSubjectFilter))
+            .Where(document => string.IsNullOrWhiteSpace(normalizedStatusFilter) || DocumentMatchesStatus(document, normalizedStatusFilter))
+            .ToList();
         var userIsAdmin = base.IsAdmin();
         var userIsLecturer = base.IsLecturer();
         var lecturers = userIsAdmin
@@ -84,7 +89,9 @@ public sealed class IndexModel : HomePageModelBase
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(chapter => chapter)
             .ToList();
+        Query = normalizedQuery;
         SubjectFilter = normalizedSubjectFilter;
+        StatusFilter = normalizedStatusFilter;
         IsAdmin = userIsAdmin;
         IsLecturer = userIsLecturer;
         TotalDocumentCount = accessibleDocuments.Count;
@@ -93,6 +100,7 @@ public sealed class IndexModel : HomePageModelBase
         IndexedDocumentCount = indexedDocuments.Count;
         ProcessingDocumentCount = accessibleDocuments.Count(document => document.Status == DocumentIndexStatus.Processing);
         FailedDocumentCount = accessibleDocuments.Count(document => document.Status == DocumentIndexStatus.Failed);
+        FilteredDocumentCount = documents.Count;
         AverageChunksPerIndexedDocument = indexedDocuments.Count == 0
             ? 0
             : indexedDocuments.Average(document => document.ChunkCount);
@@ -260,5 +268,26 @@ public sealed class IndexModel : HomePageModelBase
         TryDeleteStoredFile(document);
         TempData["Success"] = $"Đã xóa tài liệu {document.FileName}.";
         return RedirectToPage("/Home/Index");
+    }
+
+    private static bool DocumentMatchesQuery(IndexedDocument document, string query)
+    {
+        return Contains(document.FileName, query)
+               || Contains(document.Subject, query)
+               || Contains(document.Chapter, query)
+               || Contains(document.UploadedByName, query)
+               || Contains(document.UploadedByEmail, query)
+               || Contains(document.ContentType, query);
+    }
+
+    private static bool DocumentMatchesStatus(IndexedDocument document, string statusFilter)
+    {
+        return document.Status.Equals(statusFilter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool Contains(string? value, string query)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+               && value.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 }

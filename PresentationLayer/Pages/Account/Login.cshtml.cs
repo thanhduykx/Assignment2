@@ -133,7 +133,7 @@ public sealed class LoginModel : PageModel
     {
         return AppRoles.Normalize(role) switch
         {
-            AppRoles.Admin => RedirectToPage("/Research/Index"),
+            AppRoles.Admin => RedirectToPage("/Home/Index"),
             AppRoles.Lecturer => RedirectToPage("/Home/Index"),
             _ => RedirectToPage("/Home/Chat")
         };
@@ -154,8 +154,7 @@ public sealed class LoginModel : PageModel
 
         if (role == AppRoles.Lecturer)
         {
-            return !path.StartsWith("/Research", StringComparison.OrdinalIgnoreCase)
-                   && !path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
+            return !path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
         }
 
         return path.Equals("/Home/Chat", StringComparison.OrdinalIgnoreCase)

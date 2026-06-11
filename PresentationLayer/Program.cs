@@ -8,7 +8,6 @@ namespace PresentationLayer
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.InputEncoding = System.Text.Encoding.UTF8;
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var builder = WebApplication.CreateBuilder(args);
 
             static string FirstConfigured(params string?[] values)
@@ -113,10 +112,6 @@ namespace PresentationLayer
                     out var parsedFineTunedMinimumConfidence)
                 ? parsedFineTunedMinimumConfidence
                 : 0.62;
-            var fineTunedChatUseLatestResearchModel = bool.TryParse(
-                    fineTunedChatSection["UseLatestResearchModel"],
-                    out var parsedUseLatestResearchModel)
-                && parsedUseLatestResearchModel;
             var configuredFineTunedExamplesPath = fineTunedChatSection["ExamplesPath"];
             var fineTunedChatExamplesPath = string.IsNullOrWhiteSpace(configuredFineTunedExamplesPath)
                 ? Path.Combine(builder.Environment.ContentRootPath, "App_Data", "fine-tuned-chat-examples.json")
@@ -134,21 +129,7 @@ namespace PresentationLayer
                 fineTunedChatSection["Provider"] ?? "local://supervised-qa",
                 fineTunedChatSection["Endpoint"] ?? "local://supervised-qa",
                 fineTunedChatMinimumConfidence,
-                fineTunedChatUseLatestResearchModel,
                 fineTunedChatExamplesPath));
-            var huggingFaceApiKey = FirstConfigured(
-                builder.Configuration["HuggingFace:ApiKey"],
-                builder.Configuration["HUGGINGFACE_API_KEY"],
-                Environment.GetEnvironmentVariable("HUGGINGFACE_API_KEY"));
-            var huggingFaceBaseAddress = builder.Configuration["HuggingFace:BaseAddress"]
-                ?? Environment.GetEnvironmentVariable("HUGGINGFACE_BASE_ADDRESS")
-                ?? "https://router.huggingface.co/hf-inference/";
-            var huggingFaceEnabled = !bool.TryParse(builder.Configuration["HuggingFace:Enabled"], out var parsedHuggingFaceEnabled)
-                || parsedHuggingFaceEnabled;
-            builder.Services.AddSingleton(new ServicesLayer.HuggingFaceApiOptions(
-                huggingFaceApiKey,
-                huggingFaceBaseAddress,
-                huggingFaceEnabled));
             builder.Services.AddSingleton<DataAccessLayer.IKnowledgeRepository>(_ =>
             {
                 var repository = new DataAccessLayer.Repositories.SqlKnowledgeRepository(
@@ -157,9 +138,6 @@ namespace PresentationLayer
                     Path.Combine(builder.Environment.ContentRootPath, "App_Data", "rag-store.json")).GetAwaiter().GetResult();
                 return repository;
             });
-            builder.Services.AddSingleton<DataAccessLayer.IResearchRepository>(_ =>
-                new DataAccessLayer.Repositories.SqlResearchRepository(
-                    builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty));
             builder.Services.AddSingleton<PresentationLayer.Services.IUserAccountStore>(_ =>
             {
                 var seedAdminSection = builder.Configuration.GetSection("SeedAdmin");
@@ -212,7 +190,6 @@ namespace PresentationLayer
             });
             builder.Services.AddSingleton<ServicesLayer.IFineTunedChatService>(serviceProvider =>
                 new ServicesLayer.FineTunedChatService(
-                    serviceProvider.GetService<DataAccessLayer.IResearchRepository>(),
                     new HttpClient
                     {
                         Timeout = TimeSpan.FromSeconds(Math.Max(5, geminiTimeoutSeconds))
@@ -242,14 +219,9 @@ namespace PresentationLayer
                 {
                     Timeout = TimeSpan.FromSeconds(35)
                 }));
-            builder.Services.AddSingleton<PresentationLayer.Services.IResearchReportPdfService, PresentationLayer.Services.ResearchReportPdfService>();
             builder.Services.AddScoped<ServicesLayer.IDocumentIndexingService, ServicesLayer.DocumentIndexingService>();
             builder.Services.AddScoped<ServicesLayer.IRagChatService, ServicesLayer.RagChatService>();
             builder.Services.AddHostedService<PresentationLayer.Services.DocumentIndexWorker>();
-            builder.Services.AddHttpClient<ServicesLayer.IResearchBenchmarkService, ServicesLayer.ResearchBenchmarkService>(client =>
-            {
-                client.Timeout = TimeSpan.FromSeconds(180);
-            });
 
             var app = builder.Build();
             _ = app.Services.GetRequiredService<DataAccessLayer.IKnowledgeRepository>();

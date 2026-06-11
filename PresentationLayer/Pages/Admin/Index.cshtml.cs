@@ -28,10 +28,18 @@ public sealed class IndexModel : PageModel
     public IReadOnlyList<AdminUserRowViewModel> Users { get; private set; } = Array.Empty<AdminUserRowViewModel>();
     public IReadOnlyList<string> Roles { get; private set; } = Array.Empty<string>();
     public IReadOnlyList<AdminSubjectOptionViewModel> SubjectOptions { get; private set; } = Array.Empty<AdminSubjectOptionViewModel>();
+    public string? Query { get; private set; }
+    public string? RoleFilter { get; private set; }
+    public int TotalUserCount { get; private set; }
+    public int AdminUserCount { get; private set; }
+    public int LecturerUserCount { get; private set; }
+    public int StudentUserCount { get; private set; }
+    public int SubjectCount { get; private set; }
+    public int AssignedSubjectCount { get; private set; }
 
-    public async Task OnGetAsync(CancellationToken cancellationToken)
+    public async Task OnGetAsync(string? q, string? roleFilter, CancellationToken cancellationToken)
     {
-        await LoadAsync(cancellationToken);
+        await LoadAsync(q, roleFilter, cancellationToken);
     }
 
     public async Task<IActionResult> OnPostCreateUserAsync([FromForm] CreateAdminUserViewModel model, CancellationToken cancellationToken)
@@ -193,10 +201,12 @@ public sealed class IndexModel : PageModel
         return RedirectToPage("/Admin/Index");
     }
 
-    private async Task LoadAsync(CancellationToken cancellationToken)
+    private async Task LoadAsync(string? q, string? roleFilter, CancellationToken cancellationToken)
     {
         var users = await _users.GetAllAsync(cancellationToken);
         var subjects = await _knowledge.GetCourseCatalogAsync(cancellationToken);
+        var normalizedQuery = q?.Trim();
+        var normalizedRoleFilter = roleFilter?.Trim();
         var adminCount = users.Count(user => user.Role == AppRoles.Admin);
         var assignedSubjectsByUser = subjects
             .Where(subject => subject.OwnerUserId.HasValue)
@@ -222,17 +232,32 @@ public sealed class IndexModel : PageModel
                 OwnerEmail = subject.OwnerEmail
             })
             .ToList();
-        Users = users.Select(user => new AdminUserRowViewModel
-        {
-            Id = user.Id,
-            Email = user.Email,
-            FullName = user.FullName,
-            Provider = user.Provider,
-            Role = user.Role,
-            CreatedAt = user.CreatedAt,
-            IsLastAdmin = user.Role == AppRoles.Admin && adminCount <= 1,
-            AssignedSubjects = ResolveAssignedSubjectLabels(user, subjects, assignedSubjectsByUser)
-        }).ToList();
+        var userRows = users.Select(user => new AdminUserRowViewModel
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Provider = user.Provider,
+                Role = user.Role,
+                CreatedAt = user.CreatedAt,
+                IsLastAdmin = user.Role == AppRoles.Admin && adminCount <= 1,
+                AssignedSubjects = ResolveAssignedSubjectLabels(user, subjects, assignedSubjectsByUser)
+            })
+            .ToList();
+
+        Query = normalizedQuery;
+        RoleFilter = normalizedRoleFilter;
+        TotalUserCount = userRows.Count;
+        AdminUserCount = userRows.Count(user => user.Role == AppRoles.Admin);
+        LecturerUserCount = userRows.Count(user => user.Role == AppRoles.Lecturer);
+        StudentUserCount = userRows.Count(user => user.Role == AppRoles.Student);
+        SubjectCount = subjects.Count;
+        AssignedSubjectCount = subjects.Count(subject => subject.OwnerUserId.HasValue);
+
+        Users = userRows
+            .Where(user => string.IsNullOrWhiteSpace(normalizedQuery) || UserMatchesQuery(user, normalizedQuery))
+            .Where(user => string.IsNullOrWhiteSpace(normalizedRoleFilter) || user.Role.Equals(normalizedRoleFilter, StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
 
     private static IReadOnlyList<string> ResolveAssignedSubjectLabels(
@@ -253,6 +278,21 @@ public sealed class IndexModel : PageModel
         }
 
         return new[] { "All indexed documents" };
+    }
+
+    private static bool UserMatchesQuery(AdminUserRowViewModel user, string query)
+    {
+        return Contains(user.FullName, query)
+               || Contains(user.Email, query)
+               || Contains(user.Provider, query)
+               || Contains(user.Role, query)
+               || user.AssignedSubjects.Any(subject => Contains(subject, query));
+    }
+
+    private static bool Contains(string? value, string query)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+               && value.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsCurrentUser(Guid userId)

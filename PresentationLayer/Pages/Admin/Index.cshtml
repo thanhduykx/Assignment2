@@ -1,20 +1,61 @@
 @page
 @model PresentationLayer.Pages.Admin.IndexModel
 @{
-    ViewData["Title"] = "User roles";
+    ViewData["Title"] = "Người dùng / Users";
     ViewData["UseRblShell"] = true;
     ViewData["ActiveNav"] = "admin";
-    ViewData["ShellTitle"] = "User roles";
+    ViewData["ShellTitle"] = "Người dùng / Users";
+
+    var users = Model.Users
+        .OrderBy(user => user.Role)
+        .ThenBy(user => user.FullName)
+        .ThenBy(user => user.Email)
+        .ToList();
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Query)
+        || !string.IsNullOrWhiteSpace(Model.RoleFilter);
+
+    string DisplayName(PresentationLayer.Models.AdminUserRowViewModel user)
+    {
+        return string.IsNullOrWhiteSpace(user.FullName) ? user.Email : user.FullName;
+    }
+
+    string Initials(PresentationLayer.Models.AdminUserRowViewModel user)
+    {
+        var source = DisplayName(user).Trim();
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return "U";
+        }
+
+        var parts = source.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+        }
+
+        return source[..1].ToUpperInvariant();
+    }
+
+    string RoleClass(string role)
+    {
+        return role switch
+        {
+            PresentationLayer.Security.AppRoles.Admin => "ops-role--admin",
+            PresentationLayer.Security.AppRoles.Lecturer => "ops-role--lecturer",
+            PresentationLayer.Security.AppRoles.Student => "ops-role--student",
+            _ => "ops-role--muted"
+        };
+    }
 }
 
-<section class="rbl-panel rbl-document-table-panel">
-    <div class="rbl-panel-header">
+<section class="ops-page ops-admin-page">
+    <header class="ops-page-header">
         <div>
-            <span class="rbl-section-label">Admin</span>
-            <h2>User role management</h2>
+            <span class="ops-eyebrow">Access control</span>
+            <h1>Người dùng / User roles</h1>
+            <p>Quản lý tài khoản, vai trò và phân công môn phụ trách cho giảng viên.</p>
         </div>
-        <span class="rbl-table-meta">@Model.Users.Count users</span>
-    </div>
+    </header>
 
     @if (TempData["Success"] is string success)
     {
@@ -25,197 +66,276 @@
         <div class="rbl-alert is-error">@error</div>
     }
 
-    <section class="rbl-admin-create-user">
-        <div>
-            <span class="rbl-section-label">Create account</span>
-            <h3>Register a user</h3>
-        </div>
-        <form asp-page-handler="CreateUser" method="post" class="rbl-admin-create-form">
-            @Html.AntiForgeryToken()
-            <label class="rbl-field">
-                <span>Full name</span>
-                <input name="FullName" maxlength="120" autocomplete="name" />
-            </label>
-            <label class="rbl-field">
-                <span>Email</span>
-                <input name="Email" type="email" autocomplete="email" />
-            </label>
-            <label class="rbl-field">
-                <span>Password</span>
-                <input name="Password" type="password" minlength="8" autocomplete="new-password" />
-            </label>
-            <label class="rbl-field">
-                <span>Role</span>
-                <select name="Role">
-                    @foreach (var role in Model.Roles)
-                    {
-                        if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
+    <section class="ops-kpi-grid ops-admin-kpis" aria-label="User metrics">
+        <article class="ops-kpi">
+            <span>Total users</span>
+            <strong>@Model.TotalUserCount</strong>
+            <small>@users.Count shown</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Admins</span>
+            <strong>@Model.AdminUserCount</strong>
+            <small>Full system access</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Lecturers</span>
+            <strong>@Model.LecturerUserCount</strong>
+            <small>Manage assigned subjects</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Students</span>
+            <strong>@Model.StudentUserCount</strong>
+            <small>Read and chat access</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Subjects</span>
+            <strong>@Model.SubjectCount</strong>
+            <small>@Model.AssignedSubjectCount assigned</small>
+        </article>
+    </section>
+
+    <div class="ops-admin-layout">
+        <section class="ops-panel ops-admin-main">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow">Directory</span>
+                    <h2>Bảng người dùng / User table</h2>
+                </div>
+                <span class="ops-panel-note">@users.Count/@Model.TotalUserCount users</span>
+            </div>
+
+            <form asp-page="/Admin/Index" method="get" class="ops-filter-bar ops-admin-filter">
+                <label class="ops-field ops-field--search">
+                    <span>Search / Tìm kiếm</span>
+                    <input name="q" value="@Model.Query" placeholder="Name, email, provider, subject..." />
+                </label>
+                <label class="ops-field">
+                    <span>Role / Vai trò</span>
+                    <select name="roleFilter">
+                        @if (string.IsNullOrWhiteSpace(Model.RoleFilter))
                         {
-                            <option value="@role" selected>@role</option>
+                            <option value="" selected>All roles</option>
                         }
                         else
                         {
-                            <option value="@role">@role</option>
+                            <option value="">All roles</option>
                         }
-                    }
-                </select>
-            </label>
-            <button type="submit" class="rbl-submit-button">
-                <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
-                Create
-            </button>
-        </form>
-    </section>
-
-    <section class="rbl-admin-create-user">
-        <div>
-            <span class="rbl-section-label">Create subject</span>
-            <h3>Add a course subject</h3>
-        </div>
-        <form asp-page-handler="CreateSubject" method="post" class="rbl-admin-create-form rbl-admin-subject-form">
-            @Html.AntiForgeryToken()
-            <label class="rbl-field">
-                <span>Subject code</span>
-                <input name="Code" maxlength="32" placeholder="IOT102" autocomplete="off" />
-            </label>
-            <label class="rbl-field">
-                <span>Subject name</span>
-                <input name="Name" maxlength="255" placeholder="Internet of Things" autocomplete="off" />
-            </label>
-            <label class="rbl-field">
-                <span>Description</span>
-                <input name="Description" maxlength="1000" placeholder="Optional" autocomplete="off" />
-            </label>
-            <button type="submit" class="rbl-submit-button">
-                <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
-                Create subject
-            </button>
-        </form>
-    </section>
-
-    @if (Model.Users.Count == 0)
-    {
-        <div class="rbl-empty-state compact">
-            <strong>No users yet.</strong>
-            <p>The first registered account will become Admin automatically.</p>
-        </div>
-    }
-    else
-    {
-        <div class="rbl-table-wrap">
-            <table class="rbl-table rbl-user-role-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Provider</th>
-                        <th>Created</th>
-                        <th>Role</th>
-                        <th>Subjects</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var user in Model.Users)
-                {
-                    <tr>
-                        <td class="rbl-user-name-cell">
-                            <form asp-page-handler="UpdateName" method="post" class="rbl-user-name-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="UserId" value="@user.Id" />
-                                <label class="rbl-field rbl-user-name-field">
-                                    <span class="visually-hidden">Full name</span>
-                                    <input name="FullName" value="@user.FullName" maxlength="120" autocomplete="name" />
-                                </label>
-                                <button type="submit" class="rbl-small-button rbl-small-button--primary">Save</button>
-                            </form>
-                        </td>
-                        <td>@user.Email</td>
-                        <td>@user.Provider</td>
-                        <td>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td class="rbl-role-cell">
-                            <form asp-page-handler="UpdateRole" method="post" class="rbl-role-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="UserId" value="@user.Id" />
-                                <label class="rbl-field rbl-role-field">
-                                    <span class="visually-hidden">Role</span>
-                                    <select name="Role" disabled="@user.IsLastAdmin">
-                                        @foreach (var role in Model.Roles)
-                                        {
-                                            if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                <option value="@role" selected>@role</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="@role">@role</option>
-                                            }
-                                        }
-                                    </select>
-                                </label>
-                                <button type="submit" class="rbl-small-button rbl-small-button--primary" disabled="@user.IsLastAdmin">Save</button>
-                            </form>
-                        </td>
-                        <td class="rbl-lecturer-subject-cell">
-                            @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)
+                        @foreach (var role in Model.Roles)
+                        {
+                            if (role.Equals(Model.RoleFilter, StringComparison.OrdinalIgnoreCase))
                             {
-                                <div class="rbl-lecturer-subjects">
-                                    @if (user.AssignedSubjects.Count == 0)
-                                    {
-                                        <span class="rbl-muted-chip">No owned subjects</span>
-                                    }
-                                    else
-                                    {
-                                        foreach (var subject in user.AssignedSubjects)
-                                        {
-                                            <span class="rbl-subject-owner-chip">@subject</span>
-                                        }
-                                    }
-                                </div>
-                                <form asp-page-handler="AssignLecturerSubject" method="post" class="rbl-lecturer-subject-form">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="UserId" value="@user.Id" />
-                                    <label class="rbl-field rbl-lecturer-subject-field">
-                                        <span class="visually-hidden">Subject</span>
-                                        <select name="SubjectId" disabled="@(Model.SubjectOptions.Count == 0)">
-                                            @if (Model.SubjectOptions.Count == 0)
-                                            {
-                                                <option value="">No subjects</option>
-                                            }
-                                            else
-                                            {
-                                                foreach (var subject in Model.SubjectOptions)
-                                                {
-                                                    var ownerLabel = string.IsNullOrWhiteSpace(subject.OwnerName)
-                                                        ? "Unassigned"
-                                                        : $"Owner: {subject.OwnerName}";
-                                                    <option value="@subject.Id">@subject.DisplayName (@ownerLabel)</option>
-                                                }
-                                            }
-                                        </select>
-                                    </label>
-                                    <button type="submit" class="rbl-small-button rbl-small-button--primary" disabled="@(Model.SubjectOptions.Count == 0)">Assign</button>
-                                </form>
-                            }
-                            else if (user.Role == PresentationLayer.Security.AppRoles.Student)
-                            {
-                                <span class="rbl-subject-owner-chip">All indexed documents</span>
+                                <option value="@role" selected>@role</option>
                             }
                             else
                             {
-                                <span class="rbl-muted-chip">Not applicable</span>
+                                <option value="@role">@role</option>
                             }
-                        </td>
-                        <td class="rbl-role-status-cell">
-                            @if (user.IsLastAdmin)
-                            {
-                                <span class="rbl-status is-success">Last admin</span>
-                            }
-                        </td>
-                    </tr>
+                        }
+                    </select>
+                </label>
+                <button type="submit" class="ops-button ops-button--secondary">Filter</button>
+                @if (hasActiveFilters)
+                {
+                    <a class="ops-button ops-button--ghost" asp-page="/Admin/Index">Clear</a>
                 }
-                </tbody>
-            </table>
-        </div>
-    }
+            </form>
+
+            @if (users.Count == 0)
+            {
+                <div class="ops-empty">
+                    <strong>No matching users.</strong>
+                    <p>Clear filters or create a new account from the command panel.</p>
+                </div>
+            }
+            else
+            {
+                <div class="ops-table-wrap">
+                    <table class="ops-table ops-user-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Provider</th>
+                                <th>Created</th>
+                                <th>Role / Vai trò</th>
+                                <th>Subjects</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var user in users)
+                        {
+                            <tr>
+                                <td data-label="User">
+                                    <form asp-page-handler="UpdateName" method="post" class="ops-user-cell">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="UserId" value="@user.Id" />
+                                        <span class="ops-avatar">@Initials(user)</span>
+                                        <label class="ops-inline-field">
+                                            <span class="visually-hidden">Full name</span>
+                                            <input name="FullName" value="@user.FullName" maxlength="120" autocomplete="name" />
+                                            <small>@user.Email</small>
+                                        </label>
+                                        <button type="submit" class="ops-mini-button">Save</button>
+                                    </form>
+                                </td>
+                                <td data-label="Provider">
+                                    <span class="ops-chip">@user.Provider</span>
+                                </td>
+                                <td data-label="Created">
+                                    <span>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
+                                </td>
+                                <td data-label="Role / Vai trò">
+                                    <form asp-page-handler="UpdateRole" method="post" class="ops-role-form">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="UserId" value="@user.Id" />
+                                        <span class="ops-role-dot @RoleClass(user.Role)" aria-hidden="true"></span>
+                                        <select name="Role" disabled="@user.IsLastAdmin">
+                                            @foreach (var role in Model.Roles)
+                                            {
+                                                if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <option value="@role" selected>@role</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@role">@role</option>
+                                                }
+                                            }
+                                        </select>
+                                        <button type="submit" class="ops-mini-button" disabled="@user.IsLastAdmin">Save</button>
+                                    </form>
+                                </td>
+                                <td data-label="Subjects">
+                                    @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)
+                                    {
+                                        <div class="ops-subject-cell">
+                                            <div class="ops-chip-list">
+                                                @if (user.AssignedSubjects.Count == 0)
+                                                {
+                                                    <span class="ops-chip ops-chip--muted">No owned subjects</span>
+                                                }
+                                                else
+                                                {
+                                                    foreach (var subject in user.AssignedSubjects)
+                                                    {
+                                                        <span class="ops-chip">@subject</span>
+                                                    }
+                                                }
+                                            </div>
+                                            <form asp-page-handler="AssignLecturerSubject" method="post" class="ops-assign-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="UserId" value="@user.Id" />
+                                                <select name="SubjectId" disabled="@(Model.SubjectOptions.Count == 0)">
+                                                    @if (Model.SubjectOptions.Count == 0)
+                                                    {
+                                                        <option value="">No subjects</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        foreach (var subject in Model.SubjectOptions)
+                                                        {
+                                                            var ownerLabel = string.IsNullOrWhiteSpace(subject.OwnerName)
+                                                                ? "Unassigned"
+                                                                : $"Owner: {subject.OwnerName}";
+                                                            <option value="@subject.Id">@subject.DisplayName (@ownerLabel)</option>
+                                                        }
+                                                    }
+                                                </select>
+                                                <button type="submit" class="ops-mini-button" disabled="@(Model.SubjectOptions.Count == 0)">Assign</button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else if (user.Role == PresentationLayer.Security.AppRoles.Student)
+                                    {
+                                        <span class="ops-chip">All indexed documents</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ops-chip ops-chip--muted">Not applicable</span>
+                                    }
+                                </td>
+                                <td data-label="Status">
+                                    @if (user.IsLastAdmin)
+                                    {
+                                        <span class="rbl-status is-success">Last admin</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ops-muted">Active</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <aside class="ops-command-rail" aria-label="Admin commands">
+            <section class="ops-panel ops-command-card">
+                <span class="ops-eyebrow">Create account</span>
+                <h2>Thêm user</h2>
+                <form asp-page-handler="CreateUser" method="post" class="ops-stacked-form">
+                    @Html.AntiForgeryToken()
+                    <label class="ops-field">
+                        <span>Full name</span>
+                        <input name="FullName" maxlength="120" autocomplete="name" />
+                    </label>
+                    <label class="ops-field">
+                        <span>Email</span>
+                        <input name="Email" type="email" autocomplete="email" />
+                    </label>
+                    <label class="ops-field">
+                        <span>Password</span>
+                        <input name="Password" type="password" minlength="8" autocomplete="new-password" />
+                    </label>
+                    <label class="ops-field">
+                        <span>Role</span>
+                        <select name="Role">
+                            @foreach (var role in Model.Roles)
+                            {
+                                if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@role" selected>@role</option>
+                                }
+                                else
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            }
+                        </select>
+                    </label>
+                    <button type="submit" class="ops-button ops-button--primary">
+                        <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
+                        Create user
+                    </button>
+                </form>
+            </section>
+
+            <section class="ops-panel ops-command-card">
+                <span class="ops-eyebrow">Create subject</span>
+                <h2>Thêm môn</h2>
+                <form asp-page-handler="CreateSubject" method="post" class="ops-stacked-form">
+                    @Html.AntiForgeryToken()
+                    <label class="ops-field">
+                        <span>Subject code</span>
+                        <input name="Code" maxlength="32" placeholder="IOT102" autocomplete="off" />
+                    </label>
+                    <label class="ops-field">
+                        <span>Subject name</span>
+                        <input name="Name" maxlength="255" placeholder="Internet of Things" autocomplete="off" />
+                    </label>
+                    <label class="ops-field">
+                        <span>Description</span>
+                        <input name="Description" maxlength="1000" placeholder="Optional" autocomplete="off" />
+                    </label>
+                    <button type="submit" class="ops-button ops-button--primary">
+                        <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
+                        Create subject
+                    </button>
+                </form>
+            </section>
+        </aside>
+    </div>
 </section>
