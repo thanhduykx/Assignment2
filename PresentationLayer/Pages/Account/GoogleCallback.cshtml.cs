@@ -81,7 +81,7 @@ public sealed class GoogleCallbackModel : PageModel
 
         return AppRoles.Normalize(user.Role) switch
         {
-            AppRoles.Admin => RedirectToPage("/Research/Index"),
+            AppRoles.Admin => RedirectToPage("/Home/Index"),
             AppRoles.Lecturer => RedirectToPage("/Home/Index"),
             _ => RedirectToPage("/Home/Chat")
         };
@@ -102,8 +102,7 @@ public sealed class GoogleCallbackModel : PageModel
 
         if (role == AppRoles.Lecturer)
         {
-            return !path.StartsWith("/Research", StringComparison.OrdinalIgnoreCase)
-                   && !path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
+            return !path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
         }
 
         return path.Equals("/Home/Chat", StringComparison.OrdinalIgnoreCase)

@@ -497,7 +497,7 @@ public sealed class RagChatServiceTests
             var service = new FineTunedChatService(
                 researchRepository: null,
                 new HttpClient(),
-                new FineTunedChatOptions(true, "local://supervised-qa", "local://supervised-qa", 0.62, false, path));
+                new FineTunedChatOptions(true, "local://supervised-qa", "local://supervised-qa", 0.62, path));
 
             var answer = await service.TryAnswerAsync(
                 "DBA103 co chuan dau ra nao?",
@@ -534,7 +534,7 @@ public sealed class RagChatServiceTests
             var service = new FineTunedChatService(
                 researchRepository: null,
                 new HttpClient(),
-                new FineTunedChatOptions(true, "local://supervised-qa", "local://supervised-qa", 0.9, false, path));
+                new FineTunedChatOptions(true, "local://supervised-qa", "local://supervised-qa", 0.9, path));
 
             var answer = await service.TryAnswerAsync(
                 "DBA103 sinh vien can lam gi?",

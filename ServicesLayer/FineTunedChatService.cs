@@ -13,7 +13,6 @@ public sealed record FineTunedChatOptions(
     string Provider,
     string Endpoint,
     double MinimumConfidence,
-    bool UseLatestResearchModel,
     string ExamplesPath);
 
 public sealed record FineTunedChatAnswer(
@@ -68,16 +67,13 @@ public sealed class FineTunedChatService : IFineTunedChatService
         "ai", "gi", "nao", "hay", "biet", "ve", "khong", "da", "bao", "nhieu", "may", "hoi", "can", "noi", "mon", "hoc"
     };
 
-    private readonly IResearchRepository? _researchRepository;
     private readonly HttpClient _httpClient;
     private readonly FineTunedChatOptions _options;
 
     public FineTunedChatService(
-        IResearchRepository? researchRepository,
         HttpClient httpClient,
         FineTunedChatOptions options)
     {
-        _researchRepository = researchRepository;
         _httpClient = httpClient;
         _options = options;
     }
@@ -95,11 +91,8 @@ public sealed class FineTunedChatService : IFineTunedChatService
         }
 
         var minimumConfidence = Math.Clamp(_options.MinimumConfidence <= 0 ? 0.62 : _options.MinimumConfidence, 0, 1);
-        var model = _options.UseLatestResearchModel && _researchRepository is not null
-            ? await _researchRepository.GetLatestFineTunedModelAsync(cancellationToken)
-            : null;
-        var endpoint = string.IsNullOrWhiteSpace(model?.Endpoint) ? _options.Endpoint : model.Endpoint;
-        var modelName = string.IsNullOrWhiteSpace(model?.Name) ? "local-supervised-qa" : model.Name;
+        var endpoint = _options.Endpoint;
+        var modelName = "local-supervised-qa";
 
         if (!string.IsNullOrWhiteSpace(endpoint)
             && !endpoint.Equals("local://supervised-qa", StringComparison.OrdinalIgnoreCase))
@@ -112,10 +105,6 @@ public sealed class FineTunedChatService : IFineTunedChatService
 
         var examples = new List<FineTunedChatExample>();
         examples.AddRange(await LoadExamplesFromFileAsync(cancellationToken));
-        if (!string.IsNullOrWhiteSpace(model?.ConfigJson))
-        {
-            examples.AddRange(LoadExamplesFromConfig(model.ConfigJson, subject));
-        }
 
         var localAnswer = FindBestLocalAnswer(question, subject, allowedSubjects, examples, modelName);
         return localAnswer is not null && localAnswer.Confidence >= minimumConfidence
@@ -179,19 +168,6 @@ public sealed class FineTunedChatService : IFineTunedChatService
             return ParseExamples(document.RootElement, null);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
-        {
-            return Array.Empty<FineTunedChatExample>();
-        }
-    }
-
-    private static IReadOnlyList<FineTunedChatExample> LoadExamplesFromConfig(string configJson, string? subject)
-    {
-        try
-        {
-            using var document = JsonDocument.Parse(configJson);
-            return ParseExamples(document.RootElement, subject);
-        }
-        catch (JsonException)
         {
             return Array.Empty<FineTunedChatExample>();
         }

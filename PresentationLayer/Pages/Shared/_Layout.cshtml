@@ -2,7 +2,7 @@
 @{
     var useRblShell = ViewData["UseRblShell"] as bool? ?? false;
     var activeNav = (ViewData["ActiveNav"] as string ?? string.Empty).ToLowerInvariant();
-    var shellTitle = ViewData["ShellTitle"] as string ?? ViewData["Title"] as string ?? "RBL Portal";
+    var shellTitle = ViewData["ShellTitle"] as string ?? ViewData["Title"] as string ?? "Course Assistant";
     var bodyClass = $"{ViewData["BodyClass"]} {(useRblShell ? "rbl-body" : string.Empty)}".Trim();
     var displayName = User.FindFirstValue(ClaimTypes.Name)
         ?? User.FindFirstValue(ClaimTypes.Email)?.Split('@')[0]
@@ -14,16 +14,13 @@
     var canChat = isAuthenticated;
     var canViewDocuments = isAuthenticated;
     var canManageDocuments = currentRole == AppRoles.Lecturer || currentRole == AppRoles.Admin;
-    var canManageResearch = currentRole == AppRoles.Admin;
     var canManageUsers = currentRole == AppRoles.Admin;
-    var homePage = currentRole == AppRoles.Admin ? "/Research/Index" : currentRole == AppRoles.Lecturer ? "/Home/Index" : "/Home/Chat";
+    var homePage = currentRole == AppRoles.Student ? "/Home/Chat" : "/Home/Index";
     
     var hideAssistantLauncher = ViewData["HideAssistantLauncher"] as bool? ?? false;
     var shellTitleI18n = ViewData["ShellTitleI18n"] as string;
-    var dashboardNavClass = activeNav == "dashboard" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var chatNavClass = activeNav == "chat" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var documentsNavClass = activeNav == "documents" ? "rbl-nav-link is-active" : "rbl-nav-link";
-    var configNavClass = activeNav == "config" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var adminNavClass = activeNav == "admin" ? "rbl-nav-link is-active" : "rbl-nav-link";
 }
 <!DOCTYPE html>
@@ -69,62 +66,40 @@
     @if (useRblShell)
     {
         <div class="rbl-app-frame">
-            <aside class="rbl-sidebar" aria-label="RBL navigation">
+            <aside class="rbl-sidebar" aria-label="Application navigation">
                 <div class="rbl-brand">
                     <span class="rbl-brand-mark">
-                        <img src="~/img/dog.gif" asp-append-version="true" alt="EdTech AI dog logo" />
+                        <span class="material-symbols-outlined" aria-hidden="true">school</span>
                     </span>
                     <div>
-                        <strong>EdTech AI</strong>
-                        <span data-i18n="shell.portal">Research Portal</span>
+                        <strong>Course Assistant</strong>
+                        <span data-i18n="shell.portal">Learning Ops / Vận hành học tập</span>
                     </div>
                 </div>
 
                 <nav class="rbl-nav">
-                    @if (canManageResearch)
-                    {
-                    <a class="@dashboardNavClass" asp-page="/Research/Index">
-                        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                        <span data-i18n="shell.dashboard">Dashboard Nghiên cứu</span>
-                    </a>
-                    }
                     @if (canChat)
                     {
                     <a class="@chatNavClass" asp-page="/Home/Chat">
                         <span class="material-symbols-outlined" aria-hidden="true">chat</span>
-                        <span data-i18n="shell.chatbot">Chatbot</span>
+                        <span data-i18n="shell.chatbot">Hỏi đáp / Chat</span>
                     </a>
                     }
                     @if (canViewDocuments)
                     {
                     <a class="@documentsNavClass" asp-page="/Home/Index">
                         <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
-                        <span data-i18n="shell.documents">Kho tài liệu</span>
-                    </a>
-                    }
-                    @if (canManageResearch)
-                    {
-                    <a class="@configNavClass" asp-page="/Research/Create">
-                        <span class="material-symbols-outlined" aria-hidden="true">settings_applications</span>
-                        <span data-i18n="shell.config">Cấu hình thực nghiệm</span>
+                        <span data-i18n="shell.documents">Kho tài liệu / Documents</span>
                     </a>
                     }
                     @if (canManageUsers)
                     {
                     <a class="@adminNavClass" asp-page="/Admin/Index">
                         <span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
-                        <span>User roles</span>
+                        <span>Người dùng / Users</span>
                     </a>
                     }
                 </nav>
-
-                @if (canManageResearch)
-                {
-                    <a class="rbl-primary-action" asp-page="/Research/Create">
-                        <span class="material-symbols-outlined" aria-hidden="true">add</span>
-                        <span data-i18n="shell.newResearchProject">New Research Project</span>
-                    </a>
-                }
 
                 <div class="rbl-sidebar-footer">
                     <a class="rbl-nav-link compact" asp-page="/Home/Privacy">
@@ -132,13 +107,13 @@
                         <span data-i18n="shell.help">Help</span>
                     </a>
                     <div class="rbl-user-card">
-                        <span class="rbl-user-avatar">@userInitial</span>
-                        <div>
-                            <strong>@displayName</strong>
-                            <span>@accountEmail</span>
-                            <span>@currentRole</span>
+                            <span class="rbl-user-avatar">@userInitial</span>
+                            <div>
+                                <strong>@displayName</strong>
+                                <span>@accountEmail</span>
+                                <span>@currentRole</span>
+                            </div>
                         </div>
-                    </div>
                 </div>
             </aside>
 
@@ -153,22 +128,12 @@
                         {
                             <span>@shellTitle</span>
                         }
-                        <label class="rbl-search">
-                            <span class="material-symbols-outlined" aria-hidden="true">search</span>
-                            <input type="search" placeholder="Tìm kiếm trong hệ thống..." data-i18n-placeholder="shell.search" />
-                        </label>
                     </div>
                     <div class="rbl-topbar-actions">
                         <div class="language-switch rbl-language-switch" role="group" aria-label="Language">
                             <button type="button" class="language-option" data-language-option="en" aria-pressed="true">ENG</button>
                             <button type="button" class="language-option" data-language-option="vi" aria-pressed="false">VN</button>
                         </div>
-                        <button type="button" class="rbl-icon-button" aria-label="Notifications" data-i18n-aria-label="shell.notifications">
-                            <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
-                        </button>
-                        <button type="button" class="rbl-icon-button" aria-label="History" data-i18n-aria-label="shell.history">
-                            <span class="material-symbols-outlined" aria-hidden="true">history</span>
-                        </button>
                         @if (isAuthenticated)
                         {
                             <form asp-page="/Account/Logout" method="post" class="rbl-account-form">
@@ -217,12 +182,6 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Home/Chat" data-i18n="nav.chat">Chat</a>
-                                </li>
-                            }
-                            @if (canManageResearch)
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/Research/Index">RBL</a>
                                 </li>
                             }
                             @if (canManageUsers)
