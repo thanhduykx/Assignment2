@@ -26,7 +26,6 @@ public sealed class ChatModel : HomePageModelBase
     public IReadOnlyList<ChatSession> ChatSessions { get; private set; } = Array.Empty<ChatSession>();
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<string> SubjectOptions { get; private set; } = Array.Empty<string>();
-    public IReadOnlyList<ChatQuestionSuggestionViewModel> BenchmarkQuestions { get; private set; } = Array.Empty<ChatQuestionSuggestionViewModel>();
     public string? LoadErrorMessage { get; private set; }
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
@@ -68,6 +67,5 @@ public sealed class ChatModel : HomePageModelBase
 
         Documents = indexedDocuments;
         SubjectOptions = subjectOptions;
-        BenchmarkQuestions = LoadFineTunedQuestionSuggestions(subjectOptions);
     }
 }

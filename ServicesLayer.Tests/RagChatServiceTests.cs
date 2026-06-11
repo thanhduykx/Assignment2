@@ -69,7 +69,13 @@ public sealed class RagChatServiceTests
                 Subject = "DBA103 - Nhac cu truyen thong",
                 Chapter = "Tong Quan",
                 ChunkIndex = 1,
-                Text = "Subject Code: DBA103 NoCredit: 3",
+                Text = """
+                    Syllabus ID: 11835
+                    Syllabus Name: Nhac cu truyen thong
+                    Subject Code: DBA103
+                    NoCredit: 3
+                    Degree Level: Beginner
+                    """,
                 Embedding = new Dictionary<int, double> { [1] = 1 }
             }
         });
@@ -399,7 +405,7 @@ public sealed class RagChatServiceTests
     }
 
     [Fact]
-    public async Task AskAsync_DoesNotUseFineTunedFallback_WhenRagHasNoEvidence()
+    public async Task AskAsync_ReturnsOutOfScope_WhenRagHasNoEvidence()
     {
         var repository = new InMemoryChatKnowledgeRepository(new[]
         {
@@ -433,7 +439,7 @@ public sealed class RagChatServiceTests
     }
 
     [Fact]
-    public async Task AskAsync_UsesDocumentChunksWithoutFineTunedFallback()
+    public async Task AskAsync_UsesDocumentChunksForRagAnswer()
     {
         var repository = new InMemoryChatKnowledgeRepository(new[]
         {
@@ -509,80 +515,6 @@ public sealed class RagChatServiceTests
         Assert.Contains("Tong Quan", answer.Answer);
         Assert.Contains("Assessment", answer.Answer);
         Assert.NotEmpty(answer.Citations);
-    }
-
-    [Fact]
-    public async Task FineTunedChatService_DoesNotUseExampleFromWrongSubject()
-    {
-        var path = Path.Combine(Path.GetTempPath(), $"fine-tuned-chat-{Guid.NewGuid():N}.json");
-        await File.WriteAllTextAsync(path, """
-            {
-              "examples": [
-                {
-                  "subject": "IOT102 - Internet of Things",
-                  "status": "Approved",
-                  "question": "IOT102 co chuan dau ra nao?",
-                  "answer": "IOT102 co chuan dau ra ve cam bien va ket noi IoT."
-                }
-              ]
-            }
-            """);
-        try
-        {
-            var service = new FineTunedChatService(
-                researchRepository: null,
-                new HttpClient(),
-                new FineTunedChatOptions(true, "local://supervised-qa", "local://supervised-qa", 0.62, path));
-
-            var answer = await service.TryAnswerAsync(
-                "DBA103 co chuan dau ra nao?",
-                "DBA103 - Nhac cu truyen thong - Dan Bau",
-                Array.Empty<ChatMessage>(),
-                new[] { "DBA103 - Nhac cu truyen thong - Dan Bau", "IOT102 - Internet of Things" });
-
-            Assert.Null(answer);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
-    }
-
-    [Fact]
-    public async Task FineTunedChatService_RejectsLowConfidenceMatch()
-    {
-        var path = Path.Combine(Path.GetTempPath(), $"fine-tuned-chat-{Guid.NewGuid():N}.json");
-        await File.WriteAllTextAsync(path, """
-            {
-              "examples": [
-                {
-                  "subject": "DBA103 - Nhac cu truyen thong - Dan Bau",
-                  "status": "Approved",
-                  "question": "DBA103 co bao nhieu tin chi?",
-                  "answer": "DBA103 co 3 tin chi."
-                }
-              ]
-            }
-            """);
-        try
-        {
-            var service = new FineTunedChatService(
-                researchRepository: null,
-                new HttpClient(),
-                new FineTunedChatOptions(true, "local://supervised-qa", "local://supervised-qa", 0.9, path));
-
-            var answer = await service.TryAnswerAsync(
-                "DBA103 sinh vien can lam gi?",
-                "DBA103 - Nhac cu truyen thong - Dan Bau",
-                Array.Empty<ChatMessage>(),
-                new[] { "DBA103 - Nhac cu truyen thong - Dan Bau" });
-
-            Assert.Null(answer);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
     }
 
     private sealed class NoOpChatCompletionService : ILocalChatCompletionService

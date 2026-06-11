@@ -23,7 +23,18 @@ public sealed class DocumentIndexWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await EnqueueProcessingDocumentsAsync(stoppingToken);
+        try
+        {
+            await EnqueueProcessingDocumentsAsync(stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not enqueue pending indexing jobs at startup.");
+        }
 
         try
         {

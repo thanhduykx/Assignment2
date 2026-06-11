@@ -67,24 +67,6 @@ namespace PresentationLayer
                 options.AddPolicy(AuthorizationPolicies.AdminOnly, policy =>
                     policy.RequireRole(AppRoles.Admin));
             });
-            var geminiSection = builder.Configuration.GetSection("Gemini");
-            var geminiApiKey = FirstConfigured(
-                geminiSection["ApiKey"],
-                builder.Configuration["GEMINI_API_KEY"],
-                Environment.GetEnvironmentVariable("GEMINI_API_KEY"));
-            var geminiEnabled = !bool.TryParse(geminiSection["Enabled"], out var parsedGeminiEnabled) || parsedGeminiEnabled;
-            var geminiChatModel = geminiSection["Model"] ?? "gemini-3.5-flash";
-            var geminiEmbeddingModel = builder.Configuration["Embedding:Model"]
-                ?? geminiSection["EmbeddingModel"]
-                ?? "gemini-embedding-001";
-            var geminiEmbeddingDimensions = int.TryParse(
-                    builder.Configuration["Embedding:OutputDimensionality"] ?? geminiSection["EmbeddingOutputDimensionality"],
-                    out var parsedEmbeddingDimensions)
-                ? parsedEmbeddingDimensions
-                : 768;
-            var geminiTimeoutSeconds = int.TryParse(geminiSection["TimeoutSeconds"], out var parsedGeminiTimeout)
-                ? parsedGeminiTimeout
-                : 120;
             var huggingFaceSection = builder.Configuration.GetSection("HuggingFace");
             var huggingFaceToken = FirstConfigured(
                 Environment.GetEnvironmentVariable("HF_TOKEN"),
@@ -103,53 +85,7 @@ namespace PresentationLayer
                 huggingFaceTimeoutSeconds,
                 huggingFaceSection["ChatBaseUrl"] ?? "https://router.huggingface.co/v1/chat/completions",
                 huggingFaceSection["EmbeddingBaseUrl"] ?? "https://router.huggingface.co/hf-inference/models");
-            var useHuggingFace = huggingFaceOptions.Enabled && !string.IsNullOrWhiteSpace(huggingFaceOptions.Token);
-            var semanticChunkingEnabled = bool.TryParse(
-                    builder.Configuration["SemanticChunking:Enabled"] ?? geminiSection["EnableSemanticChunking"],
-                    out var parsedSemanticChunkingEnabled)
-                && parsedSemanticChunkingEnabled;
-            var semanticChunkingModel = builder.Configuration["SemanticChunking:Model"]
-                ?? geminiSection["ChunkingModel"]
-                ?? geminiChatModel;
-            var semanticChunkingMaxPromptCharacters = int.TryParse(
-                    builder.Configuration["SemanticChunking:MaxPromptCharacters"] ?? geminiSection["ChunkingMaxPromptCharacters"],
-                    out var parsedMaxPromptCharacters)
-                ? parsedMaxPromptCharacters
-                : 16000;
-            var semanticChunkingMaxParagraphs = int.TryParse(
-                    builder.Configuration["SemanticChunking:MaxParagraphs"] ?? geminiSection["ChunkingMaxParagraphs"],
-                    out var parsedMaxParagraphs)
-                ? parsedMaxParagraphs
-                : 180;
-            var fineTunedChatSection = builder.Configuration.GetSection("FineTunedChat");
-            var fineTunedChatEnabled = !bool.TryParse(fineTunedChatSection["Enabled"], out var parsedFineTunedChatEnabled)
-                                       || parsedFineTunedChatEnabled;
-            var fineTunedChatMinimumConfidence = double.TryParse(
-                    fineTunedChatSection["MinimumConfidence"],
-                    System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    out var parsedFineTunedMinimumConfidence)
-                ? parsedFineTunedMinimumConfidence
-                : 0.62;
-            var configuredFineTunedExamplesPath = fineTunedChatSection["ExamplesPath"];
-            var fineTunedChatExamplesPath = string.IsNullOrWhiteSpace(configuredFineTunedExamplesPath)
-                ? Path.Combine(builder.Environment.ContentRootPath, "App_Data", "fine-tuned-chat-examples.json")
-                : Path.IsPathRooted(configuredFineTunedExamplesPath)
-                    ? configuredFineTunedExamplesPath
-                    : Path.Combine(builder.Environment.ContentRootPath, configuredFineTunedExamplesPath);
-            builder.Services.AddSingleton(new ServicesLayer.GeminiApiOptions(
-                geminiApiKey,
-                geminiChatModel,
-                geminiEmbeddingModel,
-                geminiEmbeddingDimensions,
-                geminiEnabled));
             builder.Services.AddSingleton(huggingFaceOptions);
-            builder.Services.AddSingleton(new ServicesLayer.FineTunedChatOptions(
-                fineTunedChatEnabled,
-                fineTunedChatSection["Provider"] ?? "local://supervised-qa",
-                fineTunedChatSection["Endpoint"] ?? "local://supervised-qa",
-                fineTunedChatMinimumConfidence,
-                fineTunedChatExamplesPath));
             builder.Services.AddSingleton<DataAccessLayer.IKnowledgeRepository>(_ =>
             {
                 var repository = new DataAccessLayer.Repositories.SqlKnowledgeRepository(
@@ -182,85 +118,24 @@ namespace PresentationLayer
             });
             builder.Services.AddSingleton<ServicesLayer.IEmbeddingService>(_ =>
             {
-                var embedding = builder.Configuration.GetSection("Embedding");
-                var timeoutSeconds = int.TryParse(embedding["TimeoutSeconds"], out var parsedTimeout)
-                    ? parsedTimeout
-                    : 120;
-
-                if (useHuggingFace)
-                {
-                    return new ServicesLayer.HuggingFaceEmbeddingService(
-                        new HttpClient
-                        {
-                            Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
-                        },
-                        huggingFaceOptions);
-                }
-
-                var geminiEmbeddingService = new ServicesLayer.GeminiEmbeddingService(
+                return new ServicesLayer.HuggingFaceEmbeddingService(
                     new HttpClient
                     {
-                        BaseAddress = new Uri("https://generativelanguage.googleapis.com/"),
-                        Timeout = TimeSpan.FromSeconds(Math.Max(5, timeoutSeconds))
+                        Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
                     },
-                    new ServicesLayer.GeminiApiOptions(
-                        geminiApiKey,
-                        geminiChatModel,
-                        geminiEmbeddingModel,
-                        geminiEmbeddingDimensions,
-                        geminiEnabled));
-
-                return new ServicesLayer.FallbackEmbeddingService(
-                    geminiEmbeddingService,
-                    new ServicesLayer.HashingEmbeddingService());
+                    huggingFaceOptions);
             });
             builder.Services.AddSingleton<ServicesLayer.ILocalChatCompletionService>(_ =>
             {
-                if (useHuggingFace)
-                {
-                    return new ServicesLayer.HuggingFaceChatCompletionService(
-                        new HttpClient
-                        {
-                            Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
-                        },
-                        huggingFaceOptions);
-                }
-
-                return new ServicesLayer.GeminiChatCompletionService(
+                return new ServicesLayer.HuggingFaceChatCompletionService(
                     new HttpClient
                     {
-                        BaseAddress = new Uri("https://generativelanguage.googleapis.com/"),
-                        Timeout = TimeSpan.FromSeconds(Math.Max(5, geminiTimeoutSeconds))
+                        Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
                     },
-                    geminiChatModel,
-                    geminiApiKey,
-                    geminiEnabled);
+                    huggingFaceOptions);
             });
-            builder.Services.AddSingleton<ServicesLayer.IFineTunedChatService>(serviceProvider =>
-                new ServicesLayer.FineTunedChatService(
-                    new HttpClient
-                    {
-                        Timeout = TimeSpan.FromSeconds(Math.Max(5, geminiTimeoutSeconds))
-                    },
-                    serviceProvider.GetRequiredService<ServicesLayer.FineTunedChatOptions>()));
             builder.Services.AddSingleton<ServicesLayer.IDocumentTextExtractor, ServicesLayer.DocumentTextExtractor>();
-            builder.Services.AddSingleton<ServicesLayer.ITextChunker>(_ =>
-            {
-                var fallbackChunker = new ServicesLayer.ParagraphAwareTextChunker();
-                return new ServicesLayer.GeminiSemanticTextChunker(
-                    new HttpClient
-                    {
-                        BaseAddress = new Uri("https://generativelanguage.googleapis.com/"),
-                        Timeout = TimeSpan.FromSeconds(Math.Max(5, geminiTimeoutSeconds))
-                    },
-                    new ServicesLayer.GeminiSemanticChunkingOptions(
-                        geminiApiKey,
-                        semanticChunkingModel,
-                        semanticChunkingEnabled && geminiEnabled,
-                        semanticChunkingMaxPromptCharacters,
-                        semanticChunkingMaxParagraphs),
-                    fallbackChunker);
-            });
+            builder.Services.AddSingleton<ServicesLayer.ITextChunker, ServicesLayer.ParagraphAwareTextChunker>();
             builder.Services.AddSingleton<ServicesLayer.IDocumentIndexJobQueue, ServicesLayer.DocumentIndexJobQueue>();
             builder.Services.AddSingleton<ServicesLayer.IWebPageTextExtractor>(_ =>
                 new ServicesLayer.WebPageTextExtractor(new HttpClient

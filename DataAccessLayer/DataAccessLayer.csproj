@@ -19,7 +19,6 @@
     <Compile Remove="Entities\Experiment.cs" />
     <Compile Remove="Entities\ExperimentRun.cs" />
     <Compile Remove="Entities\BenchmarkResult.cs" />
-    <Compile Remove="Entities\FineTuneModel.cs" />
     <Compile Remove="Entities\TestQuestion.cs" />
     <Compile Remove="EduVietRagDbContext.cs" />
     <Compile Remove="Migrations\**\*.cs" />
