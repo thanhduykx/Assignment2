@@ -14,6 +14,7 @@ public sealed class IndexModel : HomePageModelBase
     private readonly IEmbeddingService _embeddingService;
     private readonly ITextChunker _chunker;
     private readonly IChunkRetrievalEnrichmentService _chunkEnrichment;
+    private readonly IDocumentStatusNotifier _documentStatusNotifier;
 
     public IndexModel(
         ILogger<HomePageModelBase> logger,
@@ -26,12 +27,14 @@ public sealed class IndexModel : HomePageModelBase
         IDocumentIndexJobQueue indexJobQueue,
         IEmbeddingService embeddingService,
         ITextChunker chunker,
-        IChunkRetrievalEnrichmentService chunkEnrichment)
+        IChunkRetrievalEnrichmentService chunkEnrichment,
+        IDocumentStatusNotifier documentStatusNotifier)
         : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
         _embeddingService = embeddingService;
         _chunker = chunker;
         _chunkEnrichment = chunkEnrichment;
+        _documentStatusNotifier = documentStatusNotifier;
     }
 
     private string EffectiveChunkingStrategy => $"{_chunker.StrategyName}+{_chunkEnrichment.StrategyName}";
@@ -258,8 +261,6 @@ public sealed class IndexModel : HomePageModelBase
                     cancellationToken);
             }
 
-            await _indexJobQueue.EnqueueAsync(result.DocumentId, cancellationToken);
-
             TempData["Success"] = isVietnamese
                 ? "Đã nhận tài liệu và đang index."
                 : "The document has been queued for indexing.";
@@ -268,7 +269,10 @@ public sealed class IndexModel : HomePageModelBase
             if (indexedDocument is not null)
             {
                 await SyncCourseCatalogFromDocumentsAsync(new[] { indexedDocument }, cancellationToken);
+                await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(indexedDocument, CancellationToken.None);
             }
+
+            await _indexJobQueue.EnqueueAsync(result.DocumentId, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -314,6 +318,7 @@ public sealed class IndexModel : HomePageModelBase
         }
 
         await _repository.MarkDocumentIndexProcessingAsync(id, cancellationToken);
+        await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(id, CancellationToken.None);
         await _indexJobQueue.EnqueueAsync(id, cancellationToken);
         TempData["Success"] = $"Da dua {document.FileName} vao hang doi re-index.";
         return RedirectToPage("/Home/Index");
@@ -336,6 +341,7 @@ public sealed class IndexModel : HomePageModelBase
         foreach (var documentId in staleDocumentIds)
         {
             await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
+            await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
             await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
         }
 

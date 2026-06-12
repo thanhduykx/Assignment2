@@ -9,15 +9,18 @@ public sealed class DocumentIndexWorker : BackgroundService
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDocumentIndexJobQueue _queue;
+    private readonly IDocumentStatusNotifier _documentStatusNotifier;
     private readonly ILogger<DocumentIndexWorker> _logger;
 
     public DocumentIndexWorker(
         IServiceScopeFactory scopeFactory,
         IDocumentIndexJobQueue queue,
+        IDocumentStatusNotifier documentStatusNotifier,
         ILogger<DocumentIndexWorker> logger)
     {
         _scopeFactory = scopeFactory;
         _queue = queue;
+        _documentStatusNotifier = documentStatusNotifier;
         _logger = logger;
     }
 
@@ -70,6 +73,7 @@ public sealed class DocumentIndexWorker : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var indexingService = scope.ServiceProvider.GetRequiredService<IDocumentIndexingService>();
                 await indexingService.ProcessDocumentAsync(documentId, cancellationToken);
+                await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
                 return;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -95,6 +99,8 @@ public sealed class DocumentIndexWorker : BackgroundService
                 lastError?.Message ?? "Document indexing failed.",
                 cancellationToken);
         }
+
+        await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
 
         if (lastError is not null)
         {

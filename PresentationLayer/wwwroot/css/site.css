@@ -62,33 +62,6 @@
   src: url('/fonts/br-omega/BROmega-Black.otf') format('opentype');
 }
 
-/* vietnamese */
-@font-face {
-  font-family: 'Anton';
-  font-style: normal;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3K8-C8QSw.woff2) format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-
-/* latin-ext */
-@font-face {
-  font-family: 'Anton';
-  font-style: normal;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3K9-C8QSw.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-/* latin */
-@font-face {
-  font-family: 'Anton';
-  font-style: normal;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3Kz-C8.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
 html {
   font-size: 16px;
   height: 100%;
@@ -125,23 +98,15 @@ body {
   margin: 0;
   color: #172033;
   background: #f4f7fb;
-  font-family: BROmega, "Segoe UI", Arial, sans-serif;
-}
-
-html:lang(vi) body,
-html:lang(vi) button,
-html:lang(vi) input,
-html:lang(vi) textarea,
-html:lang(vi) select {
   font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
 }
 
-html:lang(en) body,
-html:lang(en) button,
-html:lang(en) input,
-html:lang(en) textarea,
-html:lang(en) select {
-  font-family: BROmega, "Segoe UI", Arial, sans-serif;
+body,
+button,
+input,
+textarea,
+select {
+  font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
 }
 
 body.chatbot-chat-open {
@@ -2085,16 +2050,8 @@ body {
 
 /* Professional document manager pass */
 body {
-  font-family: BROmega, "Segoe UI", Arial, sans-serif;
-  background: #f6f8fb;
-}
-
-html:lang(vi) body {
   font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
-}
-
-html:lang(en) body {
-  font-family: BROmega, "Segoe UI", Arial, sans-serif;
+  background: #f6f8fb;
 }
 
 .container {
@@ -5540,7 +5497,7 @@ body.rbl-body .rbl-main {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 24px;
+  padding: 18px 22px;
   background: var(--rbl-bg);
 }
 
@@ -5561,7 +5518,7 @@ body.rbl-body .rbl-main {
   --ops-red: #b42318;
   --ops-red-soft: #fee4e2;
   display: grid;
-  gap: 18px;
+  gap: 12px;
   min-width: 0;
   color: var(--ops-text);
 }
@@ -5572,22 +5529,22 @@ body.rbl-body .rbl-main {
 
 .ops-page-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 96px;
-  padding: 18px 20px;
+  min-height: 0;
+  padding: 12px 16px;
   border: 1px solid #cdd9e8;
-  border-left: 5px solid var(--ops-blue);
+  border-left: 4px solid var(--ops-blue);
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
 }
 
 .ops-page-header h1 {
-  margin: 2px 0 6px;
+  margin: 2px 0 3px;
   color: var(--ops-text);
-  font-size: clamp(1.65rem, 2.2vw, 2.25rem);
+  font-size: clamp(1.28rem, 1.6vw, 1.55rem);
   font-weight: 850;
   line-height: 1.12;
 }
@@ -5596,8 +5553,12 @@ body.rbl-body .rbl-main {
   max-width: 860px;
   margin: 0;
   color: var(--ops-muted);
-  font-size: 0.94rem;
+  font-size: 0.84rem;
   line-height: 1.45;
+}
+
+.ops-documents-page .ops-page-header {
+  display: none;
 }
 
 .ops-eyebrow {
@@ -5617,20 +5578,20 @@ body.rbl-body .rbl-main {
 
 .ops-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 8px;
 }
 
 .ops-kpi {
   display: grid;
-  gap: 4px;
-  min-height: 94px;
-  padding: 14px;
+  gap: 2px;
+  min-height: 66px;
+  padding: 9px 11px;
   border: 1px solid var(--ops-border);
-  border-left: 4px solid var(--ops-navy);
+  border-left: 3px solid var(--ops-navy);
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: none;
 }
 
 .ops-kpi:nth-child(2) {
@@ -5655,14 +5616,14 @@ body.rbl-body .rbl-main {
 
 .ops-kpi span {
   color: var(--ops-muted);
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 850;
   text-transform: uppercase;
 }
 
 .ops-kpi strong {
   color: var(--ops-text);
-  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  font-size: 1.25rem;
   font-weight: 850;
   line-height: 1.05;
 }
@@ -5687,7 +5648,7 @@ body.rbl-body .rbl-main {
 }
 
 .ops-panel {
-  padding: 16px;
+  padding: 14px;
 }
 
 .ops-panel-head {
@@ -5695,8 +5656,8 @@ body.rbl-body .rbl-main {
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  margin: -16px -16px 16px;
-  padding: 14px 16px 12px;
+  margin: -14px -14px 12px;
+  padding: 11px 14px 10px;
   border-bottom: 1px solid var(--ops-border);
   border-radius: 6px 6px 0 0;
   background: #f8fbff;
@@ -5881,6 +5842,29 @@ body.rbl-body .rbl-main {
   border-top-color: var(--ops-orange);
 }
 
+.ops-upload-panel > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.ops-upload-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ops-upload-panel:not([open]) {
+  padding-bottom: 0;
+}
+
+.ops-upload-panel:not([open]) .ops-panel-head {
+  margin-bottom: -1px;
+  border-bottom: 0;
+  border-radius: 6px;
+}
+
+.ops-upload-panel[open] .ops-panel-note {
+  background: #ffffff;
+}
+
 .ops-upload-panel .ops-panel-head {
   background: var(--ops-orange-soft);
 }
@@ -6002,6 +5986,21 @@ body.rbl-body .rbl-main {
 
 .ops-table tbody tr:hover {
   background: #fbfdff;
+}
+
+.ops-table tbody tr.is-realtime-updated,
+.ops-tree-document-row.is-realtime-updated {
+  animation: documentRealtimePulse 1.4s ease-out;
+}
+
+@keyframes documentRealtimePulse {
+  0% {
+    background: rgba(20, 184, 166, 0.16);
+  }
+
+  100% {
+    background: transparent;
+  }
 }
 
 .ops-table tbody tr:last-child td {
@@ -6714,6 +6713,15 @@ body.rbl-body .rbl-main {
     flex-direction: column;
   }
 
+  .ops-documents-page .ops-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-documents-page .ops-kpi {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
   .ops-kpi-grid,
   .ops-command-rail,
   .ops-command-grid,
@@ -6732,6 +6740,10 @@ body.rbl-body .rbl-main {
   .ops-tree-subject-upload,
   .ops-tree-document-row {
     grid-template-columns: 1fr;
+  }
+
+  .ops-documents-page .ops-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ops-catalog-item > summary {
