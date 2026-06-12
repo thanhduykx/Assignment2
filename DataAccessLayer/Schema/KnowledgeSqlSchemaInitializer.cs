@@ -6,19 +6,19 @@ namespace DataAccessLayer.Schema;
 
 internal static class KnowledgeSqlSchemaInitializer
 {
-    private static readonly IReadOnlyList<(string Code, string Name, string Description)> DefaultCourseSubjects = new[]
+    private static readonly IReadOnlyList<(string Code, string Description)> DefaultCourseSubjects = new[]
     {
-        ("IOT102", "IOT102", "Default subject option for lecturer assignment."),
-        ("DBI103", "DBI103", "Default subject option for lecturer assignment."),
-        ("PRN222", "PRN222", "Default subject option for lecturer assignment."),
-        ("PRN212", "PRN212", "Default subject option for lecturer assignment."),
-        ("PRU213", "PRU213", "Default subject option for lecturer assignment."),
-        ("EX101", "EX101", "Default subject option for lecturer assignment."),
-        ("PRJ301", "PRJ301", "Default subject option for lecturer assignment."),
-        ("SWP391", "SWP391", "Default subject option for lecturer assignment."),
-        ("ENW493C", "ENW493C", "Default subject option for lecturer assignment."),
-        ("JPD133", "JPD133", "Default subject option for lecturer assignment."),
-        ("SWE201C", "SWE201C", "Default subject option for lecturer assignment.")
+        ("IOT102", "Default subject option for lecturer assignment."),
+        ("DBA103", "Default subject option for lecturer assignment."),
+        ("PRN222", "Default subject option for lecturer assignment."),
+        ("PRN212", "Default subject option for lecturer assignment."),
+        ("PRU213", "Default subject option for lecturer assignment."),
+        ("EXE101", "Default subject option for lecturer assignment."),
+        ("PRJ301", "Default subject option for lecturer assignment."),
+        ("SWP391", "Default subject option for lecturer assignment."),
+        ("ENW493C", "Default subject option for lecturer assignment."),
+        ("JPD133", "Default subject option for lecturer assignment."),
+        ("SWE201C", "Default subject option for lecturer assignment.")
     };
 
     public static void EnsureTablesCreated(KnowledgeSqlDbContext context)
@@ -367,7 +367,7 @@ internal static class KnowledgeSqlSchemaInitializer
             {
                 Id = Guid.NewGuid(),
                 Code = code,
-                Name = string.IsNullOrWhiteSpace(seed.Name) ? code : seed.Name.Trim(),
+                Name = code,
                 Description = seed.Description.Trim(),
                 CreatedAt = DateTimeOffset.UtcNow
             });

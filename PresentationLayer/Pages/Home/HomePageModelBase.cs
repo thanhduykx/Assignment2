@@ -331,7 +331,7 @@ public abstract class HomePageModelBase : PageModel
                     {
                         Id = CreateStableCatalogId(parsed.Code),
                         Code = parsed.Code,
-                        Name = string.IsNullOrWhiteSpace(parsed.Name) ? parsed.Code : parsed.Name,
+                        Name = parsed.Code,
                         Description = "Tự đồng bộ từ tài liệu đã index.",
                         CreatedAt = document.UploadedAt
                     };
@@ -340,7 +340,7 @@ public abstract class HomePageModelBase : PageModel
                 else if (string.IsNullOrWhiteSpace(subject.Name)
                          || subject.Name.Equals(subject.Code, StringComparison.OrdinalIgnoreCase))
                 {
-                    subject.Name = string.IsNullOrWhiteSpace(parsed.Name) ? parsed.Code : parsed.Name;
+                    subject.Name = parsed.Code;
                 }
 
                 var chapterTitle = document.Chapter.Trim();
@@ -458,7 +458,7 @@ public abstract class HomePageModelBase : PageModel
                 subject = await _repository.UpsertSubjectAsync(
                     subjectId: null,
                     code: parsed.Code,
-                    name: parsed.Name,
+                    name: parsed.Code,
                     description: "Tự đồng bộ từ tài liệu đã index.",
                     cancellationToken);
             }
@@ -468,7 +468,7 @@ public abstract class HomePageModelBase : PageModel
                 subject = await _repository.UpsertSubjectAsync(
                     subject.Id,
                     subject.Code,
-                    parsed.Name,
+                    parsed.Code,
                     subject.Description,
                     cancellationToken);
             }
@@ -500,20 +500,17 @@ public abstract class HomePageModelBase : PageModel
             }
 
             var separatorIndex = trimmed.IndexOf(" - ", StringComparison.Ordinal);
-            var separatorLength = 3;
             if (separatorIndex < 0)
             {
                 separatorIndex = trimmed.IndexOf('-', StringComparison.Ordinal);
-                separatorLength = 1;
             }
 
             if (separatorIndex > 0)
             {
                 var codeCandidate = NormalizeCatalogCode(trimmed[..separatorIndex]);
-                var nameCandidate = trimmed[(separatorIndex + separatorLength)..].Trim();
-                if (!string.IsNullOrWhiteSpace(codeCandidate) && !string.IsNullOrWhiteSpace(nameCandidate))
+                if (!string.IsNullOrWhiteSpace(codeCandidate))
                 {
-                    return (codeCandidate, nameCandidate);
+                    return (codeCandidate, codeCandidate);
                 }
             }
 
@@ -521,7 +518,7 @@ public abstract class HomePageModelBase : PageModel
             var code = NormalizeCatalogCode(firstToken);
             return string.IsNullOrWhiteSpace(code)
                 ? (string.Empty, string.Empty)
-                : (code, trimmed);
+                : (code, code);
         }
 
         protected static bool SubjectMatchesFilter(string documentSubject, string subjectFilter)

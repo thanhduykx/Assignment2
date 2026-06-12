@@ -6,7 +6,6 @@ public sealed class HomeIndexViewModel
 {
     public IReadOnlyList<IndexedDocument> Documents { get; set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<CourseSubject> CourseCatalog { get; set; } = Array.Empty<CourseSubject>();
-    public IReadOnlyList<UserOptionViewModel> LecturerOptions { get; set; } = Array.Empty<UserOptionViewModel>();
     public IReadOnlyList<string> DocumentSubjectOptions { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> DocumentChapterOptions { get; set; } = Array.Empty<string>();
     public string? SubjectFilter { get; set; }
@@ -65,9 +64,7 @@ public sealed class SubjectCatalogViewModel
 {
     public Guid? Id { get; set; }
     public string Code { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public Guid? OwnerUserId { get; set; }
 }
 
 public sealed class ChapterCatalogViewModel

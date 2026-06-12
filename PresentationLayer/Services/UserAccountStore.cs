@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Data.SqlClient;
 using PresentationLayer.Models;
 using PresentationLayer.Security;
 
@@ -45,20 +45,19 @@ public sealed class UserAccountStore : IUserAccountStore
     private const int KeySize = 32;
     private const int Iterations = 100_000;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        WriteIndented = true
-    };
-
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly string _path;
+    private readonly string _connectionString;
     private readonly SeedAdminOptions _seedAdmin;
 
-    public UserAccountStore(string path, SeedAdminOptions? seedAdmin = null)
+    public UserAccountStore(string connectionString, SeedAdminOptions? seedAdmin = null)
     {
-        _path = path;
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("DefaultConnection is not configured.");
+        }
+
+        _connectionString = connectionString;
         _seedAdmin = NormalizeSeedAdminOptions(seedAdmin);
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
     }
 
     public async Task<IReadOnlyList<UserAccount>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -513,18 +512,9 @@ public sealed class UserAccountStore : IUserAccountStore
 
     private async Task<List<UserAccount>> LoadAsync(CancellationToken cancellationToken)
     {
-        List<UserAccount> users;
+        await EnsureCreatedAsync(cancellationToken);
+        var users = await LoadUsersCoreAsync(cancellationToken);
         var changed = false;
-
-        if (!File.Exists(_path))
-        {
-            users = new List<UserAccount>();
-        }
-        else
-        {
-            await using var stream = File.OpenRead(_path);
-            users = await JsonSerializer.DeserializeAsync<List<UserAccount>>(stream, JsonOptions, cancellationToken) ?? new List<UserAccount>();
-        }
 
         foreach (var user in users)
         {
@@ -566,13 +556,141 @@ public sealed class UserAccountStore : IUserAccountStore
 
     private async Task SaveAsync(List<UserAccount> users, CancellationToken cancellationToken)
     {
-        var tempPath = $"{_path}.tmp";
-        await using (var stream = File.Create(tempPath))
+        await EnsureCreatedAsync(cancellationToken);
+
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        try
         {
-            await JsonSerializer.SerializeAsync(stream, users, JsonOptions, cancellationToken);
+            await using (var deleteCommand = connection.CreateCommand())
+            {
+                deleteCommand.Transaction = transaction;
+                deleteCommand.CommandText = "DELETE FROM app_users";
+                await deleteCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            foreach (var user in users)
+            {
+                await using var insertCommand = connection.CreateCommand();
+                insertCommand.Transaction = transaction;
+                insertCommand.CommandText = """
+                    INSERT INTO app_users (
+                        Id, Email, FullName, PasswordHash, PasswordResetTokenHash,
+                        PasswordResetTokenExpiresAt, PasswordChangedAt, Provider, Role, CreatedAt)
+                    VALUES (
+                        @Id, @Email, @FullName, @PasswordHash, @PasswordResetTokenHash,
+                        @PasswordResetTokenExpiresAt, @PasswordChangedAt, @Provider, @Role, @CreatedAt)
+                    """;
+                AddUserParameters(insertCommand, user);
+                await insertCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private async Task<List<UserAccount>> LoadUsersCoreAsync(CancellationToken cancellationToken)
+    {
+        var users = new List<UserAccount>();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, Email, FullName, PasswordHash, PasswordResetTokenHash,
+                   PasswordResetTokenExpiresAt, PasswordChangedAt, Provider, Role, CreatedAt
+            FROM app_users
+            ORDER BY Email
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            users.Add(new UserAccount
+            {
+                Id = reader.GetGuid(0),
+                Email = reader.GetString(1),
+                FullName = reader.GetString(2),
+                PasswordHash = reader.GetString(3),
+                PasswordResetTokenHash = reader.IsDBNull(4) ? null : reader.GetString(4),
+                PasswordResetTokenExpiresAt = reader.IsDBNull(5) ? null : reader.GetFieldValue<DateTimeOffset>(5),
+                PasswordChangedAt = reader.IsDBNull(6) ? null : reader.GetFieldValue<DateTimeOffset>(6),
+                Provider = reader.GetString(7),
+                Role = reader.GetString(8),
+                CreatedAt = reader.GetFieldValue<DateTimeOffset>(9)
+            });
         }
 
-        File.Move(tempPath, _path, true);
+        return users;
+    }
+
+    private async Task EnsureCreatedAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            IF OBJECT_ID('app_users', 'U') IS NULL
+            BEGIN
+                CREATE TABLE app_users (
+                    Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_app_users PRIMARY KEY,
+                    Email NVARCHAR(320) NOT NULL,
+                    FullName NVARCHAR(120) NOT NULL,
+                    PasswordHash NVARCHAR(512) NOT NULL,
+                    PasswordResetTokenHash NVARCHAR(128) NULL,
+                    PasswordResetTokenExpiresAt DATETIMEOFFSET NULL,
+                    PasswordChangedAt DATETIMEOFFSET NULL,
+                    Provider NVARCHAR(120) NOT NULL,
+                    Role NVARCHAR(32) NOT NULL,
+                    CreatedAt DATETIMEOFFSET NOT NULL
+                );
+            END;
+
+            IF COL_LENGTH('app_users', 'PasswordResetTokenHash') IS NULL
+                ALTER TABLE app_users ADD PasswordResetTokenHash NVARCHAR(128) NULL;
+            IF COL_LENGTH('app_users', 'PasswordResetTokenExpiresAt') IS NULL
+                ALTER TABLE app_users ADD PasswordResetTokenExpiresAt DATETIMEOFFSET NULL;
+            IF COL_LENGTH('app_users', 'PasswordChangedAt') IS NULL
+                ALTER TABLE app_users ADD PasswordChangedAt DATETIMEOFFSET NULL;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM sys.indexes
+                WHERE name = 'UX_app_users_Email'
+                  AND object_id = OBJECT_ID('app_users'))
+            BEGIN
+                CREATE UNIQUE INDEX UX_app_users_Email ON app_users (Email);
+            END;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM sys.indexes
+                WHERE name = 'IX_app_users_Role'
+                  AND object_id = OBJECT_ID('app_users'))
+            BEGIN
+                CREATE INDEX IX_app_users_Role ON app_users (Role);
+            END;
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static void AddUserParameters(SqlCommand command, UserAccount user)
+    {
+        command.Parameters.AddWithValue("@Id", user.Id);
+        command.Parameters.AddWithValue("@Email", user.Email);
+        command.Parameters.AddWithValue("@FullName", user.FullName);
+        command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+        command.Parameters.AddWithValue("@PasswordResetTokenHash", (object?)user.PasswordResetTokenHash ?? DBNull.Value);
+        command.Parameters.AddWithValue("@PasswordResetTokenExpiresAt", (object?)user.PasswordResetTokenExpiresAt ?? DBNull.Value);
+        command.Parameters.AddWithValue("@PasswordChangedAt", (object?)user.PasswordChangedAt ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Provider", user.Provider);
+        command.Parameters.AddWithValue("@Role", user.Role);
+        command.Parameters.AddWithValue("@CreatedAt", user.CreatedAt);
     }
 
     private static string NormalizeEmail(string email)

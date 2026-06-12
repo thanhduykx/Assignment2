@@ -154,7 +154,7 @@ namespace PresentationLayer
                                        || parsedSeedAdminEnabled;
 
                 return new PresentationLayer.Services.UserAccountStore(
-                    Path.Combine(builder.Environment.ContentRootPath, "App_Data", "users.json"),
+                    builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
                     new PresentationLayer.Services.SeedAdminOptions(
                         seedAdminEnabled,
                         seedAdminSection["FullName"] ?? "System Admin",

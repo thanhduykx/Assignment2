@@ -22,6 +22,13 @@ public sealed class AdminUserRowViewModel
     public bool IsLastAdmin { get; set; }
     public bool IsCurrentUser { get; set; }
     public IReadOnlyList<string> AssignedSubjects { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<AdminAssignedSubjectViewModel> AssignedSubjectDetails { get; set; } = Array.Empty<AdminAssignedSubjectViewModel>();
+}
+
+public sealed class AdminAssignedSubjectViewModel
+{
+    public Guid Id { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
 }
 
 public sealed class AdminSubjectOptionViewModel
@@ -44,14 +51,23 @@ public sealed class DeleteAdminUserViewModel
     public Guid UserId { get; set; }
 }
 
+public sealed class RegisterLecturerSubjectViewModel
+{
+    public Guid UserId { get; set; }
+    public Guid SubjectId { get; set; }
+}
+
+public sealed class UnregisterLecturerSubjectViewModel
+{
+    public Guid UserId { get; set; }
+    public Guid SubjectId { get; set; }
+}
+
 public sealed class CreateAdminSubjectViewModel
 {
     [Required(ErrorMessage = "Subject code is required.")]
     [StringLength(32, ErrorMessage = "Subject code must be 32 characters or fewer.")]
     public string Code { get; set; } = string.Empty;
-
-    [StringLength(255, ErrorMessage = "Subject name must be 255 characters or fewer.")]
-    public string Name { get; set; } = string.Empty;
 
     [StringLength(1000, ErrorMessage = "Description must be 1000 characters or fewer.")]
     public string Description { get; set; } = string.Empty;
@@ -71,6 +87,17 @@ public sealed class CreateAdminUserViewModel
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Role is required.")]
+    public string Role { get; set; } = PresentationLayer.Security.AppRoles.Student;
+
+    public List<Guid> SubjectIds { get; set; } = new();
+}
+
+public sealed class ImportAdminUsersViewModel
+{
+    [Required(ErrorMessage = "Email list is required.")]
+    public string Emails { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Role is required.")]
     public string Role { get; set; } = PresentationLayer.Security.AppRoles.Student;
