@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using PresentationLayer.Hubs;
 using PresentationLayer.Security;
 
 namespace PresentationLayer
@@ -20,6 +21,7 @@ namespace PresentationLayer
             {
                 options.Conventions.AddPageRoute("/Home/Index", "");
             });
+            builder.Services.AddSignalR();
             var authenticationBuilder = builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
@@ -131,6 +133,24 @@ namespace PresentationLayer
                 huggingFaceTimeoutSeconds,
                 huggingFaceSection["ChatBaseUrl"] ?? "https://router.huggingface.co/v1/chat/completions",
                 huggingFaceSection["EmbeddingBaseUrl"] ?? "https://router.huggingface.co/hf-inference/models");
+            var openRouterSection = builder.Configuration.GetSection("OpenRouter");
+            var openRouterApiKey = FirstConfigured(
+                Environment.GetEnvironmentVariable("OPENROUTER_API_KEY"),
+                builder.Configuration["OPENROUTER_API_KEY"],
+                openRouterSection["ApiKey"]);
+            var openRouterEnabled = !bool.TryParse(openRouterSection["Enabled"], out var parsedOpenRouterEnabled)
+                                    || parsedOpenRouterEnabled;
+            var openRouterTimeoutSeconds = int.TryParse(openRouterSection["TimeoutSeconds"], out var parsedOpenRouterTimeout)
+                ? parsedOpenRouterTimeout
+                : 60;
+            var openRouterOptions = new ServicesLayer.OpenRouterOptions(
+                openRouterEnabled,
+                openRouterApiKey,
+                openRouterSection["ChatModel"] ?? "openrouter/free",
+                openRouterTimeoutSeconds,
+                openRouterSection["ChatBaseUrl"] ?? "https://openrouter.ai/api/v1/chat/completions",
+                openRouterSection["Referer"] ?? "http://localhost:5099",
+                openRouterSection["Title"] ?? "Course Assistant");
             var smtpSection = builder.Configuration.GetSection("Smtp");
             var smtpOptions = new PresentationLayer.Services.SmtpOptions(
                 smtpSection["Host"] ?? string.Empty,
@@ -141,6 +161,7 @@ namespace PresentationLayer
                 FirstConfigured(smtpSection["UserName"], builder.Configuration["SMTP_USERNAME"], Environment.GetEnvironmentVariable("SMTP_USERNAME")),
                 FirstConfigured(smtpSection["Password"], builder.Configuration["SMTP_PASSWORD"], Environment.GetEnvironmentVariable("SMTP_PASSWORD")));
             builder.Services.AddSingleton(huggingFaceOptions);
+            builder.Services.AddSingleton(openRouterOptions);
             builder.Services.AddSingleton(smtpOptions);
             builder.Services.AddSingleton<DataAccessLayer.IKnowledgeRepository>(_ =>
             {
@@ -163,6 +184,12 @@ namespace PresentationLayer
             });
             builder.Services.AddSingleton<ServicesLayer.IEmbeddingService>(_ =>
             {
+                var embeddingProvider = builder.Configuration["Embedding:Provider"] ?? "Hashing";
+                if (!embeddingProvider.Equals("HuggingFace", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ServicesLayer.HashingEmbeddingService();
+                }
+
                 return new ServicesLayer.HuggingFaceEmbeddingService(
                     new HttpClient
                     {
@@ -172,18 +199,39 @@ namespace PresentationLayer
             });
             builder.Services.AddSingleton<ServicesLayer.ILocalChatCompletionService>(_ =>
             {
-                return new ServicesLayer.HuggingFaceChatCompletionService(
-                    new HttpClient
-                    {
-                        Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
-                    },
-                    huggingFaceOptions);
+                var chatProvider = builder.Configuration["ChatCompletion:Provider"] ?? "OpenRouter";
+                if (chatProvider.Equals("HuggingFace", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ServicesLayer.HuggingFaceChatCompletionService(
+                        new HttpClient
+                        {
+                            Timeout = TimeSpan.FromSeconds(Math.Max(5, huggingFaceOptions.TimeoutSeconds))
+                        },
+                        huggingFaceOptions);
+                }
+
+                var httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromSeconds(Math.Max(5, openRouterOptions.TimeoutSeconds))
+                };
+                if (!string.IsNullOrWhiteSpace(openRouterOptions.Referer))
+                {
+                    httpClient.DefaultRequestHeaders.TryAddWithoutValidation("HTTP-Referer", openRouterOptions.Referer);
+                }
+
+                if (!string.IsNullOrWhiteSpace(openRouterOptions.Title))
+                {
+                    httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-OpenRouter-Title", openRouterOptions.Title);
+                }
+
+                return new ServicesLayer.OpenRouterChatCompletionService(httpClient, openRouterOptions);
             });
             builder.Services.AddSingleton<ServicesLayer.IDocumentTextExtractor, ServicesLayer.DocumentTextExtractor>();
             builder.Services.AddSingleton<ServicesLayer.ITextChunker, ServicesLayer.FlmSyllabusAwareTextChunker>();
             builder.Services.AddSingleton<ServicesLayer.IChunkRetrievalEnrichmentService, ServicesLayer.AiChunkRetrievalEnrichmentService>();
             builder.Services.AddSingleton<ServicesLayer.IDocumentIndexJobQueue, ServicesLayer.DocumentIndexJobQueue>();
             builder.Services.AddSingleton<PresentationLayer.Services.IAccountEmailSender, PresentationLayer.Services.SmtpAccountEmailSender>();
+            builder.Services.AddSingleton<PresentationLayer.Services.IDocumentStatusNotifier, PresentationLayer.Services.SignalRDocumentStatusNotifier>();
             builder.Services.AddSingleton<ServicesLayer.IWebPageTextExtractor>(_ =>
                 new ServicesLayer.WebPageTextExtractor(new HttpClient
                 {
@@ -213,6 +261,7 @@ namespace PresentationLayer
             app.UseAuthorization();
 
             app.MapStaticAssets();
+            app.MapHub<DocumentStatusHub>("/hubs/documents");
             app.MapRazorPages()
                 .WithStaticAssets();
 

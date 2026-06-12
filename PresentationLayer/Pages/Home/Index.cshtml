@@ -123,22 +123,22 @@
     <section class="ops-kpi-grid" aria-label="Document metrics">
         <article class="ops-kpi">
             <span>Total / Tổng</span>
-            <strong>@totalDocuments</strong>
-            <small>@visibleDocuments shown</small>
+            <strong data-document-kpi="total">@totalDocuments</strong>
+            <small><span data-document-visible-count>@visibleDocuments</span> shown</small>
         </article>
         <article class="ops-kpi">
             <span>Indexed</span>
-            <strong>@Model.IndexedDocumentCount</strong>
+            <strong data-document-kpi="indexed">@Model.IndexedDocumentCount</strong>
             <small>Ready for chat</small>
         </article>
         <article class="ops-kpi">
             <span>Processing</span>
-            <strong>@Model.ProcessingDocumentCount</strong>
+            <strong data-document-kpi="processing">@Model.ProcessingDocumentCount</strong>
             <small>Queued or indexing</small>
         </article>
         <article class="ops-kpi ops-kpi--danger">
             <span>Failed</span>
-            <strong>@Model.FailedDocumentCount</strong>
+            <strong data-document-kpi="failed">@Model.FailedDocumentCount</strong>
             <small>Needs attention</small>
         </article>
         <article class="ops-kpi">
@@ -151,21 +151,21 @@
             <article class="ops-kpi">
                 <span>Stale embeddings</span>
                 <strong>@Model.StaleEmbeddingDocumentCount</strong>
-                <small>Need HF re-index</small>
+                <small>Need re-index</small>
             </article>
         }
     </section>
 
     @if (canManageDocuments)
     {
-        <section class="ops-panel ops-upload-panel">
-            <div class="ops-panel-head">
+        <details class="ops-panel ops-upload-panel">
+            <summary class="ops-panel-head">
                 <div>
                     <span class="ops-eyebrow">Ingestion</span>
                     <h2>Upload & index</h2>
                 </div>
-                <span class="ops-panel-note">PDF, DOCX, PPTX, TXT hoặc URL bài giảng</span>
-            </div>
+                <span class="ops-panel-note">Open upload form</span>
+            </summary>
 
             <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-upload-form">
                 @Html.AntiForgeryToken()
@@ -219,7 +219,7 @@
                     </button>
                 </div>
             </form>
-        </section>
+        </details>
     }
 
     <section class="ops-panel">
@@ -239,7 +239,6 @@
                         </button>
                     </form>
                 }
-                <span class="ops-panel-note">@visibleDocuments/@totalDocuments documents</span>
             </div>
         </div>
 
@@ -327,7 +326,7 @@
                     <tbody>
                     @foreach (var document in documents)
                     {
-                        <tr>
+                        <tr data-document-id="@document.Id" data-document-status-value="@document.Status">
                             <td data-label="File">
                                 <div class="ops-file-cell">
                                     <span class="material-symbols-outlined" aria-hidden="true">description</span>
@@ -344,11 +343,11 @@
                                 </div>
                             </td>
                             <td data-label="Status">
-                                <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)">@StatusLabel(document)</span>
+                                <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)" data-document-status>@StatusLabel(document)</span>
                             </td>
                             <td data-label="Chunks / Size">
                                 <div class="ops-stack">
-                                    <strong>@document.ChunkCount chunks</strong>
+                                    <strong data-document-chunks>@document.ChunkCount chunks</strong>
                                     <small>@FormatBytes(document.FileSizeBytes)</small>
                                 </div>
                             </td>
@@ -359,14 +358,14 @@
                                 </div>
                             </td>
                             <td data-label="Actions">
-                                <div class="ops-row-actions">
+                                <div class="ops-row-actions" data-document-actions>
                                     @if (document.Status == DocumentIndexStatus.Indexed)
                                     {
-                                        <button type="button" class="ops-mini-button" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem / View</button>
+                                        <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem / View" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem / View</button>
                                     }
                                     else
                                     {
-                                        <button type="button" class="ops-mini-button" disabled title="@StatusTitle(document)">View</button>
+                                        <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem / View" disabled title="@StatusTitle(document)">View</button>
                                     }
                                     @if (canManageDocuments)
                                     {
@@ -594,20 +593,20 @@
                                                         <div class="ops-tree-document-list">
                                                             @foreach (var document in chapter.Documents.OrderByDescending(item => item.UploadedAt))
                                                             {
-                                                                <div class="ops-tree-document-row">
+                                                                <div class="ops-tree-document-row" data-document-id="@document.Id" data-document-status-value="@document.Status" data-document-size-label="@FormatBytes(document.FileSizeBytes)">
                                                                     <span class="material-symbols-outlined" aria-hidden="true">description</span>
                                                                     <div class="ops-tree-document-main">
                                                                         <strong title="@document.FileName">@document.FileName</strong>
-                                                                        <small>@StatusLabel(document) · @document.ChunkCount chunks · @FormatBytes(document.FileSizeBytes)</small>
+                                                                        <small data-document-tree-meta>@StatusLabel(document) · @document.ChunkCount chunks · @FormatBytes(document.FileSizeBytes)</small>
                                                                     </div>
-                                                                    <div class="ops-row-actions">
+                                                                    <div class="ops-row-actions" data-document-actions>
                                                                         @if (document.Status == DocumentIndexStatus.Indexed)
                                                                         {
-                                                                            <button type="button" class="ops-mini-button" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem</button>
+                                                                            <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem</button>
                                                                         }
                                                                         else
                                                                         {
-                                                                            <button type="button" class="ops-mini-button" disabled title="@StatusTitle(document)">Xem</button>
+                                                                            <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem" disabled title="@StatusTitle(document)">Xem</button>
                                                                         }
                                                                         <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa</a>
                                                                         <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tài liệu này?">

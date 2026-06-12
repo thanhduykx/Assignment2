@@ -36,7 +36,7 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
 
         if (!_options.Enabled || string.IsNullOrWhiteSpace(_options.Token))
         {
-            throw new InvalidOperationException("HuggingFace token is required for embeddings.");
+            throw new InvalidOperationException("HuggingFace token is required for embeddings. Set HuggingFace:Token in appsettings.json or HF_TOKEN before indexing documents.");
         }
 
         try
@@ -50,7 +50,9 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
             using var response = await _httpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                throw new InvalidOperationException($"HuggingFace embedding request failed with HTTP {(int)response.StatusCode}.");
+                var errorBody = await ReadErrorBodyAsync(response, cancellationToken);
+                var detail = string.IsNullOrWhiteSpace(errorBody) ? response.ReasonPhrase : errorBody;
+                throw new InvalidOperationException($"HuggingFace embedding request failed with HTTP {(int)response.StatusCode}. {detail}");
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -67,6 +69,18 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
         {
             throw new InvalidOperationException("HuggingFace embedding request timed out. Check HF_TOKEN, network, provider status, or increase HuggingFace:TimeoutSeconds.");
         }
+    }
+
+    private static async Task<string> ReadErrorBodyAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return string.Empty;
+        }
+
+        body = body.ReplaceLineEndings(" ").Trim();
+        return body.Length <= 500 ? body : body[..500];
     }
 
     public double CosineSimilarity(IReadOnlyDictionary<int, double> left, IReadOnlyDictionary<int, double> right)

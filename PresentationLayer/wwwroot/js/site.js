@@ -201,6 +201,7 @@ const translations = {
 
 const languageKey = "courseAssistantLanguage";
 const chatPage = document.querySelector(".rbl-chat-page");
+const documentsPage = document.querySelector(".ops-documents-page");
 const chatForm = document.getElementById("chatForm");
 const questionInput = document.getElementById("questionInput");
 const chatMessages = document.getElementById("chatMessages");
@@ -1078,21 +1079,214 @@ async function openDocumentPreview(url) {
 }
 
 function bindDocumentPreviewButtons() {
-  document.querySelectorAll("[data-document-preview-url]").forEach((button) => {
+  document.querySelectorAll("[data-document-preview-action], [data-document-preview-url]").forEach((button) => {
+    if (button.dataset.documentPreviewBound === "true") {
+      return;
+    }
+
+    button.dataset.documentPreviewBound = "true";
     button.addEventListener("click", () => {
+      if (button.disabled || !button.dataset.documentPreviewUrl) {
+        return;
+      }
+
       openDocumentPreview(button.dataset.documentPreviewUrl);
     });
   });
 
   document.querySelectorAll("[data-document-preview-close]").forEach((button) => {
+    if (button.dataset.documentPreviewCloseBound === "true") {
+      return;
+    }
+
+    button.dataset.documentPreviewCloseBound = "true";
     button.addEventListener("click", closeDocumentPreview);
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && documentPreviewModal?.classList.contains("is-open")) {
-      closeDocumentPreview();
+  if (document.body.dataset.documentPreviewEscapeBound !== "true") {
+    document.body.dataset.documentPreviewEscapeBound = "true";
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && documentPreviewModal?.classList.contains("is-open")) {
+        closeDocumentPreview();
+      }
+    });
+  }
+}
+
+function normalizeDocumentStatusPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const documentId = payload.documentId || payload.DocumentId || "";
+  if (!documentId) {
+    return null;
+  }
+
+  return {
+    documentId,
+    fileName: payload.fileName || payload.FileName || "",
+    subject: payload.subject || payload.Subject || "",
+    chapter: payload.chapter || payload.Chapter || "",
+    status: payload.status || payload.Status || "",
+    chunkCount: Number(payload.chunkCount ?? payload.ChunkCount ?? 0),
+    indexedAt: payload.indexedAt || payload.IndexedAt || "",
+    indexError: payload.indexError || payload.IndexError || ""
+  };
+}
+
+function normalizeDocumentStatus(status) {
+  return (status || "").trim().toLowerCase();
+}
+
+function getDocumentStatusLabel(status) {
+  switch (normalizeDocumentStatus(status)) {
+    case "indexed":
+      return "Indexed";
+    case "processing":
+      return "Processing";
+    case "failed":
+      return "Failed";
+    default:
+      return status || "Unknown";
+  }
+}
+
+function getDocumentStatusClass(status) {
+  switch (normalizeDocumentStatus(status)) {
+    case "indexed":
+      return "is-success";
+    case "processing":
+      return "is-running";
+    case "failed":
+      return "is-error";
+    default:
+      return "is-muted";
+  }
+}
+
+function getDocumentStatusTitle(document) {
+  if (normalizeDocumentStatus(document.status) === "failed" && document.indexError) {
+    return document.indexError;
+  }
+
+  if (normalizeDocumentStatus(document.status) === "indexed" && document.indexedAt) {
+    return `Indexed at ${formatPreviewDate(document.indexedAt)}`;
+  }
+
+  return getDocumentStatusLabel(document.status);
+}
+
+function updateDocumentKpiValue(key, delta) {
+  const target = document.querySelector(`[data-document-kpi="${key}"]`);
+  if (!target || delta === 0) {
+    return;
+  }
+
+  const currentValue = Number.parseInt(target.textContent || "0", 10);
+  target.textContent = String(Math.max(0, (Number.isNaN(currentValue) ? 0 : currentValue) + delta));
+}
+
+function updateDocumentKpis(previousStatus, nextStatus) {
+  const previousKey = normalizeDocumentStatus(previousStatus);
+  const nextKey = normalizeDocumentStatus(nextStatus);
+  if (!previousKey || previousKey === nextKey) {
+    return;
+  }
+
+  if (["indexed", "processing", "failed"].includes(previousKey)) {
+    updateDocumentKpiValue(previousKey, -1);
+  }
+
+  if (["indexed", "processing", "failed"].includes(nextKey)) {
+    updateDocumentKpiValue(nextKey, 1);
+  }
+}
+
+function updateDocumentPreviewAction(row, document) {
+  const action = row.querySelector("[data-document-preview-action]");
+  if (!action) {
+    return;
+  }
+
+  const isIndexed = normalizeDocumentStatus(document.status) === "indexed";
+  action.disabled = !isIndexed;
+  action.textContent = action.dataset.documentPreviewLabel || action.textContent || "View";
+  action.title = isIndexed ? "" : getDocumentStatusTitle(document);
+  if (isIndexed) {
+    action.dataset.documentPreviewUrl = `/Home/DocumentPreview/${document.documentId}`;
+  } else {
+    delete action.dataset.documentPreviewUrl;
+  }
+}
+
+function updateDocumentRow(row, document) {
+  row.dataset.documentStatusValue = document.status;
+
+  const statusBadge = row.querySelector("[data-document-status]");
+  if (statusBadge) {
+    statusBadge.classList.remove("is-success", "is-running", "is-error", "is-muted");
+    statusBadge.classList.add(getDocumentStatusClass(document.status));
+    statusBadge.textContent = getDocumentStatusLabel(document.status);
+    statusBadge.title = getDocumentStatusTitle(document);
+  }
+
+  const chunks = row.querySelector("[data-document-chunks]");
+  if (chunks) {
+    chunks.textContent = `${document.chunkCount || 0} chunks`;
+  }
+
+  const treeMeta = row.querySelector("[data-document-tree-meta]");
+  if (treeMeta) {
+    const sizeLabel = row.dataset.documentSizeLabel || "";
+    treeMeta.textContent = [getDocumentStatusLabel(document.status), `${document.chunkCount || 0} chunks`, sizeLabel]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  updateDocumentPreviewAction(row, document);
+  row.classList.add("is-realtime-updated");
+  window.setTimeout(() => row.classList.remove("is-realtime-updated"), 1400);
+}
+
+function applyDocumentStatusChanged(payload) {
+  const document = normalizeDocumentStatusPayload(payload);
+  if (!document) {
+    return;
+  }
+
+  const rows = [...window.document.querySelectorAll(`[data-document-id="${CSS.escape(document.documentId)}"]`)];
+  if (rows.length === 0) {
+    return;
+  }
+
+  const previousStatus = rows[0].dataset.documentStatusValue || rows[0].querySelector("[data-document-status]")?.textContent || "";
+  updateDocumentKpis(previousStatus, document.status);
+  rows.forEach((row) => updateDocumentRow(row, document));
+  bindDocumentPreviewButtons();
+}
+
+async function startDocumentStatusRealtime() {
+  if (!documentsPage || !window.signalR?.HubConnectionBuilder) {
+    return;
+  }
+
+  const connection = new window.signalR.HubConnectionBuilder()
+    .withUrl("/hubs/documents")
+    .withAutomaticReconnect()
+    .build();
+
+  connection.on("documentStatusChanged", applyDocumentStatusChanged);
+
+  async function start() {
+    try {
+      await connection.start();
+    } catch {
+      window.setTimeout(start, 5000);
     }
-  });
+  }
+
+  await start();
 }
 
 async function refreshSessionList() {
@@ -1704,6 +1898,7 @@ initAdminRoleUpdateForms();
 initAssistantLauncherDrag();
 markActiveSession(getSessionId());
 applyLanguage();
+startDocumentStatusRealtime();
 
 if (chatForm) {
   chatForm.addEventListener("submit", async (event) => {
