@@ -5550,12 +5550,18 @@ body.rbl-body .rbl-main {
   --ops-text: #111827;
   --ops-navy: #0b2d5c;
   --ops-navy-soft: #edf4ff;
+  --ops-blue: #0f66b3;
+  --ops-blue-soft: #eaf5ff;
   --ops-emerald: #047857;
   --ops-emerald-soft: #dff7ed;
+  --ops-orange: #d96116;
+  --ops-orange-soft: #fff4e5;
+  --ops-purple: #6d3fc6;
+  --ops-purple-soft: #f1ebff;
   --ops-red: #b42318;
   --ops-red-soft: #fee4e2;
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
   color: var(--ops-text);
 }
@@ -5569,7 +5575,13 @@ body.rbl-body .rbl-main {
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  min-height: 86px;
+  min-height: 96px;
+  padding: 18px 20px;
+  border: 1px solid #cdd9e8;
+  border-left: 5px solid var(--ops-blue);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
 }
 
 .ops-page-header h1 {
@@ -5591,6 +5603,11 @@ body.rbl-body .rbl-main {
 .ops-eyebrow {
   display: inline-flex;
   align-items: center;
+  width: fit-content;
+  padding: 3px 8px;
+  border: 1px solid #b9eadc;
+  border-radius: 999px;
+  background: #f0fdf7;
   color: var(--ops-emerald);
   font-size: 0.72rem;
   font-weight: 850;
@@ -5610,10 +5627,26 @@ body.rbl-body .rbl-main {
   min-height: 94px;
   padding: 14px;
   border: 1px solid var(--ops-border);
-  border-left: 3px solid var(--ops-navy);
+  border-left: 4px solid var(--ops-navy);
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.ops-kpi:nth-child(2) {
+  border-left-color: var(--ops-blue);
+}
+
+.ops-kpi:nth-child(3) {
+  border-left-color: var(--ops-emerald);
+}
+
+.ops-kpi:nth-child(4) {
+  border-left-color: var(--ops-orange);
+}
+
+.ops-kpi:nth-child(5) {
+  border-left-color: var(--ops-purple);
 }
 
 .ops-kpi--danger {
@@ -5647,6 +5680,7 @@ body.rbl-body .rbl-main {
 .ops-panel,
 .ops-command-card {
   border: 1px solid var(--ops-border);
+  border-top: 3px solid var(--ops-blue);
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
@@ -5661,9 +5695,11 @@ body.rbl-body .rbl-main {
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
+  margin: -16px -16px 16px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--ops-border);
+  border-radius: 6px 6px 0 0;
+  background: #f8fbff;
 }
 
 .ops-panel-head h2,
@@ -5841,6 +5877,20 @@ body.rbl-body .rbl-main {
   gap: 14px;
 }
 
+.ops-upload-panel {
+  border-top-color: var(--ops-orange);
+}
+
+.ops-upload-panel .ops-panel-head {
+  background: var(--ops-orange-soft);
+}
+
+.ops-upload-panel .ops-eyebrow {
+  border-color: #ffd7a8;
+  background: #fffaf2;
+  color: var(--ops-orange);
+}
+
 .ops-ingest-grid {
   display: grid;
   grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr) auto;
@@ -5855,10 +5905,10 @@ body.rbl-body .rbl-main {
   place-items: center;
   gap: 5px;
   padding: 18px;
-  border: 1px dashed #9bb4d3;
+  border: 1px dashed #d69c66;
   border-radius: 8px;
-  background: #f7fbff;
-  color: var(--ops-navy);
+  background: #fffaf2;
+  color: #8a3c0b;
   text-align: center;
   cursor: pointer;
 }
@@ -5943,8 +5993,8 @@ body.rbl-body .rbl-main {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #f8fafc;
-  color: #475467;
+  background: #eef4fb;
+  color: #24364f;
   font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
@@ -6036,6 +6086,31 @@ body.rbl-body .rbl-main {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+.ops-subject-chip-form {
+  margin: 0;
+}
+
+.ops-chip--action {
+  gap: 4px;
+  border-color: #cfe0f5;
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ops-chip--action .material-symbols-outlined {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ops-chip--action:hover,
+.ops-chip--action:focus-visible {
+  border-color: #f5c2bd;
+  background: var(--ops-red-soft);
+  color: var(--ops-red);
+  outline: none;
 }
 
 .ops-empty {
@@ -6167,6 +6242,10 @@ body.rbl-body .rbl-main {
 
 .ops-inline-edit {
   grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(160px, 0.8fr) auto;
+}
+
+.ops-subject-edit {
+  grid-template-columns: minmax(120px, 0.7fr) minmax(180px, 1.3fr) auto;
 }
 
 .ops-chapter-row {
@@ -6357,6 +6436,42 @@ body.rbl-body .rbl-main {
 
 .ops-admin-main {
   min-width: 0;
+  border-top-color: var(--ops-blue);
+}
+
+.ops-command-card--create {
+  border-top-color: var(--ops-emerald);
+}
+
+.ops-command-card--create .ops-eyebrow {
+  border-color: #b9eadc;
+  background: #f0fdf7;
+  color: var(--ops-emerald);
+}
+
+.ops-command-card--import {
+  border-top-color: var(--ops-purple);
+}
+
+.ops-command-card--import .ops-eyebrow {
+  border-color: #d8c9ff;
+  background: var(--ops-purple-soft);
+  color: var(--ops-purple);
+}
+
+.ops-command-card--subject {
+  border-top-color: var(--ops-orange);
+}
+
+.ops-command-card--subject .ops-eyebrow {
+  border-color: #ffd7a8;
+  background: var(--ops-orange-soft);
+  color: var(--ops-orange);
+}
+
+.ops-import-textarea {
+  min-height: 132px;
+  resize: vertical;
 }
 
 .ops-user-cell {
@@ -6606,6 +6721,7 @@ body.rbl-body .rbl-main {
   .ops-filter-bar,
   .ops-admin-filter,
   .ops-inline-edit,
+  .ops-subject-edit,
   .ops-chapter-row,
   .ops-chapter-row .ops-inline-edit,
   .ops-folder-summary,

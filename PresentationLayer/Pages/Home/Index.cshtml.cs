@@ -39,7 +39,6 @@ public sealed class IndexModel : HomePageModelBase
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<CourseSubject> CourseCatalog { get; private set; } = Array.Empty<CourseSubject>();
     public IReadOnlyList<DocumentTreeSubjectViewModel> DocumentTree { get; private set; } = Array.Empty<DocumentTreeSubjectViewModel>();
-    public IReadOnlyList<UserOptionViewModel> LecturerOptions { get; private set; } = Array.Empty<UserOptionViewModel>();
     public IReadOnlyList<string> DocumentSubjectOptions { get; private set; } = Array.Empty<string>();
     public IReadOnlyList<string> DocumentChapterOptions { get; private set; } = Array.Empty<string>();
     public string? Query { get; private set; }
@@ -66,10 +65,6 @@ public sealed class IndexModel : HomePageModelBase
         var scope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
         var userIsAdmin = base.IsAdmin();
         var userIsLecturer = base.IsLecturer();
-        var lecturers = userIsAdmin
-            ? await _users.GetByRoleAsync(AppRoles.Lecturer, cancellationToken)
-            : Array.Empty<UserAccount>();
-
         IReadOnlyList<IndexedDocument> accessibleDocuments;
         IReadOnlyList<IndexedDocument> documents;
         IReadOnlyList<CourseSubject> allCourseCatalog;
@@ -111,7 +106,6 @@ public sealed class IndexModel : HomePageModelBase
         Documents = documents;
         CourseCatalog = courseCatalog;
         DocumentTree = BuildDocumentTree(courseCatalog, accessibleDocuments);
-        LecturerOptions = lecturers.Select(ToUserOption).ToList();
         DocumentSubjectOptions = accessibleDocuments
             .Select(document => document.Subject)
             .Where(subject => !string.IsNullOrWhiteSpace(subject))
@@ -153,8 +147,7 @@ public sealed class IndexModel : HomePageModelBase
 
         try
         {
-            var ownerInfo = await BuildSubjectOwnerInfoAsync(model.OwnerUserId, cancellationToken);
-            await _repository.UpsertSubjectAsync(model.Id, model.Code, model.Name, model.Description, cancellationToken, ownerInfo);
+            await _repository.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
             TempData["Success"] = "Đã lưu môn học.";
         }
         catch (Exception ex)
@@ -417,12 +410,13 @@ public sealed class IndexModel : HomePageModelBase
             if (subjectNode is null)
             {
                 var parsed = ParseSubjectForCatalog(document.Subject);
+                var subjectCode = string.IsNullOrWhiteSpace(parsed.Code) ? "UNCATALOGED" : parsed.Code;
                 subjectNode = new DocumentTreeSubjectViewModel
                 {
-                    SubjectId = CreateStableCatalogId(string.IsNullOrWhiteSpace(parsed.Code) ? document.Subject : parsed.Code),
-                    Code = string.IsNullOrWhiteSpace(parsed.Code) ? "UNCATALOGED" : parsed.Code,
-                    Name = string.IsNullOrWhiteSpace(parsed.Name) ? document.Subject : parsed.Name,
-                    DisplayName = string.IsNullOrWhiteSpace(document.Subject) ? "Chưa phân loại" : document.Subject,
+                    SubjectId = CreateStableCatalogId(subjectCode),
+                    Code = subjectCode,
+                    Name = subjectCode,
+                    DisplayName = subjectCode,
                     Description = "Tạo từ tài liệu đã upload nhưng chưa có trong catalog."
                 };
                 subjects.Add(subjectNode);

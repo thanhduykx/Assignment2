@@ -11,24 +11,19 @@
     var documents = Model.Documents.OrderByDescending(item => item.UploadedAt).ToList();
     var courseCatalog = Model.CourseCatalog.OrderBy(item => item.Code).ToList();
     var documentTree = Model.DocumentTree.OrderBy(item => item.Code).ThenBy(item => item.Name).ToList();
-    var lecturerOptions = Model.LecturerOptions.OrderBy(item => item.FullName).ThenBy(item => item.Email).ToList();
     var isAdmin = Model.IsAdmin;
     var canManageDocuments = Model.IsAdmin || Model.IsLecturer;
     var totalDocuments = Model.TotalDocumentCount;
     var visibleDocuments = documents.Count;
     var totalChunks = Model.TotalChunkCount;
     var averageChunks = Model.AverageChunksPerIndexedDocument <= 0 ? 0 : Model.AverageChunksPerIndexedDocument;
-    var documentSubjectOptions = Model.DocumentSubjectOptions
-        .Where(subject => !string.IsNullOrWhiteSpace(subject))
-        .OrderBy(subject => subject)
-        .ToList();
     var subjectOptions = courseCatalog
         .Select(subject => subject.DisplayName)
-        .Concat(documentSubjectOptions)
         .Where(subject => !string.IsNullOrWhiteSpace(subject))
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(subject => subject)
         .ToList();
+    var canUploadToSubject = subjectOptions.Count > 0;
     var chapterOptions = courseCatalog.SelectMany(subject => subject.Chapters)
         .Select(chapter => chapter.Title)
         .Concat(Model.DocumentChapterOptions)
@@ -179,7 +174,17 @@
                 <div class="ops-form-row">
                     <label class="ops-field">
                         <span>Subject / Môn học</span>
-                        <input name="Subject" list="subjectOptions" placeholder="DBA103 - Đàn Bầu" />
+                        <select name="Subject" required disabled="@(!canUploadToSubject)">
+                            <option value="">Chọn môn học</option>
+                            @foreach (var subject in subjectOptions)
+                            {
+                                <option value="@subject">@subject</option>
+                            }
+                        </select>
+                        @if (!canUploadToSubject)
+                        {
+                            <small>Chưa có môn nào được gán cho tài khoản này.</small>
+                        }
                     </label>
                     <label class="ops-field">
                         <span>Chapter / Chương</span>
@@ -187,12 +192,6 @@
                     </label>
                 </div>
 
-                <datalist id="subjectOptions">
-                    @foreach (var subject in subjectOptions)
-                    {
-                        <option value="@subject"></option>
-                    }
-                </datalist>
                 <datalist id="chapterOptions">
                     @foreach (var chapter in chapterOptions)
                     {
@@ -214,7 +213,7 @@
                         <small>SPA/React/Vue sẽ được render trước khi trích xuất nội dung.</small>
                     </label>
 
-                    <button type="submit" class="ops-button ops-button--primary ops-upload-submit">
+                    <button type="submit" class="ops-button ops-button--primary ops-upload-submit" disabled="@(!canUploadToSubject)">
                         <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                         Index now
                     </button>
@@ -416,22 +415,8 @@
                                 <input name="Code" placeholder="IOT102" />
                             </label>
                             <label class="ops-field">
-                                <span>Tên môn</span>
-                                <input name="Name" placeholder="Internet of Things" />
-                            </label>
-                            <label class="ops-field">
                                 <span>Mô tả</span>
                                 <input name="Description" placeholder="Short description" />
-                            </label>
-                            <label class="ops-field">
-                                <span>Giảng viên phụ trách</span>
-                                <select name="OwnerUserId">
-                                    <option value="">Chưa phân công</option>
-                                    @foreach (var lecturer in lecturerOptions)
-                                    {
-                                        <option value="@lecturer.Id">@lecturer.DisplayName</option>
-                                    }
-                                </select>
                             </label>
                             <button type="submit" class="ops-button ops-button--primary">Save subject</button>
                         </form>
@@ -487,33 +472,11 @@
                                 <div class="ops-folder-subject-body">
                                     @if (isAdmin)
                                     {
-                                        <form asp-page-handler="SaveSubject" method="post" class="ops-inline-edit">
+                                        <form asp-page-handler="SaveSubject" method="post" class="ops-inline-edit ops-subject-edit">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="Id" value="@subject.SubjectId" />
                                             <input name="Code" value="@subject.Code" />
-                                            <input name="Name" value="@subject.Name" />
                                             <input name="Description" value="@subject.Description" />
-                                            <select name="OwnerUserId">
-                                                @if (!subject.OwnerUserId.HasValue)
-                                                {
-                                                    <option value="" selected>Chưa phân công</option>
-                                                }
-                                                else
-                                                {
-                                                    <option value="">Chưa phân công</option>
-                                                }
-                                                @foreach (var lecturer in lecturerOptions)
-                                                {
-                                                    if (subject.OwnerUserId == lecturer.Id)
-                                                    {
-                                                        <option value="@lecturer.Id" selected>@lecturer.DisplayName</option>
-                                                    }
-                                                    else
-                                                    {
-                                                        <option value="@lecturer.Id">@lecturer.DisplayName</option>
-                                                    }
-                                                }
-                                            </select>
                                             <button type="submit" class="ops-mini-button">Update</button>
                                         </form>
                                         <form asp-page-handler="DeleteSubject" method="post" class="ops-danger-form" data-confirm="Xóa môn này và toàn bộ chương bên trong? Thao tác này không thể hoàn tác.">

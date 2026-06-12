@@ -44,7 +44,7 @@ const translations = {
     "documents.subject": "Subject",
     "documents.chapter": "Chapter",
     "documents.source": "Source",
-    "documents.subjectPlaceholder": "Example: CODE - Subject name",
+    "documents.subjectPlaceholder": "Example: IOT102",
     "documents.chapterPlaceholder": "Example: Chapter 1 or Week 1",
     "documents.dropzoneTitle": "Drag and drop a document or click to choose a file",
     "documents.dropzoneDefault": "Supports PDF, DOCX, PPTX, TXT",
@@ -143,7 +143,7 @@ const translations = {
     "documents.subject": "Môn học",
     "documents.chapter": "Chương",
     "documents.source": "Nguồn",
-    "documents.subjectPlaceholder": "VD: Mã môn - Tên môn",
+    "documents.subjectPlaceholder": "VD: IOT102",
     "documents.chapterPlaceholder": "VD: Chương 1 hoặc Tuần 1",
     "documents.dropzoneTitle": "Kéo thả tài liệu hoặc bấm để chọn file",
     "documents.dropzoneDefault": "Hỗ trợ PDF, DOCX, PPTX, TXT",
@@ -1622,31 +1622,33 @@ function bindSuggestionButtons() {
 }
 
 function initAdminCreateUserForm() {
-  const form = document.querySelector("[data-admin-create-user-form]");
-  if (!form) {
-    return;
-  }
+  document.querySelectorAll("[data-admin-user-role-subject-form]").forEach((form) => {
+    if (form.dataset.roleSubjectBound === "true") {
+      return;
+    }
 
-  const roleSelect = form.querySelector("[data-admin-role-select]");
-  const subjectPicker = form.querySelector("[data-lecturer-subject-picker]");
-  if (!roleSelect || !subjectPicker) {
-    return;
-  }
+    const roleSelect = form.querySelector("[data-admin-role-select]");
+    const subjectPicker = form.querySelector("[data-lecturer-subject-picker]");
+    if (!roleSelect || !subjectPicker) {
+      return;
+    }
 
-  const subjectInputs = Array.from(subjectPicker.querySelectorAll("input[name='SubjectIds']"));
-  const syncSubjectPicker = () => {
-    const isLecturer = (roleSelect.value || "").toLowerCase() === "lecturer";
-    subjectPicker.classList.toggle("is-hidden", !isLecturer);
-    subjectInputs.forEach((input) => {
-      input.disabled = !isLecturer;
-      if (!isLecturer) {
-        input.checked = false;
-      }
-    });
-  };
+    form.dataset.roleSubjectBound = "true";
+    const subjectInputs = Array.from(subjectPicker.querySelectorAll("input[name='SubjectIds']"));
+    const syncSubjectPicker = () => {
+      const isLecturer = (roleSelect.value || "").toLowerCase() === "lecturer";
+      subjectPicker.classList.toggle("is-hidden", !isLecturer);
+      subjectInputs.forEach((input) => {
+        input.disabled = !isLecturer;
+        if (!isLecturer) {
+          input.checked = false;
+        }
+      });
+    };
 
-  roleSelect.addEventListener("change", syncSubjectPicker);
-  syncSubjectPicker();
+    roleSelect.addEventListener("change", syncSubjectPicker);
+    syncSubjectPicker();
+  });
 }
 
 function initConfirmForms() {

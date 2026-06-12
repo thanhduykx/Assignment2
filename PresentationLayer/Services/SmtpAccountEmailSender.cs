@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
 using PresentationLayer.Models;
+using PresentationLayer.Security;
 
 namespace PresentationLayer.Services;
 
@@ -21,7 +22,8 @@ public interface IAccountEmailSender
         UserAccount account,
         string temporaryPassword,
         string? loginUrl,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<string>? subjectLabels = null);
 
     Task SendPasswordResetEmailAsync(
         UserAccount account,
@@ -52,7 +54,8 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
         UserAccount account,
         string temporaryPassword,
         string? loginUrl,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<string>? subjectLabels = null)
     {
         ValidateOptions();
 
@@ -65,8 +68,8 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
         };
         message.To.Add(new MailAddress(account.Email, account.FullName, Encoding.UTF8));
 
-        var plainText = BuildPlainText(account, temporaryPassword, loginUrl);
-        var html = BuildHtml(account, temporaryPassword, loginUrl);
+        var plainText = BuildPlainText(account, temporaryPassword, loginUrl, subjectLabels);
+        var html = BuildHtml(account, temporaryPassword, loginUrl, subjectLabels);
         message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(plainText, Encoding.UTF8, MediaTypeNames.Text.Plain));
 
         var htmlView = AlternateView.CreateAlternateViewFromString(html, Encoding.UTF8, MediaTypeNames.Text.Html);
@@ -143,11 +146,16 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
         }
     }
 
-    private static string BuildPlainText(UserAccount account, string temporaryPassword, string? loginUrl)
+    private static string BuildPlainText(
+        UserAccount account,
+        string temporaryPassword,
+        string? loginUrl,
+        IReadOnlyList<string>? subjectLabels)
     {
         var loginLine = string.IsNullOrWhiteSpace(loginUrl)
             ? "Đăng nhập tại địa chỉ ứng dụng được nhà trường cung cấp."
             : $"Đăng nhập: {loginUrl}";
+        var accessSummary = BuildAccessSummary(account, subjectLabels);
 
         return $"""
             Chào mừng bạn tới Ứng dụng Chat Bot - Quản Lý Tài Liệu
@@ -158,6 +166,7 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
 
             Email đăng nhập: {account.Email}
             Vai trò: {account.Role}
+            Môn / quyền truy cập: {accessSummary}
             Mật khẩu tạm thời: {temporaryPassword}
 
             {loginLine}
@@ -229,11 +238,16 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
             """;
     }
 
-    private static string BuildHtml(UserAccount account, string temporaryPassword, string? loginUrl)
+    private static string BuildHtml(
+        UserAccount account,
+        string temporaryPassword,
+        string? loginUrl,
+        IReadOnlyList<string>? subjectLabels)
     {
         var fullName = WebUtility.HtmlEncode(account.FullName);
         var email = WebUtility.HtmlEncode(account.Email);
         var role = WebUtility.HtmlEncode(account.Role);
+        var accessSummary = WebUtility.HtmlEncode(BuildAccessSummary(account, subjectLabels));
         var password = WebUtility.HtmlEncode(temporaryPassword);
         var loginLink = string.IsNullOrWhiteSpace(loginUrl)
             ? "<p style=\"margin:0;color:#475569;\">Đăng nhập tại địa chỉ ứng dụng được nhà trường cung cấp.</p>"
@@ -270,6 +284,10 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
                               <td style="padding:12px 14px;font-weight:700;font-size:14px;">{{role}}</td>
                             </tr>
                             <tr>
+                              <td style="padding:12px 14px;color:#64748b;font-size:14px;">Môn / quyền truy cập</td>
+                              <td style="padding:12px 14px;font-weight:700;font-size:14px;">{{accessSummary}}</td>
+                            </tr>
+                            <tr>
                               <td style="padding:12px 14px;color:#64748b;font-size:14px;">Mật khẩu tạm thời</td>
                               <td style="padding:12px 14px;font-weight:800;font-size:14px;color:#b42318;">{{password}}</td>
                             </tr>
@@ -297,5 +315,27 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
             </body>
             </html>
             """;
+    }
+
+    private static string BuildAccessSummary(UserAccount account, IReadOnlyList<string>? subjectLabels)
+    {
+        if (account.Role == AppRoles.Admin)
+        {
+            return "Admin - toàn quyền hệ thống";
+        }
+
+        if (account.Role == AppRoles.Lecturer)
+        {
+            var subjects = subjectLabels?
+                .Where(subject => !string.IsNullOrWhiteSpace(subject))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? new List<string>();
+
+            return subjects.Count == 0
+                ? "Lecturer - chưa được gán môn"
+                : string.Join(", ", subjects);
+        }
+
+        return "Student - tất cả tài liệu đã index";
     }
 }
