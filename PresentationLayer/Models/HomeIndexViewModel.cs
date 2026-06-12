@@ -21,6 +21,30 @@ public sealed class HomeIndexViewModel
     public double AverageChunksPerIndexedDocument { get; set; }
 }
 
+public sealed class DocumentTreeSubjectViewModel
+{
+    public Guid SubjectId { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Guid? OwnerUserId { get; set; }
+    public string OwnerName { get; set; } = string.Empty;
+    public string OwnerEmail { get; set; } = string.Empty;
+    public List<DocumentTreeChapterViewModel> Chapters { get; set; } = new();
+    public int DocumentCount => Chapters.Sum(chapter => chapter.Documents.Count);
+}
+
+public sealed class DocumentTreeChapterViewModel
+{
+    public Guid? ChapterId { get; set; }
+    public Guid SubjectId { get; set; }
+    public string SubjectDisplayName { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+    public List<IndexedDocument> Documents { get; set; } = new();
+}
+
 public sealed class ChatIndexViewModel
 {
     public IReadOnlyList<ChatSession> ChatSessions { get; set; } = Array.Empty<ChatSession>();

@@ -38,6 +38,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public IReadOnlyList<IndexedDocument> Documents { get; private set; } = Array.Empty<IndexedDocument>();
     public IReadOnlyList<CourseSubject> CourseCatalog { get; private set; } = Array.Empty<CourseSubject>();
+    public IReadOnlyList<DocumentTreeSubjectViewModel> DocumentTree { get; private set; } = Array.Empty<DocumentTreeSubjectViewModel>();
     public IReadOnlyList<UserOptionViewModel> LecturerOptions { get; private set; } = Array.Empty<UserOptionViewModel>();
     public IReadOnlyList<string> DocumentSubjectOptions { get; private set; } = Array.Empty<string>();
     public IReadOnlyList<string> DocumentChapterOptions { get; private set; } = Array.Empty<string>();
@@ -109,6 +110,7 @@ public sealed class IndexModel : HomePageModelBase
 
         Documents = documents;
         CourseCatalog = courseCatalog;
+        DocumentTree = BuildDocumentTree(courseCatalog, accessibleDocuments);
         LecturerOptions = lecturers.Select(ToUserOption).ToList();
         DocumentSubjectOptions = accessibleDocuments
             .Select(document => document.Subject)
@@ -223,7 +225,7 @@ public sealed class IndexModel : HomePageModelBase
             if (string.IsNullOrWhiteSpace(model.Subject) || string.IsNullOrWhiteSpace(model.Chapter))
             {
                 TempData["Error"] = isVietnamese
-                    ? "Subject va Chapter la bat buoc khi upload tai lieu."
+                    ? "Môn học và chương/mục là bắt buộc khi upload tài liệu."
                     : "Subject and Chapter are required when uploading a document.";
                 return RedirectToPage("/Home/Index");
             }
@@ -266,7 +268,7 @@ public sealed class IndexModel : HomePageModelBase
             await _indexJobQueue.EnqueueAsync(result.DocumentId, cancellationToken);
 
             TempData["Success"] = isVietnamese
-                ? "Da nhan tai lieu va dang index."
+                ? "Đã nhận tài liệu và đang index."
                 : "The document has been queued for indexing.";
 
             var indexedDocument = await _repository.GetDocumentAsync(result.DocumentId, cancellationToken);
@@ -369,5 +371,86 @@ public sealed class IndexModel : HomePageModelBase
     {
         return !string.IsNullOrWhiteSpace(value)
                && value.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<DocumentTreeSubjectViewModel> BuildDocumentTree(
+        IReadOnlyList<CourseSubject> courseCatalog,
+        IReadOnlyList<IndexedDocument> documents)
+    {
+        var subjects = courseCatalog
+            .OrderBy(subject => subject.Code)
+            .ThenBy(subject => subject.Name)
+            .Select(subject => new DocumentTreeSubjectViewModel
+            {
+                SubjectId = subject.Id,
+                Code = subject.Code,
+                Name = subject.Name,
+                DisplayName = subject.DisplayName,
+                Description = subject.Description,
+                OwnerUserId = subject.OwnerUserId,
+                OwnerName = subject.OwnerName,
+                OwnerEmail = subject.OwnerEmail,
+                Chapters = subject.Chapters
+                    .OrderBy(chapter => chapter.SortOrder)
+                    .ThenBy(chapter => chapter.Title)
+                    .Select(chapter => new DocumentTreeChapterViewModel
+                    {
+                        ChapterId = chapter.Id,
+                        SubjectId = subject.Id,
+                        SubjectDisplayName = subject.DisplayName,
+                        Title = chapter.Title,
+                        SortOrder = chapter.SortOrder
+                    })
+                    .ToList()
+            })
+            .ToList();
+
+        foreach (var document in documents
+                     .OrderBy(document => document.Chapter)
+                     .ThenByDescending(document => document.UploadedAt))
+        {
+            var subject = FindSubjectForDocumentSubject(courseCatalog, document.Subject);
+            var subjectNode = subject is null
+                ? null
+                : subjects.FirstOrDefault(item => item.SubjectId == subject.Id);
+
+            if (subjectNode is null)
+            {
+                var parsed = ParseSubjectForCatalog(document.Subject);
+                subjectNode = new DocumentTreeSubjectViewModel
+                {
+                    SubjectId = CreateStableCatalogId(string.IsNullOrWhiteSpace(parsed.Code) ? document.Subject : parsed.Code),
+                    Code = string.IsNullOrWhiteSpace(parsed.Code) ? "UNCATALOGED" : parsed.Code,
+                    Name = string.IsNullOrWhiteSpace(parsed.Name) ? document.Subject : parsed.Name,
+                    DisplayName = string.IsNullOrWhiteSpace(document.Subject) ? "Chưa phân loại" : document.Subject,
+                    Description = "Tạo từ tài liệu đã upload nhưng chưa có trong catalog."
+                };
+                subjects.Add(subjectNode);
+            }
+
+            var chapterTitle = string.IsNullOrWhiteSpace(document.Chapter) ? "Chưa phân loại" : document.Chapter.Trim();
+            var chapterNode = subjectNode.Chapters.FirstOrDefault(chapter =>
+                chapter.Title.Equals(chapterTitle, StringComparison.OrdinalIgnoreCase));
+            if (chapterNode is null)
+            {
+                chapterNode = new DocumentTreeChapterViewModel
+                {
+                    SubjectId = subjectNode.SubjectId,
+                    SubjectDisplayName = subjectNode.DisplayName,
+                    Title = chapterTitle,
+                    SortOrder = subjectNode.Chapters.Count == 0
+                        ? 1
+                        : subjectNode.Chapters.Max(chapter => chapter.SortOrder) + 1
+                };
+                subjectNode.Chapters.Add(chapterNode);
+            }
+
+            chapterNode.Documents.Add(document);
+        }
+
+        return subjects
+            .OrderBy(subject => subject.Code)
+            .ThenBy(subject => subject.Name)
+            .ToList();
     }
 }
