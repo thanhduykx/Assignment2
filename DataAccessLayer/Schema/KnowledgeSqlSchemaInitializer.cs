@@ -379,32 +379,6 @@ internal static class KnowledgeSqlSchemaInitializer
             context.SaveChanges();
         }
 
-        var subject = context.CourseSubjects.FirstOrDefault(item => item.Code == "DBA103");
-        if (subject is null)
-        {
-            subject = new KnowledgeSqlCourseSubject
-            {
-                Id = Guid.NewGuid(),
-                Code = "DBA103",
-                Name = "Nhạc cụ truyền thống - Đàn Bầu",
-                Description = "Demo subject used for the assignment RAG knowledge base.",
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-            context.CourseSubjects.Add(subject);
-            context.SaveChanges();
-        }
-
-        if (!context.CourseChapters.Any(item => item.SubjectId == subject.Id && item.Title == "Syllabus 11835"))
-        {
-            context.CourseChapters.Add(new KnowledgeSqlCourseChapter
-            {
-                Id = Guid.NewGuid(),
-                SubjectId = subject.Id,
-                Title = "Syllabus 11835",
-                SortOrder = 1
-            });
-            context.SaveChanges();
-        }
     }
 
     private static string NormalizeSubjectCode(string code)

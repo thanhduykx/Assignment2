@@ -10,6 +10,7 @@
 
     var documents = Model.Documents.OrderByDescending(item => item.UploadedAt).ToList();
     var courseCatalog = Model.CourseCatalog.OrderBy(item => item.Code).ToList();
+    var documentTree = Model.DocumentTree.OrderBy(item => item.Code).ThenBy(item => item.Name).ToList();
     var lecturerOptions = Model.LecturerOptions.OrderBy(item => item.FullName).ThenBy(item => item.Email).ToList();
     var isAdmin = Model.IsAdmin;
     var canManageDocuments = Model.IsAdmin || Model.IsLecturer;
@@ -460,7 +461,7 @@
                     </form>
                 </div>
 
-                @if (courseCatalog.Count == 0)
+                @if (documentTree.Count == 0)
                 {
                     <div class="ops-empty">
                         <strong>Chưa có danh mục môn học.</strong>
@@ -469,25 +470,26 @@
                 }
                 else
                 {
-                    <div class="ops-catalog-list">
-                        @foreach (var subject in courseCatalog)
+                    <div class="ops-folder-tree">
+                        @foreach (var subject in documentTree)
                         {
-                            <details class="ops-catalog-item">
-                                <summary>
-                                    <span class="ops-code">@subject.Code</span>
-                                    <span>
-                                        <strong>@subject.Name</strong>
+                            <details class="ops-folder-subject" open>
+                                <summary class="ops-folder-summary">
+                                    <span class="material-symbols-outlined" aria-hidden="true">folder</span>
+                                    <span class="ops-folder-main">
+                                        <strong>@subject.DisplayName</strong>
                                         <small>@(string.IsNullOrWhiteSpace(subject.Description) ? "Chưa có mô tả." : subject.Description)</small>
                                     </span>
                                     <span class="ops-chip">Owner: @PersonLabel(subject.OwnerName, "Unassigned")</span>
-                                    <span class="ops-chip">@subject.Chapters.Count chapters</span>
+                                    <span class="ops-chip">@subject.Chapters.Count chương</span>
+                                    <span class="ops-chip">@subject.DocumentCount tài liệu</span>
                                 </summary>
-                                <div class="ops-catalog-detail">
+                                <div class="ops-folder-subject-body">
                                     @if (isAdmin)
                                     {
                                         <form asp-page-handler="SaveSubject" method="post" class="ops-inline-edit">
                                             @Html.AntiForgeryToken()
-                                            <input type="hidden" name="Id" value="@subject.Id" />
+                                            <input type="hidden" name="Id" value="@subject.SubjectId" />
                                             <input name="Code" value="@subject.Code" />
                                             <input name="Name" value="@subject.Name" />
                                             <input name="Description" value="@subject.Description" />
@@ -516,33 +518,152 @@
                                         </form>
                                         <form asp-page-handler="DeleteSubject" method="post" class="ops-danger-form" data-confirm="Xóa môn này và toàn bộ chương bên trong? Thao tác này không thể hoàn tác.">
                                             @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@subject.Id" />
+                                            <input type="hidden" name="id" value="@subject.SubjectId" />
                                             <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete subject</button>
                                         </form>
                                     }
 
-                                    <div class="ops-chapter-list">
+                                    <form asp-page-handler="SaveChapter" method="post" class="ops-folder-add-chapter">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="SubjectId" value="@subject.SubjectId" />
+                                        <label class="ops-field">
+                                            <span>Thêm chương/mục trong @subject.Code</span>
+                                            <input name="Title" placeholder="VD: Chapter 1 / Mục 1.1" />
+                                        </label>
+                                        <label class="ops-field">
+                                            <span>Thứ tự</span>
+                                            <input name="SortOrder" type="number" value="@(subject.Chapters.Count + 1)" />
+                                        </label>
+                                        <button type="submit" class="ops-mini-button">
+                                            <span class="material-symbols-outlined" aria-hidden="true">create_new_folder</span>
+                                            Thêm mục
+                                        </button>
+                                    </form>
+
+                                    <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-subject-upload">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Language" value="vi" data-language-field />
+                                        <input type="hidden" name="Subject" value="@subject.DisplayName" />
+
+                                        <label class="ops-field">
+                                            <span>Chương/mục</span>
+                                            <input name="Chapter" placeholder="VD: Chapter 1 / Mục 1.1" required />
+                                        </label>
+                                        <label class="ops-field">
+                                            <span>File tài liệu</span>
+                                            <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                                        </label>
+                                        <label class="ops-field">
+                                            <span>Hoặc URL bài giảng</span>
+                                            <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                                        </label>
+                                        <button type="submit" class="ops-button ops-button--primary">
+                                            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                            Thêm tài liệu vào môn
+                                        </button>
+                                    </form>
+
+                                    <div class="ops-folder-chapter-list">
                                         @if (subject.Chapters.Count == 0)
                                         {
-                                            <p class="ops-muted">Môn này chưa có chương.</p>
+                                            <p class="ops-muted">Môn này chưa có chương/mục.</p>
                                         }
-                                        @foreach (var chapter in subject.Chapters)
+                                        @foreach (var chapter in subject.Chapters.OrderBy(item => item.SortOrder).ThenBy(item => item.Title))
                                         {
-                                            <div class="ops-chapter-row">
-                                                <form asp-page-handler="SaveChapter" method="post" class="ops-inline-edit">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="Id" value="@chapter.Id" />
-                                                    <input type="hidden" name="SubjectId" value="@subject.Id" />
-                                                    <input name="Title" value="@chapter.Title" />
-                                                    <input name="SortOrder" type="number" value="@chapter.SortOrder" />
-                                                    <button type="submit" class="ops-mini-button">Update</button>
-                                                </form>
-                                                <form asp-page-handler="DeleteChapter" method="post" data-confirm="Xóa chương này? Thao tác này không thể hoàn tác.">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@chapter.Id" />
-                                                    <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete</button>
-                                                </form>
-                                            </div>
+                                            <details class="ops-folder-chapter" open>
+                                                <summary class="ops-folder-chapter-summary">
+                                                    <span class="material-symbols-outlined" aria-hidden="true">folder_open</span>
+                                                    <span class="ops-folder-main">
+                                                        <strong>@chapter.Title</strong>
+                                                        <small>@chapter.Documents.Count tài liệu</small>
+                                                    </span>
+                                                </summary>
+
+                                                <div class="ops-folder-chapter-body">
+                                                    <div class="ops-folder-toolbar">
+                                                        <form asp-page-handler="SaveChapter" method="post" class="ops-inline-edit ops-folder-chapter-edit">
+                                                            @Html.AntiForgeryToken()
+                                                            @if (chapter.ChapterId.HasValue)
+                                                            {
+                                                                <input type="hidden" name="Id" value="@chapter.ChapterId" />
+                                                            }
+                                                            <input type="hidden" name="SubjectId" value="@subject.SubjectId" />
+                                                            <input name="Title" value="@chapter.Title" />
+                                                            <input name="SortOrder" type="number" value="@chapter.SortOrder" />
+                                                            <button type="submit" class="ops-mini-button">Update</button>
+                                                        </form>
+                                                        @if (chapter.ChapterId.HasValue)
+                                                        {
+                                                            <form asp-page-handler="DeleteChapter" method="post" data-confirm="Xóa chương/mục này? Thao tác này không thể hoàn tác.">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="id" value="@chapter.ChapterId" />
+                                                                <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete</button>
+                                                            </form>
+                                                        }
+                                                    </div>
+
+                                                    <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="Language" value="vi" data-language-field />
+                                                        <input type="hidden" name="Subject" value="@chapter.SubjectDisplayName" />
+                                                        <input type="hidden" name="Chapter" value="@chapter.Title" />
+
+                                                        <label class="ops-field">
+                                                            <span>Thêm file vào @chapter.Title</span>
+                                                            <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                                                        </label>
+                                                        <label class="ops-field">
+                                                            <span>Hoặc URL bài giảng</span>
+                                                            <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                                                        </label>
+                                                        <button type="submit" class="ops-button ops-button--primary">
+                                                            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                                            Thêm tài liệu
+                                                        </button>
+                                                    </form>
+
+                                                    @if (chapter.Documents.Count == 0)
+                                                    {
+                                                        <p class="ops-muted">Chưa có tài liệu trong chương/mục này.</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="ops-tree-document-list">
+                                                            @foreach (var document in chapter.Documents.OrderByDescending(item => item.UploadedAt))
+                                                            {
+                                                                <div class="ops-tree-document-row">
+                                                                    <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                                                                    <div class="ops-tree-document-main">
+                                                                        <strong title="@document.FileName">@document.FileName</strong>
+                                                                        <small>@StatusLabel(document) · @document.ChunkCount chunks · @FormatBytes(document.FileSizeBytes)</small>
+                                                                    </div>
+                                                                    <div class="ops-row-actions">
+                                                                        @if (document.Status == DocumentIndexStatus.Indexed)
+                                                                        {
+                                                                            <button type="button" class="ops-mini-button" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem</button>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <button type="button" class="ops-mini-button" disabled title="@StatusTitle(document)">Xem</button>
+                                                                        }
+                                                                        <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa</a>
+                                                                        <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tài liệu này?">
+                                                                            @Html.AntiForgeryToken()
+                                                                            <input type="hidden" name="id" value="@document.Id" />
+                                                                            <button type="submit" class="ops-mini-button">Re-index</button>
+                                                                        </form>
+                                                                        <form asp-page-handler="DeleteDocument" method="post" data-confirm="Xóa tài liệu này khỏi kho index? Thao tác này không thể hoàn tác.">
+                                                                            @Html.AntiForgeryToken()
+                                                                            <input type="hidden" name="id" value="@document.Id" />
+                                                                            <button type="submit" class="ops-mini-button ops-mini-button--danger">Xóa</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </details>
                                         }
                                     </div>
                                 </div>
