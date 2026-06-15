@@ -319,9 +319,9 @@ public sealed class UserAccountStore : IUserAccountStore
             var user = users.FirstOrDefault(item => item.Id == userId)
                 ?? throw new InvalidOperationException("User not found.");
 
-            if (user.Role != AppRoles.Student)
+            if (user.Role != AppRoles.Student && user.Role != AppRoles.Lecturer)
             {
-                throw new InvalidOperationException("Set role to Student before deleting this user.");
+                throw new InvalidOperationException("Set role to Student or Lecturer before deleting this user.");
             }
 
             if (user.Role == AppRoles.Admin && users.Count(item => item.Role == AppRoles.Admin) <= 1)
