@@ -353,7 +353,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         int sortOrder,
         CancellationToken cancellationToken = default)
     {
-        var trimmedTitle = title.Trim();
+        var trimmedTitle = title?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(trimmedTitle))
         {
             throw new InvalidOperationException("Chapter title is required.");

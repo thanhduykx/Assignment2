@@ -341,13 +341,13 @@
 
             <section class="ops-panel ops-command-card ops-command-card--import">
                 <span class="ops-eyebrow">Bulk import</span>
-                <h2>Import email list</h2>
-                <form asp-page-handler="ImportUsers" method="post" class="ops-stacked-form" data-admin-user-role-subject-form data-confirm="Tạo user hàng loạt và gửi email welcome cho danh sách này?">
+                <h2>Import Excel file / Nhập từ Excel</h2>
+                <form asp-page-handler="ImportUsers" method="post" enctype="multipart/form-data" class="ops-stacked-form" data-admin-user-role-subject-form data-confirm="Tạo user hàng loạt và gửi email welcome cho danh sách này?">
                     @Html.AntiForgeryToken()
                     <label class="ops-field">
-                        <span>Email list</span>
-                        <textarea name="Emails" rows="7" required class="ops-import-textarea" placeholder="student01@fpt.edu.vn&#10;lecturer01@fpt.edu.vn, Lecturer, DBA103|PRN222"></textarea>
-                        <small>Mỗi dòng: email hoặc email, role, subject1|subject2.</small>
+                        <span>Excel file / File Excel</span>
+                        <input name="ExcelFile" type="file" accept=".xlsx" required style="padding: 0.5rem 0;" />
+                        <small>Hệ thống tự động trích xuất cột chứa Họ & Tên và Email.</small>
                     </label>
                     <label class="ops-field">
                         <span>Default role</span>

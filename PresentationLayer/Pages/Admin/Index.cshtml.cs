@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using PresentationLayer.Models;
 using PresentationLayer.Security;
 using PresentationLayer.Services;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace PresentationLayer.Pages.Admin;
 
@@ -135,7 +137,7 @@ public sealed class IndexModel : PageModel
         {
             var subjects = await _knowledge.GetCourseCatalogAsync(cancellationToken);
             var existingUsers = await _users.GetAllAsync(cancellationToken);
-            var drafts = BuildImportDrafts(model, subjects, errors);
+            var drafts = BuildImportDraftsFromExcel(model, subjects, errors);
             ValidateImportDrafts(drafts, existingUsers, errors);
             if (errors.Count > 0)
             {
@@ -154,7 +156,7 @@ public sealed class IndexModel : PageModel
                 try
                 {
                     var user = await _users.CreateLocalForAdminAsync(
-                        BuildImportedFullName(draft.Email),
+                        draft.FullName,
                         draft.Email,
                         temporaryPassword,
                         draft.Role,
@@ -292,11 +294,18 @@ public sealed class IndexModel : PageModel
             host: Request.Host.ToUriComponent()) ?? string.Empty;
     }
 
-    private static IReadOnlyList<ImportUserDraft> BuildImportDrafts(
+    private static IReadOnlyList<ImportUserDraft> BuildImportDraftsFromExcel(
         ImportAdminUsersViewModel model,
         IReadOnlyList<CourseSubject> subjects,
         List<string> errors)
     {
+        var drafts = new List<ImportUserDraft>();
+        if (model.ExcelFile == null || model.ExcelFile.Length == 0)
+        {
+            errors.Add("Excel file is empty or missing.");
+            return drafts;
+        }
+
         var defaultRole = AppRoles.Student;
         if (AppRoles.IsKnown(model.Role))
         {
@@ -307,64 +316,151 @@ public sealed class IndexModel : PageModel
             errors.Add("Default role is invalid.");
         }
         var defaultSubjects = ResolveSubjectIds(model.SubjectIds, subjects, errors, "default subject selection");
-        var drafts = new List<ImportUserDraft>();
-        var lines = (model.Emails ?? string.Empty)
-            .Replace("\r\n", "\n", StringComparison.Ordinal)
-            .Replace('\r', '\n')
-            .Split('\n');
 
-        for (var index = 0; index < lines.Length; index++)
+        try
         {
-            var lineNumber = index + 1;
-            var line = lines[index].Trim();
-            if (string.IsNullOrWhiteSpace(line))
+            using var stream = model.ExcelFile.OpenReadStream();
+            using var doc = SpreadsheetDocument.Open(stream, false);
+            var workbookPart = doc.WorkbookPart;
+            if (workbookPart == null)
             {
-                continue;
+                errors.Add("Invalid Excel file format.");
+                return drafts;
             }
 
-            var columns = SplitImportColumns(line);
-            var email = NormalizeImportEmail(columns[0]);
-            if (!IsValidEmail(email))
+            var sheet = workbookPart.Workbook.Sheets?.Cast<Sheet>().FirstOrDefault();
+            if (sheet == null)
             {
-                errors.Add($"Line {lineNumber}: email is invalid.");
-                continue;
+                errors.Add("Excel file has no worksheets.");
+                return drafts;
             }
 
-            var roleText = columns.Count >= 2 && !string.IsNullOrWhiteSpace(columns[1])
-                ? columns[1]
-                : defaultRole;
-            if (!AppRoles.IsKnown(roleText))
+            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+            var sheetData = worksheetPart.Worksheet.Elements<SheetData>().FirstOrDefault();
+            if (sheetData == null)
             {
-                errors.Add($"Line {lineNumber}: role is invalid.");
-                continue;
+                errors.Add("Worksheet has no data.");
+                return drafts;
             }
 
-            var role = AppRoles.Normalize(roleText);
-            var rowSubjectTokens = columns.Count >= 3
-                ? SplitSubjectTokens(columns[2])
-                : Array.Empty<string>();
-
-            if (role != AppRoles.Lecturer && rowSubjectTokens.Count > 0)
+            var rows = sheetData.Elements<Row>().ToList();
+            if (rows.Count == 0)
             {
-                errors.Add($"Line {lineNumber}: subjects are only valid for Lecturer role.");
-                continue;
+                errors.Add("Worksheet has no rows.");
+                return drafts;
             }
 
-            var selectedSubjects = role == AppRoles.Lecturer
-                ? rowSubjectTokens.Count > 0
-                    ? ResolveSubjectTokens(rowSubjectTokens, subjects, errors, $"Line {lineNumber}")
-                    : defaultSubjects
-                : Array.Empty<CourseSubject>();
+            // Detect headers from row 1
+            var headerRow = rows[0];
+            string? nameColumn = null;
+            string? emailColumn = null;
 
-            drafts.Add(new ImportUserDraft(lineNumber, email, role, selectedSubjects));
+            foreach (Cell cell in headerRow.Elements<Cell>())
+            {
+                string headerText = GetCellValue(doc, cell);
+                string colLetter = GetColumnLetter(cell.CellReference?.Value);
+
+                if (headerText.Equals("Họ & Tên", StringComparison.OrdinalIgnoreCase) ||
+                    headerText.Equals("Họ và Tên", StringComparison.OrdinalIgnoreCase) ||
+                    headerText.Equals("Name", StringComparison.OrdinalIgnoreCase) ||
+                    headerText.Equals("Tên", StringComparison.OrdinalIgnoreCase))
+                {
+                    nameColumn = colLetter;
+                }
+                else if (nameColumn == null && (
+                    headerText.Contains("Họ & Tên", StringComparison.OrdinalIgnoreCase) ||
+                    headerText.Contains("Họ và Tên", StringComparison.OrdinalIgnoreCase) ||
+                    headerText.Contains("Name", StringComparison.OrdinalIgnoreCase)))
+                {
+                    nameColumn = colLetter;
+                }
+
+                if (headerText.Equals("Email", StringComparison.OrdinalIgnoreCase))
+                {
+                    emailColumn = colLetter;
+                }
+                else if (emailColumn == null && headerText.Contains("Email", StringComparison.OrdinalIgnoreCase))
+                {
+                    emailColumn = colLetter;
+                }
+            }
+
+            if (string.IsNullOrEmpty(nameColumn)) nameColumn = "A";
+            if (string.IsNullOrEmpty(emailColumn)) emailColumn = "D";
+
+            for (int i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                var lineNumber = i + 1;
+
+                string fullName = "";
+                string email = "";
+
+                foreach (Cell cell in row.Elements<Cell>())
+                {
+                    string colLetter = GetColumnLetter(cell.CellReference?.Value);
+                    if (colLetter == nameColumn)
+                    {
+                        fullName = GetCellValue(doc, cell);
+                    }
+                    else if (colLetter == emailColumn)
+                    {
+                        email = GetCellValue(doc, cell);
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    continue;
+                }
+
+                var normalizedEmail = NormalizeImportEmail(email);
+                if (!IsValidEmail(normalizedEmail))
+                {
+                    errors.Add($"Row {lineNumber}: Email '{email}' is invalid.");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(fullName))
+                {
+                    fullName = BuildImportedFullName(normalizedEmail);
+                }
+
+                drafts.Add(new ImportUserDraft(lineNumber, fullName, normalizedEmail, defaultRole, defaultSubjects));
+            }
+        }
+        catch (Exception ex)
+        {
+            errors.Add($"Failed to parse Excel file: {ex.Message}");
         }
 
         if (drafts.Count == 0 && errors.Count == 0)
         {
-            errors.Add("Email list is empty.");
+            errors.Add("No valid user rows found in the Excel file.");
         }
 
         return drafts;
+    }
+
+    private static string GetColumnLetter(string? cellReference)
+    {
+        if (string.IsNullOrEmpty(cellReference)) return string.Empty;
+        return new string(cellReference.TakeWhile(char.IsLetter).ToArray()).ToUpperInvariant();
+    }
+
+    private static string GetCellValue(SpreadsheetDocument doc, Cell cell)
+    {
+        if (cell == null) return string.Empty;
+        string val = cell.CellValue?.Text ?? string.Empty;
+        if (cell.DataType != null && cell.DataType == CellValues.SharedString)
+        {
+            var sstPart = doc.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+            if (sstPart?.SharedStringTable != null && int.TryParse(val, out int id))
+            {
+                val = sstPart.SharedStringTable.ChildElements[id].InnerText;
+            }
+        }
+        return val.Trim();
     }
 
     private static void ValidateImportDrafts(
@@ -406,25 +502,6 @@ public sealed class IndexModel : PageModel
         }
     }
 
-    private static IReadOnlyList<string> SplitImportColumns(string line)
-    {
-        var separator = line.Contains('\t')
-            ? '\t'
-            : line.Contains(';')
-                ? ';'
-                : ',';
-
-        return line.Split(separator, 3, StringSplitOptions.TrimEntries).ToList();
-    }
-
-    private static IReadOnlyList<string> SplitSubjectTokens(string value)
-    {
-        return value
-            .Split(new[] { '|', '+', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(token => !string.IsNullOrWhiteSpace(token))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
 
     private static IReadOnlyList<CourseSubject> ResolveSubjectIds(
         IEnumerable<Guid>? subjectIds,
@@ -448,44 +525,7 @@ public sealed class IndexModel : PageModel
         return selectedSubjects;
     }
 
-    private static IReadOnlyList<CourseSubject> ResolveSubjectTokens(
-        IEnumerable<string> subjectTokens,
-        IReadOnlyList<CourseSubject> subjects,
-        List<string> errors,
-        string scope)
-    {
-        var selectedSubjects = new List<CourseSubject>();
-        foreach (var token in subjectTokens)
-        {
-            var subject = FindSubjectByToken(token, subjects);
-            if (subject is null)
-            {
-                errors.Add($"{scope}: subject '{token}' was not found.");
-                continue;
-            }
 
-            selectedSubjects.Add(subject);
-        }
-
-        return selectedSubjects
-            .GroupBy(subject => subject.Id)
-            .Select(group => group.First())
-            .ToList();
-    }
-
-    private static CourseSubject? FindSubjectByToken(string token, IReadOnlyList<CourseSubject> subjects)
-    {
-        var normalizedToken = token.Trim();
-        if (Guid.TryParse(normalizedToken, out var subjectId))
-        {
-            return subjects.FirstOrDefault(subject => subject.Id == subjectId);
-        }
-
-        return subjects.FirstOrDefault(subject =>
-            subject.Code.Equals(normalizedToken, StringComparison.OrdinalIgnoreCase)
-            || subject.Name.Equals(normalizedToken, StringComparison.OrdinalIgnoreCase)
-            || subject.DisplayName.Equals(normalizedToken, StringComparison.OrdinalIgnoreCase));
-    }
 
     private static string NormalizeImportEmail(string email)
     {
@@ -998,6 +1038,7 @@ public sealed class IndexModel : PageModel
 
     private sealed record ImportUserDraft(
         int LineNumber,
+        string FullName,
         string Email,
         string Role,
         IReadOnlyList<CourseSubject> Subjects);

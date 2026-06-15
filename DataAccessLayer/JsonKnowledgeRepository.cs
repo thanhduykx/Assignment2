@@ -435,7 +435,7 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
             var store = await LoadAsync(cancellationToken);
             var subject = store.CourseSubjects.FirstOrDefault(item => item.Id == subjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
-            var trimmedTitle = title.Trim();
+            var trimmedTitle = title?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(trimmedTitle))
             {
                 throw new InvalidOperationException("Chapter title is required.");
