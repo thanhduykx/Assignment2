@@ -457,7 +457,7 @@
                     <div class="ops-folder-tree">
                         @foreach (var subject in documentTree)
                         {
-                            <details class="ops-folder-subject" open>
+                            <details class="ops-folder-subject ops-subject-card-shell" data-subject-detail-url='@Url.Page("/Home/SubjectDocuments", new { id = subject.SubjectId })' role="link" tabindex="0">
                                 <summary class="ops-folder-summary">
                                     <span class="material-symbols-outlined" aria-hidden="true">folder</span>
                                     <span class="ops-folder-main">
