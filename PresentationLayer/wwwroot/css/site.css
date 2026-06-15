@@ -6177,6 +6177,16 @@ body.rbl-body .rbl-main {
   box-shadow: none;
 }
 
+.ops-command-card--inline {
+  grid-template-columns: minmax(120px, 0.7fr) minmax(160px, 1fr) minmax(160px, 1.2fr) auto;
+  align-items: end;
+}
+
+.ops-command-card--inline h3 {
+  margin: 0;
+  align-self: center;
+}
+
 .ops-stacked-form {
   display: grid;
   gap: 10px;
@@ -6263,6 +6273,108 @@ body.rbl-body .rbl-main {
 .ops-folder-tree {
   display: grid;
   gap: 10px;
+}
+
+.ops-catalog-panel .ops-folder-tree,
+.ops-subject-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+
+.ops-subject-card-shell {
+  min-height: 58px;
+  border: 1px solid var(--ops-border);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.ops-subject-card-shell:hover,
+.ops-subject-card-shell:focus-visible {
+  border-color: var(--ops-navy);
+  box-shadow: 0 10px 22px rgba(11, 45, 92, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.ops-subject-card-shell .ops-folder-summary {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  background: transparent;
+  text-align: center;
+}
+
+.ops-subject-card-shell .ops-folder-summary > .material-symbols-outlined,
+.ops-subject-card-shell .ops-folder-main small,
+.ops-subject-card-shell .ops-folder-summary > .ops-chip,
+.ops-subject-card-shell .ops-folder-subject-body {
+  display: none;
+}
+
+.ops-subject-card-shell .ops-folder-main strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ops-navy);
+  font-size: 0.86rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+.ops-back-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  color: var(--ops-navy);
+  font-size: 0.84rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.ops-back-link:hover,
+.ops-back-link:focus-visible {
+  color: var(--ops-blue);
+  outline: none;
+}
+
+.ops-back-link .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.ops-subject-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ops-subject-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.ops-subject-manage-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.ops-subject-edit-form {
+  display: grid;
+  flex: 1 1 320px;
+  grid-template-columns: minmax(100px, 0.65fr) minmax(160px, 1fr) auto;
+  gap: 8px;
+  align-items: end;
 }
 
 .ops-folder-subject,
@@ -6636,7 +6748,8 @@ body.rbl-body .rbl-main {
   }
 
   .ops-admin-layout,
-  .ops-ingest-grid {
+  .ops-ingest-grid,
+  .ops-subject-detail-grid {
     grid-template-columns: 1fr;
   }
 
@@ -6725,6 +6838,7 @@ body.rbl-body .rbl-main {
   .ops-kpi-grid,
   .ops-command-rail,
   .ops-command-grid,
+  .ops-command-card--inline,
   .ops-form-row,
   .ops-filter-bar,
   .ops-admin-filter,
@@ -6736,10 +6850,15 @@ body.rbl-body .rbl-main {
   .ops-folder-add-chapter,
   .ops-folder-toolbar,
   .ops-folder-chapter-edit,
+  .ops-subject-edit-form,
   .ops-tree-upload,
   .ops-tree-subject-upload,
   .ops-tree-document-row {
     grid-template-columns: 1fr;
+  }
+
+  .ops-subject-header-actions {
+    justify-content: flex-start;
   }
 
   .ops-documents-page .ops-kpi-grid {
