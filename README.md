@@ -131,7 +131,7 @@ Lenh chay nhanh:
 cd C:\Assignment1
 dotnet restore
 dotnet build Group7_SE1950.sln
-dotnet run --project PresentationLayer\Group07MVC.csproj --urls http://localhost:5097
+dotnet run --project PresentationLayer\Group07MVC.csproj --urls http://0.0.0.0:9999
 ```
 
 Connection string va Google auth duoc cau hinh trong `PresentationLayer/appsettings.json` cho demo. `HF_TOKEN` nen dat bang bien moi truong/User Secrets, khong commit token that.
@@ -140,7 +140,13 @@ Google callback khong tu tao user moi; email Google phai trung voi tai khoan da 
 Mo web:
 
 ```text
-http://localhost:5097
+http://localhost:9999
+```
+
+May khac trong cung mang LAN truy cap bang:
+
+```text
+http://<IP-may-chay-app>:9999
 ```
 
 ## Ghi chu nghiep vu
