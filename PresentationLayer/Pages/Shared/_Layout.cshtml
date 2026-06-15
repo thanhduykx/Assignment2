@@ -94,10 +94,35 @@
                     }
                     @if (canManageUsers)
                     {
-                    <a class="@adminNavClass" asp-page="/Admin/Index">
-                        <span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
-                        <span>Người dùng / Users</span>
-                    </a>
+                    <details class="rbl-nav-dropdown" @((activeNav == "admin") ? "open" : "")>
+                        <summary class="rbl-nav-link-summary @adminNavClass">
+                            <span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
+                            <span>Người dùng / Users</span>
+                            <span class="material-symbols-outlined rbl-dropdown-chevron" aria-hidden="true">expand_more</span>
+                        </summary>
+                        <div class="rbl-nav-sublist">
+                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="directory">
+                                <span class="material-symbols-outlined" aria-hidden="true">group</span>
+                                <span>Directory / Bảng người dùng</span>
+                            </a>
+                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="lecturer-table">
+                                <span class="material-symbols-outlined" aria-hidden="true">school</span>
+                                <span>Lecturer Table / Bảng giảng viên</span>
+                            </a>
+                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="create-account">
+                                <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
+                                <span>Create Account / Thêm user</span>
+                            </a>
+                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="bulk-import">
+                                <span class="material-symbols-outlined" aria-hidden="true">group_add</span>
+                                <span>Bulk Import / Nhập từ Excel</span>
+                            </a>
+                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="create-subject">
+                                <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
+                                <span>Create Subject / Thêm môn</span>
+                            </a>
+                        </div>
+                    </details>
                     }
                 </nav>
 

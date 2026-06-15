@@ -254,7 +254,7 @@ namespace PresentationLayer
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection(); // Disabled: app runs on HTTP only (no HTTPS port configured)
             app.UseRouting();
 
             app.UseAuthentication();

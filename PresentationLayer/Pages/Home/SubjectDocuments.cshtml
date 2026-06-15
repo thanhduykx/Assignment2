@@ -28,17 +28,6 @@
         return string.IsNullOrWhiteSpace(name) ? fallback : name.Trim();
     }
 
-    string StatusClass(IndexedDocument document)
-    {
-        return document.Status switch
-        {
-            DocumentIndexStatus.Indexed => "is-success",
-            DocumentIndexStatus.Processing => "is-running",
-            DocumentIndexStatus.Failed => "is-error",
-            _ => "is-muted"
-        };
-    }
-
     string StatusLabel(IndexedDocument document)
     {
         return document.Status switch
