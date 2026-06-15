@@ -1,10 +1,17 @@
-@page
+@page "{section?}"
 @model PresentationLayer.Pages.Admin.IndexModel
 @{
     ViewData["Title"] = "Người dùng / Users";
     ViewData["UseRblShell"] = true;
     ViewData["ActiveNav"] = "admin";
     ViewData["ShellTitle"] = "Người dùng / Users";
+
+    var section = Model.CurrentSection;
+    var isDirectory = section == IndexModel.AdminSection.Directory;
+    var isCreateAccount = section == IndexModel.AdminSection.CreateAccount;
+    var isBulkImport = section == IndexModel.AdminSection.BulkImport;
+    var isCreateSubject = section == IndexModel.AdminSection.CreateSubject;
+    var isLecturerTable = section == IndexModel.AdminSection.LecturerTable;
 
     var users = Model.Users
         .OrderBy(user => user.Role)
@@ -26,20 +33,11 @@
     string Initials(PresentationLayer.Models.AdminUserRowViewModel user)
     {
         var source = DisplayName(user).Trim();
-        if (string.IsNullOrWhiteSpace(source))
-        {
-            return "U";
-        }
-
+        if (string.IsNullOrWhiteSpace(source)) return "U";
         var parts = source.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length >= 2)
-        {
-            return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
-        }
-
+        if (parts.Length >= 2) return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
         return source[..1].ToUpperInvariant();
     }
-
 }
 
 <section class="ops-page ops-admin-page">
@@ -60,63 +58,234 @@
         <div class="rbl-alert is-error">@error</div>
     }
 
-    <section class="ops-kpi-grid ops-admin-kpis" aria-label="User metrics">
-        <article class="ops-kpi">
-            <span>Total users</span>
-            <strong>@Model.TotalUserCount</strong>
-            <small>@users.Count shown</small>
-        </article>
-        <article class="ops-kpi">
-            <span>Admins</span>
-            <strong>@Model.AdminUserCount</strong>
-            <small>Full system access</small>
-        </article>
-        <article class="ops-kpi">
-            <span>Lecturers</span>
-            <strong>@Model.LecturerUserCount</strong>
-            <small>Manage assigned subjects</small>
-        </article>
-        <article class="ops-kpi">
-            <span>Students</span>
-            <strong>@Model.StudentUserCount</strong>
-            <small>Read and chat access</small>
-        </article>
-        <article class="ops-kpi">
-            <span>Subjects</span>
-            <strong>@Model.SubjectCount</strong>
-            <small>@Model.AssignedSubjectCount assigned</small>
-        </article>
-    </section>
+    @if (isDirectory)
+    {
+        @* === DIRECTORY: Bảng người dùng / User table === *@
+        <section class="ops-kpi-grid ops-admin-kpis" aria-label="User metrics">
+            <article class="ops-kpi">
+                <span>Total users</span>
+                <strong>@Model.TotalUserCount</strong>
+                <small>@users.Count shown</small>
+            </article>
+            <article class="ops-kpi">
+                <span>Admins</span>
+                <strong>@Model.AdminUserCount</strong>
+                <small>Full system access</small>
+            </article>
+            <article class="ops-kpi">
+                <span>Lecturers</span>
+                <strong>@Model.LecturerUserCount</strong>
+                <small>Manage assigned subjects</small>
+            </article>
+            <article class="ops-kpi">
+                <span>Students</span>
+                <strong>@Model.StudentUserCount</strong>
+                <small>Read and chat access</small>
+            </article>
+            <article class="ops-kpi">
+                <span>Subjects</span>
+                <strong>@Model.SubjectCount</strong>
+                <small>@Model.AssignedSubjectCount assigned</small>
+            </article>
+        </section>
 
-    <div class="ops-admin-layout">
-        <section class="ops-panel ops-admin-main">
+            <section class="ops-panel">
+                <div class="ops-panel-head">
+                    <div>
+                        <span class="ops-eyebrow">Directory</span>
+                        <h2>Bảng người dùng / User table</h2>
+                    </div>
+                    <span class="ops-panel-note">@users.Count/@Model.TotalUserCount users</span>
+                </div>
+
+                <form asp-page="/Admin/Index" method="get" class="ops-filter-bar ops-admin-filter" asp-route-section="directory">
+                    <label class="ops-field ops-field--search">
+                        <span>Search / Tìm kiếm</span>
+                        <input name="q" value="@Model.Query" placeholder="Name, email, provider, subject..." />
+                    </label>
+                    <label class="ops-field">
+                        <span>Role / Vai trò</span>
+                        <select name="roleFilter">
+                            @if (string.IsNullOrWhiteSpace(Model.RoleFilter))
+                            {
+                                <option value="" selected>All roles</option>
+                            }
+                            else
+                            {
+                                <option value="">All roles</option>
+                            }
+                            @foreach (var role in Model.Roles)
+                            {
+                                if (role.Equals(Model.RoleFilter, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@role" selected>@role</option>
+                                }
+                                else
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            }
+                        </select>
+                    </label>
+                    <button type="submit" class="ops-button ops-button--secondary">Filter</button>
+                    @if (hasActiveFilters)
+                    {
+                        <a class="ops-button ops-button--ghost" asp-page="/Admin/Index" asp-route-section="directory">Clear</a>
+                    }
+                </form>
+
+                @if (users.Count == 0)
+                {
+                    <div class="ops-empty">
+                        <strong>No matching users.</strong>
+                        <p>Clear filters or create a new account from the command panel.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="ops-table-wrap">
+                        <table class="ops-table ops-user-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Created</th>
+                                    <th>Role / Vai trò</th>
+                                    <th>Subjects</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var user in users)
+                            {
+                                <tr>
+                                    <td data-label="User">
+                                        <div class="ops-user-cell">
+                                            <span class="ops-avatar">@Initials(user)</span>
+                                            <div class="ops-user-identity">
+                                                <strong>@DisplayName(user)</strong>
+                                                <small>@user.Email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Created">
+                                        <span>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
+                                    </td>
+                                    <td data-label="Role / Vai trò">
+                                        <form asp-page-handler="UpdateRole" method="post" class="ops-role-form" data-admin-role-update-form>
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="UserId" value="@user.Id" />
+                                            <select
+                                                name="Role"
+                                                disabled="@user.IsLastAdmin"
+                                                data-admin-role-update-select
+                                                data-admin-role-user="@user.Email"
+                                                title="Đổi role sẽ hỏi xác nhận và tự lưu">
+                                                @foreach (var role in Model.Roles)
+                                                {
+                                                    if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
+                                                    {
+                                                        <option value="@role" selected>@role</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@role">@role</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td data-label="Subjects">
+                                        @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)
+                                        {
+                                            <div class="ops-subject-cell">
+                                                <div class="ops-chip-list">
+                                                @if (user.AssignedSubjectDetails.Count == 0)
+                                                {
+                                                    <span class="ops-chip ops-chip--muted">Chưa đăng ký môn</span>
+                                                }
+                                                else
+                                                {
+                                                    foreach (var subject in user.AssignedSubjectDetails)
+                                                    {
+                                                        <span class="ops-chip" title="Đã assign - không thể gỡ">
+                                                            <span>@subject.DisplayName</span>
+                                                        </span>
+                                                    }
+                                                }
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (user.Role == PresentationLayer.Security.AppRoles.Student)
+                                        {
+                                            <span class="ops-chip">All indexed documents</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="ops-chip ops-chip--muted">Not applicable</span>
+                                        }
+                                    </td>
+                                    <td data-label="Actions">
+                                        @{
+                                            var deleteDisabled = user.IsLastAdmin
+                                                || user.IsCurrentUser
+                                                || (user.Role != PresentationLayer.Security.AppRoles.Student && user.Role != PresentationLayer.Security.AppRoles.Lecturer);
+                                            var deleteTitle = user.IsCurrentUser
+                                                ? "Cannot delete your own active account"
+                                                : user.IsLastAdmin
+                                                    ? "Cannot delete the last admin"
+                                                    : "Delete user";
+                                        }
+                                        <form asp-page-handler="DeleteUser" method="post" class="ops-danger-form" data-confirm="Xóa người dùng này? Thao tác này không thể hoàn tác.">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="UserId" value="@user.Id" />
+                                            <button
+                                                type="submit"
+                                                class="ops-mini-button ops-mini-button--danger"
+                                                disabled="@deleteDisabled"
+                                                title="@deleteTitle">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+    }
+
+    @if (isCreateAccount)
+    {
+        @* === CREATE ACCOUNT: Thêm user === *@
+        <section class="ops-panel">
             <div class="ops-panel-head">
                 <div>
-                    <span class="ops-eyebrow">Directory</span>
-                    <h2>Bảng người dùng / User table</h2>
+                    <span class="ops-eyebrow">Create account</span>
+                    <h2>Thêm user</h2>
                 </div>
-                <span class="ops-panel-note">@users.Count/@Model.TotalUserCount users</span>
             </div>
-
-            <form asp-page="/Admin/Index" method="get" class="ops-filter-bar ops-admin-filter">
-                <label class="ops-field ops-field--search">
-                    <span>Search / Tìm kiếm</span>
-                    <input name="q" value="@Model.Query" placeholder="Name, email, provider, subject..." />
+            <form asp-page-handler="CreateUser" method="post" class="ops-stacked-form" data-admin-create-user-form data-admin-user-role-subject-form>
+                @Html.AntiForgeryToken()
+                <label class="ops-field">
+                    <span>Full name</span>
+                    <input name="FullName" maxlength="120" autocomplete="name" />
                 </label>
                 <label class="ops-field">
-                    <span>Role / Vai trò</span>
-                    <select name="roleFilter">
-                        @if (string.IsNullOrWhiteSpace(Model.RoleFilter))
-                        {
-                            <option value="" selected>All roles</option>
-                        }
-                        else
-                        {
-                            <option value="">All roles</option>
-                        }
+                    <span>Email</span>
+                    <input name="Email" type="email" autocomplete="email" />
+                </label>
+                <label class="ops-field">
+                    <span>Password</span>
+                    <input name="Password" type="password" minlength="8" autocomplete="new-password" />
+                </label>
+                <label class="ops-field">
+                    <span>Role</span>
+                    <select name="Role" data-admin-role-select>
                         @foreach (var role in Model.Roles)
                         {
-                            if (role.Equals(Model.RoleFilter, StringComparison.OrdinalIgnoreCase))
+                            if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
                             {
                                 <option value="@role" selected>@role</option>
                             }
@@ -127,149 +296,169 @@
                         }
                     </select>
                 </label>
-                <button type="submit" class="ops-button ops-button--secondary">Filter</button>
-                @if (hasActiveFilters)
-                {
-                    <a class="ops-button ops-button--ghost" asp-page="/Admin/Index">Clear</a>
-                }
+                <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
+                    <legend>Subjects for lecturer</legend>
+                    @if (unassignedSubjects.Count == 0)
+                    {
+                        <span class="ops-muted">No unassigned subjects</span>
+                    }
+                    else
+                    {
+                        <div class="ops-subject-options">
+                            @foreach (var subject in unassignedSubjects)
+                            {
+                                <label class="ops-subject-option">
+                                    <input type="checkbox" name="SubjectIds" value="@subject.Id" />
+                                    <span>@subject.DisplayName</span>
+                                </label>
+                            }
+                        </div>
+                    }
+                </fieldset>
+                <button type="submit" class="ops-button ops-button--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
+                    Create user
+                </button>
             </form>
+        </section>
+    }
 
-            @if (users.Count == 0)
+    @if (isBulkImport)
+    {
+        @* === BULK IMPORT: Import Excel file / Nhập từ Excel === *@
+        <section class="ops-panel">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow">Bulk import</span>
+                    <h2>Import Excel file / Nhập từ Excel</h2>
+                </div>
+            </div>
+            <form asp-page-handler="ImportUsers" method="post" enctype="multipart/form-data" class="ops-stacked-form" data-admin-user-role-subject-form data-confirm="Tạo user hàng loạt và gửi email welcome cho danh sách này?">
+                @Html.AntiForgeryToken()
+                <label class="ops-field">
+                    <span>Excel file / File Excel</span>
+                    <input name="ExcelFile" type="file" accept=".xlsx" required style="padding: 0.5rem 0;" />
+                    <small>Hệ thống tự động trích xuất cột chứa Họ & Tên và Email.</small>
+                </label>
+                <label class="ops-field">
+                    <span>Default role</span>
+                    <select name="Role" data-admin-role-select>
+                        @foreach (var role in Model.Roles)
+                        {
+                            if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@role" selected>@role</option>
+                            }
+                            else
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        }
+                    </select>
+                </label>
+                <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
+                    <legend>Default subjects for lecturer</legend>
+                    @if (unassignedSubjects.Count == 0)
+                    {
+                        <span class="ops-muted">No unassigned subjects</span>
+                    }
+                    else
+                    {
+                        <div class="ops-subject-options">
+                            @foreach (var subject in unassignedSubjects)
+                            {
+                                <label class="ops-subject-option">
+                                    <input type="checkbox" name="SubjectIds" value="@subject.Id" />
+                                    <span>@subject.DisplayName</span>
+                                </label>
+                            }
+                        </div>
+                    }
+                </fieldset>
+                <button type="submit" class="ops-button ops-button--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">group_add</span>
+                    Import users
+                </button>
+                <small class="ops-muted">Welcome email sẽ có role và môn/quyền truy cập.</small>
+            </form>
+        </section>
+    }
+
+    @if (isLecturerTable)
+    {
+        @* === LECTURER TABLE: Danh sách giảng viên === *@
+        <section class="ops-panel">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow">Lecturer management</span>
+                    <h2>Lecturer Table / Bảng giảng viên</h2>
+                </div>
+                <span class="ops-panel-note">@Model.LecturerUserCount lecturers</span>
+            </div>
+
+            @{
+                var lecturers = users.Where(u => u.Role == PresentationLayer.Security.AppRoles.Lecturer).ToList();
+            }
+            @if (lecturers.Count == 0)
             {
                 <div class="ops-empty">
-                    <strong>No matching users.</strong>
-                    <p>Clear filters or create a new account from the command panel.</p>
+                    <strong>No lecturers found.</strong>
+                    <p>Create a lecturer account first.</p>
                 </div>
             }
             else
             {
                 <div class="ops-table-wrap">
-                    <table class="ops-table ops-user-table">
+                    <table class="ops-table" style="min-width: 600px;">
                         <thead>
                             <tr>
-                                <th>User</th>
-                                <th>Provider</th>
-                                <th>Created</th>
-                                <th>Role / Vai trò</th>
-                                <th>Subjects</th>
-                                <th>Actions</th>
+                                <th style="width: 260px;">NAME</th>
+                                <th>SUBJECTS</th>
                             </tr>
                         </thead>
                         <tbody>
-                        @foreach (var user in users)
+                        @foreach (var lecturer in lecturers)
                         {
                             <tr>
-                                <td data-label="User">
-                                    <div class="ops-user-cell">
-                                        <span class="ops-avatar">@Initials(user)</span>
+                                <td data-label="NAME" style="width: 260px;">
+                                    <div class="ops-user-cell" style="min-width: 0;">
+                                        <span class="ops-avatar">@Initials(lecturer)</span>
                                         <div class="ops-user-identity">
-                                            <strong>@DisplayName(user)</strong>
-                                            <small>@user.Email</small>
+                                            <strong>@DisplayName(lecturer)</strong>
+                                            <small>@lecturer.Email</small>
                                         </div>
                                     </div>
                                 </td>
-                                <td data-label="Provider">
-                                    <span class="ops-chip">@user.Provider</span>
-                                </td>
-                                <td data-label="Created">
-                                    <span>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
-                                </td>
-                                <td data-label="Role / Vai trò">
-                                    <form asp-page-handler="UpdateRole" method="post" class="ops-role-form" data-admin-role-update-form>
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="UserId" value="@user.Id" />
-                                        <select
-                                            name="Role"
-                                            disabled="@user.IsLastAdmin"
-                                            data-admin-role-update-select
-                                            data-admin-role-user="@user.Email"
-                                            title="Đổi role sẽ hỏi xác nhận và tự lưu">
-                                            @foreach (var role in Model.Roles)
-                                            {
-                                                if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
-                                                {
-                                                    <option value="@role" selected>@role</option>
-                                                }
-                                                else
-                                                {
-                                                    <option value="@role">@role</option>
-                                                }
-                                            }
-                                        </select>
-                                    </form>
-                                </td>
                                 <td data-label="Subjects">
-                                    @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)
-                                    {
-                                        <div class="ops-subject-cell">
-                                            <div class="ops-chip-list">
-                                                @if (user.AssignedSubjectDetails.Count == 0)
-                                                {
-                                                    <span class="ops-chip ops-chip--muted">Chưa đăng ký môn</span>
-                                                }
-                                                else
-                                                {
-                                                    foreach (var subject in user.AssignedSubjectDetails)
-                                                    {
-                                                        <form asp-page-handler="UnregisterLecturerSubject" method="post" class="ops-subject-chip-form" data-confirm="Gỡ môn @subject.DisplayName khỏi @DisplayName(user)?">
-                                                            @Html.AntiForgeryToken()
-                                                            <input type="hidden" name="UserId" value="@user.Id" />
-                                                            <input type="hidden" name="SubjectId" value="@subject.Id" />
-                                                            <button type="submit" class="ops-chip ops-chip--action" title="Gỡ môn @subject.DisplayName">
-                                                                <span>@subject.DisplayName</span>
-                                                                <span class="material-symbols-outlined" aria-hidden="true">close</span>
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                }
-                                            </div>
-                                            <form asp-page-handler="RegisterLecturerSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(user)?">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="UserId" value="@user.Id" />
-                                                <select name="SubjectId" required disabled="@(unassignedSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(user)">
-                                                    <option value="">@(unassignedSubjects.Count == 0 ? "Không còn môn trống" : "Chọn môn để đăng ký")</option>
-                                                    @foreach (var subject in unassignedSubjects)
-                                                    {
-                                                        <option value="@subject.Id">@subject.DisplayName</option>
-                                                    }
-                                                </select>
-                                                <button type="submit" class="ops-mini-button" disabled="@(unassignedSubjects.Count == 0)">Đăng ký</button>
-                                            </form>
+                                    <div class="ops-subject-cell">
+                                        <div class="ops-chip-list">
+                                        @if (lecturer.AssignedSubjectDetails.Count == 0)
+                                        {
+                                            <span class="ops-chip ops-chip--muted">Chưa đăng ký môn</span>
+                                        }
+                                        else
+                                        {
+                                            foreach (var subject in lecturer.AssignedSubjectDetails)
+                                            {
+                                                <span class="ops-chip" title="Đã assign - không thể gỡ">
+                                                    <span>@subject.DisplayName</span>
+                                                </span>
+                                            }
+                                        }
                                         </div>
-                                    }
-                                    else if (user.Role == PresentationLayer.Security.AppRoles.Student)
-                                    {
-                                        <span class="ops-chip">All indexed documents</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="ops-chip ops-chip--muted">Not applicable</span>
-                                    }
-                                </td>
-                                <td data-label="Actions">
-                                    @{
-                                        var deleteDisabled = user.IsLastAdmin
-                                            || user.IsCurrentUser
-                                            || user.Role != PresentationLayer.Security.AppRoles.Student;
-                                        var deleteTitle = user.IsCurrentUser
-                                            ? "Cannot delete your own active account"
-                                            : user.IsLastAdmin
-                                                ? "Cannot delete the last admin"
-                                                : user.Role != PresentationLayer.Security.AppRoles.Student
-                                                    ? "Set role to Student before deleting"
-                                                    : "Delete user";
-                                    }
-                                    <form asp-page-handler="DeleteUser" method="post" class="ops-danger-form" data-confirm="Xóa người dùng này? Thao tác này không thể hoàn tác.">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="UserId" value="@user.Id" />
-                                        <button
-                                            type="submit"
-                                            class="ops-mini-button ops-mini-button--danger"
-                                            disabled="@deleteDisabled"
-                                            title="@deleteTitle">
-                                            Delete
-                                        </button>
-                                    </form>
+                                        <form asp-page-handler="RegisterLecturerSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(lecturer)?">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="UserId" value="@lecturer.Id" />
+                                            <select name="SubjectId" required disabled="@(unassignedSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
+                                                <option value="">@(unassignedSubjects.Count == 0 ? "Không còn môn trống" : "Chọn môn để đăng ký")</option>
+                                                @foreach (var subject in unassignedSubjects)
+                                                {
+                                                    <option value="@subject.Id">@subject.DisplayName</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="ops-mini-button" disabled="@(unassignedSubjects.Count == 0)">Đăng ký</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -278,139 +467,33 @@
                 </div>
             }
         </section>
+    }
 
-        <aside class="ops-command-rail" aria-label="Admin commands">
-            <section class="ops-panel ops-command-card ops-command-card--create">
-                <span class="ops-eyebrow">Create account</span>
-                <h2>Thêm user</h2>
-                <form asp-page-handler="CreateUser" method="post" class="ops-stacked-form" data-admin-create-user-form data-admin-user-role-subject-form>
-                    @Html.AntiForgeryToken()
-                    <label class="ops-field">
-                        <span>Full name</span>
-                        <input name="FullName" maxlength="120" autocomplete="name" />
-                    </label>
-                    <label class="ops-field">
-                        <span>Email</span>
-                        <input name="Email" type="email" autocomplete="email" />
-                    </label>
-                    <label class="ops-field">
-                        <span>Password</span>
-                        <input name="Password" type="password" minlength="8" autocomplete="new-password" />
-                    </label>
-                    <label class="ops-field">
-                        <span>Role</span>
-                        <select name="Role" data-admin-role-select>
-                            @foreach (var role in Model.Roles)
-                            {
-                                if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <option value="@role" selected>@role</option>
-                                }
-                                else
-                                {
-                                    <option value="@role">@role</option>
-                                }
-                            }
-                        </select>
-                    </label>
-                    <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
-                        <legend>Subjects for lecturer</legend>
-                        @if (unassignedSubjects.Count == 0)
-                        {
-                            <span class="ops-muted">No unassigned subjects</span>
-                        }
-                        else
-                        {
-                            <div class="ops-subject-options">
-                                @foreach (var subject in unassignedSubjects)
-                                {
-                                    <label class="ops-subject-option">
-                                        <input type="checkbox" name="SubjectIds" value="@subject.Id" />
-                                        <span>@subject.DisplayName</span>
-                                    </label>
-                                }
-                            </div>
-                        }
-                    </fieldset>
-                    <button type="submit" class="ops-button ops-button--primary">
-                        <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
-                        Create user
-                    </button>
-                </form>
-            </section>
-
-            <section class="ops-panel ops-command-card ops-command-card--import">
-                <span class="ops-eyebrow">Bulk import</span>
-                <h2>Import Excel file / Nhập từ Excel</h2>
-                <form asp-page-handler="ImportUsers" method="post" enctype="multipart/form-data" class="ops-stacked-form" data-admin-user-role-subject-form data-confirm="Tạo user hàng loạt và gửi email welcome cho danh sách này?">
-                    @Html.AntiForgeryToken()
-                    <label class="ops-field">
-                        <span>Excel file / File Excel</span>
-                        <input name="ExcelFile" type="file" accept=".xlsx" required style="padding: 0.5rem 0;" />
-                        <small>Hệ thống tự động trích xuất cột chứa Họ & Tên và Email.</small>
-                    </label>
-                    <label class="ops-field">
-                        <span>Default role</span>
-                        <select name="Role" data-admin-role-select>
-                            @foreach (var role in Model.Roles)
-                            {
-                                if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <option value="@role" selected>@role</option>
-                                }
-                                else
-                                {
-                                    <option value="@role">@role</option>
-                                }
-                            }
-                        </select>
-                    </label>
-                    <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
-                        <legend>Default subjects for lecturer</legend>
-                        @if (unassignedSubjects.Count == 0)
-                        {
-                            <span class="ops-muted">No unassigned subjects</span>
-                        }
-                        else
-                        {
-                            <div class="ops-subject-options">
-                                @foreach (var subject in unassignedSubjects)
-                                {
-                                    <label class="ops-subject-option">
-                                        <input type="checkbox" name="SubjectIds" value="@subject.Id" />
-                                        <span>@subject.DisplayName</span>
-                                    </label>
-                                }
-                            </div>
-                        }
-                    </fieldset>
-                    <button type="submit" class="ops-button ops-button--primary">
-                        <span class="material-symbols-outlined" aria-hidden="true">group_add</span>
-                        Import users
-                    </button>
-                    <small class="ops-muted">Welcome email sẽ có role và môn/quyền truy cập.</small>
-                </form>
-            </section>
-
-            <section class="ops-panel ops-command-card ops-command-card--subject">
-                <span class="ops-eyebrow">Create subject</span>
-                <h2>Thêm môn</h2>
-                <form asp-page-handler="CreateSubject" method="post" class="ops-stacked-form">
-                    @Html.AntiForgeryToken()
-                    <label class="ops-field">
-                        <span>Subject code</span>
-                        <input name="Code" maxlength="32" placeholder="IOT102" autocomplete="off" />
-                    </label>
-                    <label class="ops-field">
-                        <span>Description</span>
-                        <input name="Description" maxlength="1000" placeholder="Optional" autocomplete="off" />
-                    </label>
-                    <button type="submit" class="ops-button ops-button--primary">
-                        <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
-                        Create subject
-                    </button>
-                </form>
-            </section>
-        </aside>
-    </div>
+    @if (isCreateSubject)
+    {
+        @* === CREATE SUBJECT: Thêm môn === *@
+        <section class="ops-panel">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow">Create subject</span>
+                    <h2>Thêm môn</h2>
+                </div>
+            </div>
+            <form asp-page-handler="CreateSubject" method="post" class="ops-stacked-form">
+                @Html.AntiForgeryToken()
+                <label class="ops-field">
+                    <span>Subject code</span>
+                    <input name="Code" maxlength="32" placeholder="IOT102" autocomplete="off" />
+                </label>
+                <label class="ops-field">
+                    <span>Description</span>
+                    <input name="Description" maxlength="1000" placeholder="Optional" autocomplete="off" />
+                </label>
+                <button type="submit" class="ops-button ops-button--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
+                    Create subject
+                </button>
+            </form>
+        </section>
+    }
 </section>
