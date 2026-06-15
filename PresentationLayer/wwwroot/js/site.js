@@ -1861,6 +1861,39 @@ function initConfirmForms() {
   });
 }
 
+function initSubjectCards() {
+  document.querySelectorAll("[data-subject-detail-url]").forEach((card) => {
+    if (card.dataset.subjectCardBound === "true") {
+      return;
+    }
+
+    card.dataset.subjectCardBound = "true";
+    card.addEventListener("click", (event) => {
+      const url = card.dataset.subjectDetailUrl;
+      if (!url) {
+        return;
+      }
+
+      event.preventDefault();
+      window.location.href = url;
+    });
+
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+
+      const url = card.dataset.subjectDetailUrl;
+      if (!url) {
+        return;
+      }
+
+      event.preventDefault();
+      window.location.href = url;
+    });
+  });
+}
+
 function initAdminRoleUpdateForms() {
   document.querySelectorAll("[data-admin-role-update-select]").forEach((select) => {
     if (select.dataset.roleUpdateBound === "true") {
@@ -1892,6 +1925,7 @@ bindSuggestionButtons();
 bindSessionButtons();
 bindSubjectFilterChips();
 bindDocumentPreviewButtons();
+initSubjectCards();
 initAdminCreateUserForm();
 initConfirmForms();
 initAdminRoleUpdateForms();
