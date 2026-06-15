@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Net.Sockets;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -40,6 +42,7 @@ public sealed class LoginModel : PageModel
     public string? ReturnUrl { get; set; }
 
     public bool IsGoogleLoginEnabled { get; private set; }
+    public string? GoogleLoginUnavailableMessage { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(string? returnUrl = null)
     {
@@ -49,7 +52,7 @@ public sealed class LoginModel : PageModel
         }
 
         ReturnUrl = returnUrl;
-        IsGoogleLoginEnabled = await IsGoogleLoginEnabledAsync();
+        await ConfigureGoogleLoginStateAsync();
         return Page();
     }
 
@@ -57,7 +60,7 @@ public sealed class LoginModel : PageModel
     {
         if (!ModelState.IsValid)
         {
-            IsGoogleLoginEnabled = await IsGoogleLoginEnabledAsync();
+            await ConfigureGoogleLoginStateAsync();
             return Page();
         }
 
@@ -65,14 +68,14 @@ public sealed class LoginModel : PageModel
         if (user is null)
         {
             ModelState.AddModelError(string.Empty, AccountProvisioningMessage);
-            IsGoogleLoginEnabled = await IsGoogleLoginEnabledAsync();
+            await ConfigureGoogleLoginStateAsync();
             return Page();
         }
 
         if (!_users.VerifyPassword(user, Password))
         {
             ModelState.AddModelError(string.Empty, "The email or password is incorrect.");
-            IsGoogleLoginEnabled = await IsGoogleLoginEnabledAsync();
+            await ConfigureGoogleLoginStateAsync();
             return Page();
         }
 
@@ -82,9 +85,15 @@ public sealed class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostGoogleLoginAsync(string? returnUrl = null)
     {
-        if (!await IsGoogleLoginEnabledAsync())
+        if (await _schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is null)
         {
             TempData["AuthError"] = "Google sign-in is not configured.";
+            return RedirectToPage("/Account/Login", new { returnUrl });
+        }
+
+        if (IsPrivateIpHost(Request.Host.Host))
+        {
+            TempData["AuthError"] = "Google sign-in does not support this private IP address. Use email/password on LAN, or access Google sign-in through localhost or a configured HTTPS domain.";
             return RedirectToPage("/Account/Login", new { returnUrl });
         }
 
@@ -161,8 +170,45 @@ public sealed class LoginModel : PageModel
                || path.StartsWith("/Home/Chat/", StringComparison.OrdinalIgnoreCase);
     }
 
-    private async Task<bool> IsGoogleLoginEnabledAsync()
+    private async Task ConfigureGoogleLoginStateAsync()
     {
-        return await _schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is not null;
+        GoogleLoginUnavailableMessage = null;
+        IsGoogleLoginEnabled = await _schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is not null;
+
+        if (IsGoogleLoginEnabled && IsPrivateIpHost(Request.Host.Host))
+        {
+            IsGoogleLoginEnabled = false;
+            GoogleLoginUnavailableMessage = "Dang nhap Google khong ho tro khi truy cap bang IP noi bo. Hay dung email/mat khau trong LAN, hoac dung localhost/domain HTTPS da cau hinh OAuth.";
+        }
+    }
+
+    private static bool IsPrivateIpHost(string? host)
+    {
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return false;
+        }
+
+        host = host.Trim('[', ']');
+        if (!IPAddress.TryParse(host, out var ipAddress) || IPAddress.IsLoopback(ipAddress))
+        {
+            return false;
+        }
+
+        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+        {
+            var bytes = ipAddress.GetAddressBytes();
+            return bytes[0] == 10
+                   || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                   || (bytes[0] == 192 && bytes[1] == 168);
+        }
+
+        if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            var bytes = ipAddress.GetAddressBytes();
+            return ipAddress.IsIPv6LinkLocal || (bytes[0] & 0xfe) == 0xfc;
+        }
+
+        return false;
     }
 }

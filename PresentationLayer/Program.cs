@@ -149,7 +149,7 @@ namespace PresentationLayer
                 openRouterSection["ChatModel"] ?? "openrouter/free",
                 openRouterTimeoutSeconds,
                 openRouterSection["ChatBaseUrl"] ?? "https://openrouter.ai/api/v1/chat/completions",
-                openRouterSection["Referer"] ?? "http://localhost:5099",
+                openRouterSection["Referer"] ?? "http://localhost:9999",
                 openRouterSection["Title"] ?? "Course Assistant");
             var smtpSection = builder.Configuration.GetSection("Smtp");
             var smtpOptions = new PresentationLayer.Services.SmtpOptions(

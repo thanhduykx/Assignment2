@@ -144,7 +144,7 @@
             </div>
             <label class="ops-field">
                 <span>T&#234;n ch&#432;&#417;ng/m&#7909;c</span>
-                <input name="Title" placeholder="VD: Chapter 1 / Muc 1.1" />
+                <input name="Title" placeholder="VD: Chapter 1 / Muc 1.1" required />
             </label>
             <label class="ops-field">
                 <span>Th&#7913; t&#7921;</span>
@@ -220,7 +220,7 @@
                                         <input type="hidden" name="Id" value="@chapter.ChapterId" />
                                     }
                                     <input type="hidden" name="SubjectId" value="@Model.Subject.SubjectId" />
-                                    <input name="Title" value="@chapter.Title" />
+                                    <input name="Title" value="@chapter.Title" required />
                                     <input name="SortOrder" type="number" value="@chapter.SortOrder" />
                                     <button type="submit" class="ops-mini-button">Update</button>
                                 </form>
