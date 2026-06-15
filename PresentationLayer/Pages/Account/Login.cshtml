@@ -53,6 +53,10 @@
         }
 
         <p class="auth-switch">Chưa có tài khoản? Vui lòng liên hệ Nhà trường để xin cấp tài khoản.</p>
+        @if (!Model.IsGoogleLoginEnabled && !string.IsNullOrWhiteSpace(Model.GoogleLoginUnavailableMessage))
+        {
+            <div class="alert alert-warning">@Model.GoogleLoginUnavailableMessage</div>
+        }
     </div>
 </section>
 

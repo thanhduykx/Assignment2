@@ -404,23 +404,6 @@
 
             <div class="ops-catalog-body">
                 <div class="ops-command-grid">
-                    @if (isAdmin)
-                    {
-                        <form asp-page-handler="SaveSubject" method="post" class="ops-command-card">
-                            @Html.AntiForgeryToken()
-                            <h3>Thêm môn / Add subject</h3>
-                            <label class="ops-field">
-                                <span>Mã môn</span>
-                                <input name="Code" placeholder="IOT102" />
-                            </label>
-                            <label class="ops-field">
-                                <span>Mô tả</span>
-                                <input name="Description" placeholder="Short description" />
-                            </label>
-                            <button type="submit" class="ops-button ops-button--primary">Save subject</button>
-                        </form>
-                    }
-
                     <form asp-page-handler="SaveChapter" method="post" class="ops-command-card">
                         @Html.AntiForgeryToken()
                         <h3>Thêm chương / Add chapter</h3>

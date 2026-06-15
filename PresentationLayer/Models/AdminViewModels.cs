@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+
 
 namespace PresentationLayer.Models;
 
@@ -96,8 +98,8 @@ public sealed class CreateAdminUserViewModel
 
 public sealed class ImportAdminUsersViewModel
 {
-    [Required(ErrorMessage = "Email list is required.")]
-    public string Emails { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Excel file is required.")]
+    public IFormFile ExcelFile { get; set; } = null!;
 
     [Required(ErrorMessage = "Role is required.")]
     public string Role { get; set; } = PresentationLayer.Security.AppRoles.Student;
