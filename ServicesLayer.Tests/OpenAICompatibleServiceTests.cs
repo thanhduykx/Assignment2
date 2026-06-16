@@ -4,12 +4,12 @@ using ServicesLayer;
 
 namespace ServicesLayer.Tests;
 
-public sealed class HuggingFaceServiceTests
+public sealed class OpenAICompatibleServiceTests
 {
     [Fact]
     public async Task ChatService_ParseChoicesMessageContent()
     {
-        var service = new HuggingFaceChatCompletionService(
+        var service = new OpenAICompatibleChatCompletionService(
             new HttpClient(new StaticHttpMessageHandler(
                 HttpStatusCode.OK,
                 """{"choices":[{"message":{"role":"assistant","content":"Answer from HF"}}]}""")),
@@ -37,7 +37,7 @@ public sealed class HuggingFaceServiceTests
     [Fact]
     public async Task ChatService_ReturnsNullOnHttpFailure()
     {
-        var service = new HuggingFaceChatCompletionService(
+        var service = new OpenAICompatibleChatCompletionService(
             new HttpClient(new StaticHttpMessageHandler(HttpStatusCode.BadGateway, "{}")),
             CreateOptions());
 
@@ -54,7 +54,7 @@ public sealed class HuggingFaceServiceTests
     [Fact]
     public async Task EmbeddingService_ParsesAndNormalizesVector()
     {
-        var service = new HuggingFaceEmbeddingService(
+        var service = new OpenAICompatibleEmbeddingService(
             new HttpClient(new StaticHttpMessageHandler(HttpStatusCode.OK, "[3,4]")),
             CreateOptions());
 
@@ -69,16 +69,16 @@ public sealed class HuggingFaceServiceTests
     [Fact]
     public async Task EmbeddingService_ThrowsOnHttpFailure()
     {
-        var service = new HuggingFaceEmbeddingService(
+        var service = new OpenAICompatibleEmbeddingService(
             new HttpClient(new StaticHttpMessageHandler(HttpStatusCode.Forbidden, "{}")),
             CreateOptions());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmbedAsync("hello"));
     }
 
-    private static HuggingFaceOptions CreateOptions()
+    private static OpenAICompatibleOptions CreateOptions()
     {
-        return new HuggingFaceOptions(
+        return new OpenAICompatibleOptions(
             true,
             "test-token",
             "Qwen/Qwen2.5-7B-Instruct:fastest",
