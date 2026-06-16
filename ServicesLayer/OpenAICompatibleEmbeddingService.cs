@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace ServicesLayer;
 
-public sealed class HuggingFaceEmbeddingService : IEmbeddingService
+public sealed class OpenAICompatibleEmbeddingService : IEmbeddingService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -13,9 +13,9 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
     };
 
     private readonly HttpClient _httpClient;
-    private readonly HuggingFaceOptions _options;
+    private readonly OpenAICompatibleOptions _options;
 
-    public HuggingFaceEmbeddingService(HttpClient httpClient, HuggingFaceOptions options)
+    public OpenAICompatibleEmbeddingService(HttpClient httpClient, OpenAICompatibleOptions options)
     {
         _httpClient = httpClient;
         _options = options;
@@ -36,7 +36,7 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
 
         if (!_options.Enabled || string.IsNullOrWhiteSpace(_options.Token))
         {
-            throw new InvalidOperationException("HuggingFace token is required for embeddings. Set HuggingFace:Token in appsettings.json or HF_TOKEN before indexing documents.");
+            throw new InvalidOperationException("OpenAICompatible token is required for embeddings. Set OpenAICompatible:Token in appsettings.json before indexing documents.");
         }
 
         try
@@ -44,7 +44,7 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
             using var request = new HttpRequestMessage(HttpMethod.Post, ResolveEmbeddingUrl());
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.Token);
             request.Content = JsonContent.Create(
-                new HuggingFaceEmbeddingRequest(text, new HuggingFaceEmbeddingOptions(true)),
+                new OpenAICompatibleEmbeddingRequest(text, new OpenAICompatibleEmbeddingOptions(true)),
                 options: JsonOptions);
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -52,7 +52,7 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
             {
                 var errorBody = await ReadErrorBodyAsync(response, cancellationToken);
                 var detail = string.IsNullOrWhiteSpace(errorBody) ? response.ReasonPhrase : errorBody;
-                throw new InvalidOperationException($"HuggingFace embedding request failed with HTTP {(int)response.StatusCode}. {detail}");
+                throw new InvalidOperationException($"OpenAICompatible embedding request failed with HTTP {(int)response.StatusCode}. {detail}");
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -60,14 +60,14 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
             var values = ExtractEmbeddingVector(payload.RootElement);
             if (values.Count == 0)
             {
-                throw new InvalidOperationException("HuggingFace embedding response did not contain vector values.");
+                throw new InvalidOperationException("OpenAICompatible embedding response did not contain vector values.");
             }
 
             return EmbeddingVector.NormalizeDenseEmbedding(values);
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new InvalidOperationException("HuggingFace embedding request timed out. Check HF_TOKEN, network, provider status, or increase HuggingFace:TimeoutSeconds.");
+            throw new InvalidOperationException("OpenAICompatible embedding request timed out. Check OpenAICompatible:Token in appsettings.json, network, provider status, or increase OpenAICompatible:TimeoutSeconds.");
         }
     }
 
@@ -206,9 +206,9 @@ public sealed class HuggingFaceEmbeddingService : IEmbeddingService
         return 1024;
     }
 
-    private sealed record HuggingFaceEmbeddingRequest(
+    private sealed record OpenAICompatibleEmbeddingRequest(
         [property: JsonPropertyName("inputs")] string Inputs,
-        [property: JsonPropertyName("options")] HuggingFaceEmbeddingOptions Options);
+        [property: JsonPropertyName("options")] OpenAICompatibleEmbeddingOptions Options);
 
-    private sealed record HuggingFaceEmbeddingOptions([property: JsonPropertyName("wait_for_model")] bool WaitForModel);
+    private sealed record OpenAICompatibleEmbeddingOptions([property: JsonPropertyName("wait_for_model")] bool WaitForModel);
 }

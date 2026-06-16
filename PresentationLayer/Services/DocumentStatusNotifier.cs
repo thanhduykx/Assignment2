@@ -1,6 +1,7 @@
-using DataAccessLayer;
+﻿using DataAccessLayer;
 using Microsoft.AspNetCore.SignalR;
 using PresentationLayer.Hubs;
+using ServicesLayer;
 
 namespace PresentationLayer.Services;
 
@@ -14,10 +15,22 @@ public sealed record DocumentStatusChangedPayload(
     DateTimeOffset? IndexedAt,
     string IndexError);
 
+public sealed record DocumentIndexProgressChangedPayload(
+    Guid DocumentId,
+    string FileName,
+    string Subject,
+    string Chapter,
+    string Status,
+    string Stage,
+    int ProgressPercent,
+    string Message,
+    DateTimeOffset UpdatedAt);
+
 public interface IDocumentStatusNotifier
 {
     Task NotifyDocumentStatusChangedAsync(Guid documentId, CancellationToken cancellationToken = default);
     Task NotifyDocumentStatusChangedAsync(IndexedDocument document, CancellationToken cancellationToken = default);
+    Task NotifyDocumentIndexProgressChangedAsync(DocumentIndexingProgressUpdate progressUpdate, CancellationToken cancellationToken = default);
 }
 
 public sealed class SignalRDocumentStatusNotifier : IDocumentStatusNotifier
@@ -74,6 +87,36 @@ public sealed class SignalRDocumentStatusNotifier : IDocumentStatusNotifier
         }
     }
 
+    public async Task NotifyDocumentIndexProgressChangedAsync(DocumentIndexingProgressUpdate progressUpdate, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var payload = new DocumentIndexProgressChangedPayload(
+                progressUpdate.DocumentId,
+                progressUpdate.FileName,
+                progressUpdate.Subject,
+                progressUpdate.Chapter,
+                progressUpdate.Status,
+                progressUpdate.Stage,
+                Math.Clamp(progressUpdate.ProgressPercent, 0, 100),
+                progressUpdate.Message,
+                DateTimeOffset.UtcNow);
+
+            await _hubContext.Clients.All.SendAsync(
+                DocumentStatusHub.DocumentIndexProgressChangedEvent,
+                payload,
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not publish document indexing progress for {DocumentId}.", progressUpdate.DocumentId);
+        }
+    }
+
     private async Task NotifyDocumentStatusChangedCoreAsync(IndexedDocument document, CancellationToken cancellationToken)
     {
         var payload = new DocumentStatusChangedPayload(
@@ -110,3 +153,4 @@ public sealed class SignalRDocumentStatusNotifier : IDocumentStatusNotifier
         await Task.WhenAll(sendTasks);
     }
 }
+

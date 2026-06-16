@@ -146,14 +146,6 @@
             <strong>@FormatBytes(Model.TotalUploadedBytes)</strong>
             <small>@totalChunks chunks, avg @averageChunks.ToString("0.#")</small>
         </article>
-        @if (isAdmin)
-        {
-            <article class="ops-kpi">
-                <span>Stale embeddings</span>
-                <strong>@Model.StaleEmbeddingDocumentCount</strong>
-                <small>Need re-index</small>
-            </article>
-        }
     </section>
 
     @if (canManageDocuments)
@@ -343,7 +335,10 @@
                                 </div>
                             </td>
                             <td data-label="Status">
-                                <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)" data-document-status>@StatusLabel(document)</span>
+                                <div class="ops-stack">
+                                    <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)" data-document-status>@StatusLabel(document)</span>
+                                    <small class="ops-document-progress" data-document-progress hidden></small>
+                                </div>
                             </td>
                             <td data-label="Chunks / Size">
                                 <div class="ops-stack">
@@ -581,6 +576,7 @@
                                                                     <div class="ops-tree-document-main">
                                                                         <strong title="@document.FileName">@document.FileName</strong>
                                                                         <small data-document-tree-meta>@StatusLabel(document) · @document.ChunkCount chunks · @FormatBytes(document.FileSizeBytes)</small>
+                                                                        <small class="ops-document-progress" data-document-progress hidden></small>
                                                                     </div>
                                                                     <div class="ops-row-actions" data-document-actions>
                                                                         @if (document.Status == DocumentIndexStatus.Indexed)

@@ -217,6 +217,11 @@ const documentPreviewMeta = document.getElementById("documentPreviewMeta");
 const documentPreviewBody = document.getElementById("documentPreviewBody");
 const assistantLauncher = document.getElementById("chatbotHelper");
 const assistantLauncherButton = document.getElementById("chatbotHelperButton");
+const onlineUsersWidget = document.getElementById("onlineUsersWidget");
+const onlineUsersList = document.getElementById("onlineUsersList");
+const onlineUsersSummary = document.querySelector("[data-online-users-summary]");
+const onlineUsersToggle = document.querySelector("[data-online-users-toggle]");
+const onlineUsersWidgetStateKey = "courseAssistantOnlineUsersWidgetCollapsed";
 let isSending = false;
 const subjectQuestionSubjects = readSubjectQuestionSubjects();
 const relatedQuestionPool = readRelatedQuestionPool();
@@ -956,6 +961,87 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
+
+function setOnlineUsersConnectionState(state) {
+  if (!onlineUsersWidget) {
+    return;
+  }
+
+  onlineUsersWidget.dataset.connectionState = state || "disconnected";
+}
+
+function normalizeOnlineUsersPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const users = Array.isArray(payload.users)
+    ? payload.users.map((item) => ({
+        userKey: item.userKey || "",
+        userId: item.userId || "",
+        displayName: item.displayName || item.email || "Unknown user",
+        email: item.email || "",
+        role: item.role || "",
+        initials: item.initials || "U",
+        connectionCount: Number(item.connectionCount || 0)
+      }))
+    : [];
+
+  return {
+    onlineUserCount: Number(payload.onlineUserCount || users.length || 0),
+    users,
+    windowLabel: payload.windowLabel || "active now"
+  };
+}
+
+function applyOnlineUsersChanged(payload) {
+  if (!onlineUsersWidget || !onlineUsersList || !onlineUsersSummary) {
+    return;
+  }
+
+  const snapshot = normalizeOnlineUsersPayload(payload);
+  if (!snapshot) {
+    return;
+  }
+
+  const currentUserId = onlineUsersWidget.dataset.currentUserId || "";
+  const currentUserEmail = (onlineUsersWidget.dataset.currentUserEmail || "").trim().toUpperCase();
+  const users = [...snapshot.users].sort((left, right) => {
+    const leftIsCurrent = (currentUserId && left.userId === currentUserId) || (currentUserEmail && left.email.trim().toUpperCase() === currentUserEmail);
+    const rightIsCurrent = (currentUserId && right.userId === currentUserId) || (currentUserEmail && right.email.trim().toUpperCase() === currentUserEmail);
+    if (leftIsCurrent !== rightIsCurrent) {
+      return leftIsCurrent ? -1 : 1;
+    }
+
+    return left.displayName.localeCompare(right.displayName, undefined, { sensitivity: "base" });
+  });
+
+  onlineUsersSummary.textContent = snapshot.onlineUserCount + " online users (" + snapshot.windowLabel + ")";
+
+  if (users.length === 0) {
+    onlineUsersList.innerHTML = "<li class=\"online-users-widget__empty\">No active users right now.</li>";
+    return;
+  }
+
+  onlineUsersList.innerHTML = users.map((user) => {
+    const isCurrentUser = (currentUserId && user.userId === currentUserId) || (currentUserEmail && user.email.trim().toUpperCase() === currentUserEmail);
+    const statusIcon = isCurrentUser ? "visibility" : "chat";
+    const statusTitle = isCurrentUser ? "You are online" : "Online";
+    const roleLabel = user.role ? "<span class=\"online-users-widget__role\">" + escapeHtml(user.role) + "</span>" : "";
+    const connectionLabel = user.connectionCount > 1 ? "<span class=\"online-users-widget__connections\">" + user.connectionCount + " tabs</span>" : "";
+
+    return [
+      "<li class=\"online-users-widget__item" + (isCurrentUser ? " is-current-user" : "") + "\">",
+      "  <span class=\"online-users-widget__avatar\">" + escapeHtml(user.initials) + "</span>",
+      "  <span class=\"online-users-widget__identity\">",
+      "    <strong>" + escapeHtml(user.displayName) + "</strong>",
+      "    <small>" + roleLabel + connectionLabel + "</small>",
+      "  </span>",
+      "  <span class=\"material-symbols-outlined online-users-widget__icon\" title=\"" + escapeHtml(statusTitle) + "\" aria-hidden=\"true\">" + statusIcon + "</span>",
+      "</li>"
+    ].join("");
+  }).join("");
+}
 function formatPreviewBytes(bytes) {
   const units = ["B", "KB", "MB", "GB", "TB"];
   let value = Math.max(0, Number(bytes) || 0);
@@ -1220,6 +1306,138 @@ function updateDocumentPreviewAction(row, document) {
   }
 }
 
+function normalizeDocumentProgressPercent(value) {
+  return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+}
+
+function getDocumentProgressStageMeta(stage) {
+  switch ((stage || "").trim().toLowerCase()) {
+    case "queued":
+      return { label: "Queued", tone: "is-queued" };
+    case "extracting":
+      return { label: "Extracting", tone: "is-extracting" };
+    case "chunking":
+      return { label: "Chunking", tone: "is-chunking" };
+    case "embedding":
+      return { label: "Embedding", tone: "is-embedding" };
+    case "saving":
+      return { label: "Saving", tone: "is-saving" };
+    case "completed":
+      return { label: "Completed", tone: "is-completed" };
+    default:
+      return { label: stage || "Processing", tone: "is-processing" };
+  }
+}
+
+function formatDocumentIndexProgress(progress) {
+  if (!progress) {
+    return null;
+  }
+
+  const stageMeta = getDocumentProgressStageMeta(progress.stage);
+  const percent = normalizeDocumentProgressPercent(progress.progressPercent);
+  const message = (progress.message || "").trim();
+
+  return {
+    stage: stageMeta.label,
+    tone: stageMeta.tone,
+    percent,
+    message,
+    summary: message ? `${stageMeta.label} ${percent}% - ${message}` : `${stageMeta.label} ${percent}%`
+  };
+}
+
+function applyDocumentProgressToRow(row, progress) {
+  if (!row) {
+    return;
+  }
+
+  const statusBadge = row.querySelector("[data-document-status]");
+  const progressElement = row.querySelector("[data-document-progress]");
+  const progressState = formatDocumentIndexProgress(progress);
+  if (!progressElement || !progressState) {
+    return;
+  }
+
+  if (statusBadge) {
+    statusBadge.title = progressState.message || progressState.summary;
+  }
+
+  progressElement.hidden = false;
+  progressElement.dataset.progressTone = progressState.tone;
+  progressElement.title = progressState.message || progressState.summary;
+  progressElement.innerHTML = [
+    '<span class="ops-document-progress__meta">',
+    '  <span class="ops-document-progress__stage">' + escapeHtml(progressState.stage) + '</span>',
+    '  <span class="ops-document-progress__percent">' + progressState.percent + '%</span>',
+    '</span>',
+    '<span class="ops-document-progress__bar" aria-hidden="true"><span class="ops-document-progress__fill" style="width:' + progressState.percent + '%"></span></span>',
+    progressState.message
+      ? '<span class="ops-document-progress__message">' + escapeHtml(progressState.message) + '</span>'
+      : ''
+  ].join("");
+
+  row.dataset.documentProgressStage = progressState.stage;
+  row.dataset.documentProgressPercent = String(progressState.percent);
+}
+
+function clearDocumentProgress(row) {
+  if (!row) {
+    return;
+  }
+
+  const progressElement = row.querySelector("[data-document-progress]");
+  if (progressElement) {
+    progressElement.innerHTML = "";
+    progressElement.hidden = true;
+    delete progressElement.dataset.progressTone;
+    progressElement.removeAttribute("title");
+  }
+
+  delete row.dataset.documentProgressStage;
+  delete row.dataset.documentProgressPercent;
+}
+
+function applyDocumentIndexProgressChanged(payload) {
+  if (!payload?.documentId) {
+    return;
+  }
+
+  const rows = [...window.document.querySelectorAll(`[data-document-id="${CSS.escape(payload.documentId)}"]`)];
+  rows.forEach((row) => {
+    applyDocumentProgressToRow(row, payload);
+    row.classList.add("is-realtime-updated");
+    window.setTimeout(() => row.classList.remove("is-realtime-updated"), 1400);
+  });
+}
+
+function applyOnlineUsersWidgetState() {
+  if (!onlineUsersWidget || !onlineUsersToggle) {
+    return;
+  }
+
+  const collapsed = localStorage.getItem(onlineUsersWidgetStateKey) === "true";
+  onlineUsersWidget.classList.toggle("is-collapsed", collapsed);
+  onlineUsersToggle.setAttribute("aria-expanded", String(!collapsed));
+  onlineUsersToggle.setAttribute("aria-label", collapsed ? "Expand online users" : "Collapse online users");
+  const icon = onlineUsersToggle.querySelector(".material-symbols-outlined");
+  if (icon) {
+    icon.textContent = collapsed ? "expand_less" : "expand_more";
+  }
+}
+
+function initOnlineUsersWidget() {
+  if (!onlineUsersWidget || !onlineUsersToggle) {
+    return;
+  }
+
+  applyOnlineUsersWidgetState();
+  onlineUsersToggle.addEventListener("click", () => {
+    const nextCollapsed = !onlineUsersWidget.classList.contains("is-collapsed");
+    localStorage.setItem(onlineUsersWidgetStateKey, String(nextCollapsed));
+    applyOnlineUsersWidgetState();
+  });
+}
 function updateDocumentRow(row, document) {
   row.dataset.documentStatusValue = document.status;
 
@@ -1244,6 +1462,7 @@ function updateDocumentRow(row, document) {
       .join(" · ");
   }
 
+  clearDocumentProgress(row);
   updateDocumentPreviewAction(row, document);
   row.classList.add("is-realtime-updated");
   window.setTimeout(() => row.classList.remove("is-realtime-updated"), 1400);
@@ -1267,7 +1486,7 @@ function applyDocumentStatusChanged(payload) {
 }
 
 async function startDocumentStatusRealtime() {
-  if (!documentsPage || !window.signalR?.HubConnectionBuilder) {
+  if (!window.signalR?.HubConnectionBuilder || (!documentsPage && !onlineUsersWidget)) {
     return;
   }
 
@@ -1276,19 +1495,46 @@ async function startDocumentStatusRealtime() {
     .withAutomaticReconnect()
     .build();
 
-  connection.on("documentStatusChanged", applyDocumentStatusChanged);
+  if (documentsPage) {
+    connection.on("documentStatusChanged", applyDocumentStatusChanged);
+    connection.on("documentIndexProgressChanged", applyDocumentIndexProgressChanged);
+  }
+
+  if (onlineUsersWidget) {
+    connection.on("onlineUsersChanged", applyOnlineUsersChanged);
+    connection.onreconnecting(() => setOnlineUsersConnectionState("reconnecting"));
+    connection.onreconnected(async () => {
+      setOnlineUsersConnectionState("connected");
+      try {
+        applyOnlineUsersChanged(await connection.invoke("GetOnlineUsersAsync"));
+      } catch {
+        // Ignore refresh failures after reconnect.
+      }
+    });
+    connection.onclose(() => setOnlineUsersConnectionState("disconnected"));
+  }
 
   async function start() {
     try {
       await connection.start();
+      if (onlineUsersWidget) {
+        setOnlineUsersConnectionState("connected");
+        try {
+          applyOnlineUsersChanged(await connection.invoke("GetOnlineUsersAsync"));
+        } catch {
+          // Initial snapshot is best effort only.
+        }
+      }
     } catch {
+      if (onlineUsersWidget) {
+        setOnlineUsersConnectionState("disconnected");
+      }
       window.setTimeout(start, 5000);
     }
   }
 
   await start();
 }
-
 async function refreshSessionList() {
   if (!chatSessionList) {
     return;
@@ -1930,6 +2176,7 @@ initAdminCreateUserForm();
 initConfirmForms();
 initAdminRoleUpdateForms();
 initAssistantLauncherDrag();
+initOnlineUsersWidget();
 markActiveSession(getSessionId());
 applyLanguage();
 startDocumentStatusRealtime();

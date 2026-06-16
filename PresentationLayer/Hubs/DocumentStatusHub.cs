@@ -4,14 +4,24 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using PresentationLayer.Security;
+using PresentationLayer.Services;
 
 namespace PresentationLayer.Hubs;
 
-[Authorize(Policy = AuthorizationPolicies.DocumentManagement)]
+[Authorize]
 public sealed class DocumentStatusHub : Hub
 {
     public const string DocumentStatusChangedEvent = "documentStatusChanged";
+    public const string DocumentIndexProgressChangedEvent = "documentIndexProgressChanged";
+    public const string OnlineUsersChangedEvent = "onlineUsersChanged";
     public const string AdminGroup = "documents:admins";
+
+    private readonly IOnlineUserPresenceTracker _onlineUserPresenceTracker;
+
+    public DocumentStatusHub(IOnlineUserPresenceTracker onlineUserPresenceTracker)
+    {
+        _onlineUserPresenceTracker = onlineUserPresenceTracker;
+    }
 
     public override async Task OnConnectedAsync()
     {
@@ -42,7 +52,22 @@ public sealed class DocumentStatusHub : Hub
             await Task.WhenAll(groupTasks);
         }
 
+        var snapshot = _onlineUserPresenceTracker.RegisterConnection(Context.ConnectionId, Context.User);
+        await Clients.All.SendAsync(OnlineUsersChangedEvent, snapshot);
+
         await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var snapshot = _onlineUserPresenceTracker.UnregisterConnection(Context.ConnectionId);
+        await Clients.All.SendAsync(OnlineUsersChangedEvent, snapshot);
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    public Task<OnlineUsersChangedPayload> GetOnlineUsersAsync()
+    {
+        return Task.FromResult(_onlineUserPresenceTracker.GetSnapshot());
     }
 
     public static string UserGroup(Guid userId)

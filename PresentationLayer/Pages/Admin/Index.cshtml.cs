@@ -48,9 +48,26 @@ public sealed class IndexModel : PageModel
     public int SubjectCount { get; private set; }
     public int AssignedSubjectCount { get; private set; }
 
-    public async Task OnGetAsync(string? q, string? roleFilter, CancellationToken cancellationToken)
+    public enum AdminSection { Directory, CreateAccount, BulkImport, CreateSubject, LecturerTable }
+
+    public AdminSection CurrentSection { get; private set; } = AdminSection.Directory;
+
+    public async Task OnGetAsync(string? section, string? q, string? roleFilter, CancellationToken cancellationToken)
     {
+        CurrentSection = ParseSection(section);
         await LoadAsync(q, roleFilter, cancellationToken);
+    }
+
+    private static AdminSection ParseSection(string? section)
+    {
+        return section?.ToLowerInvariant() switch
+        {
+            "create-account" or "createaccount" => AdminSection.CreateAccount,
+            "bulk-import" or "bulkimport" => AdminSection.BulkImport,
+            "create-subject" or "createsubject" => AdminSection.CreateSubject,
+            "lecturer-table" or "lecturertable" => AdminSection.LecturerTable,
+            _ => AdminSection.Directory
+        };
     }
 
     public async Task<IActionResult> OnPostCreateUserAsync([FromForm] CreateAdminUserViewModel model, CancellationToken cancellationToken)
@@ -150,9 +167,20 @@ public sealed class IndexModel : PageModel
             var assignedSubjectCount = 0;
             var warnings = new List<string>();
 
+            // For bulk import: distribute subjects round-robin among lecturers
+            var availableSubjects = new Queue<CourseSubject>(
+                subjects
+                    .Where(subject => !subject.OwnerUserId.HasValue)
+                    .OrderBy(subject => subject.DisplayName));
+            var importSubjectIndex = 0;
+            var selectedSubjectList = subjects
+                .Where(subject => model.SubjectIds?.Contains(subject.Id) == true)
+                .OrderBy(subject => subject.DisplayName)
+                .ToList();
+
             foreach (var draft in drafts)
             {
-                var temporaryPassword = GenerateTemporaryPassword();
+                var temporaryPassword = "12345678";
                 try
                 {
                     var user = await _users.CreateLocalForAdminAsync(
@@ -163,8 +191,19 @@ public sealed class IndexModel : PageModel
                         cancellationToken);
                     createdCount++;
 
-                    var assignedSubjectLabels = await AssignSubjectsToNewLecturerAsync(user, draft.Subjects, cancellationToken);
-                    assignedSubjectCount += assignedSubjectLabels.Count;
+                    // Assign subjects in round-robin: each lecturer gets one subject (if available)
+                    IReadOnlyList<string> assignedSubjectLabels = Array.Empty<string>();
+                    if (draft.Role == AppRoles.Lecturer && importSubjectIndex < selectedSubjectList.Count)
+                    {
+                        var subjectForThisLecturer = selectedSubjectList[importSubjectIndex];
+                        if (!subjectForThisLecturer.OwnerUserId.HasValue)
+                        {
+                            assignedSubjectLabels = await AssignSubjectsToNewLecturerAsync(
+                                user, new[] { subjectForThisLecturer }, cancellationToken);
+                            assignedSubjectCount += assignedSubjectLabels.Count;
+                        }
+                        importSubjectIndex++;
+                    }
 
                     try
                     {
@@ -469,7 +508,6 @@ public sealed class IndexModel : PageModel
         List<string> errors)
     {
         var importedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var reservedSubjects = new Dictionary<Guid, string>();
 
         foreach (var draft in drafts)
         {
@@ -481,23 +519,6 @@ public sealed class IndexModel : PageModel
             if (existingUsers.Any(user => user.Email.Equals(draft.Email, StringComparison.OrdinalIgnoreCase)))
             {
                 errors.Add($"Line {draft.LineNumber}: this email is already registered.");
-            }
-
-            foreach (var subject in draft.Subjects)
-            {
-                if (subject.OwnerUserId.HasValue)
-                {
-                    errors.Add($"Line {draft.LineNumber}: {BuildAssignedSubjectError(subject)}");
-                    continue;
-                }
-
-                if (reservedSubjects.TryGetValue(subject.Id, out var reservedBy))
-                {
-                    errors.Add($"Line {draft.LineNumber}: subject {subject.DisplayName} is already selected for {reservedBy} in this import.");
-                    continue;
-                }
-
-                reservedSubjects[subject.Id] = draft.Email;
             }
         }
     }
@@ -651,9 +672,9 @@ public sealed class IndexModel : PageModel
             var existingUser = (await _users.GetAllAsync(cancellationToken))
                 .FirstOrDefault(user => user.Id == model.UserId)
                 ?? throw new InvalidOperationException("User not found.");
-            if (existingUser.Role != AppRoles.Student)
+            if (existingUser.Role != AppRoles.Student && existingUser.Role != AppRoles.Lecturer)
             {
-                throw new InvalidOperationException("Set role to Student before deleting this user.");
+                throw new InvalidOperationException("Set role to Student or Lecturer before deleting this user.");
             }
 
             var unassignedSubjectCount = await UnassignSubjectsOwnedByAsync(model.UserId, cancellationToken);
@@ -724,40 +745,7 @@ public sealed class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostUnregisterLecturerSubjectAsync([FromForm] UnregisterLecturerSubjectViewModel model, CancellationToken cancellationToken)
     {
-        try
-        {
-            var lecturer = await FindUserAsync(model.UserId, cancellationToken)
-                ?? throw new InvalidOperationException("User not found.");
-            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
-                .FirstOrDefault(item => item.Id == model.SubjectId)
-                ?? throw new InvalidOperationException("Subject not found.");
-
-            if (subject.OwnerUserId != lecturer.Id)
-            {
-                TempData["Error"] = $"Môn {subject.DisplayName} không thuộc {DisplayName(lecturer)}.";
-                return RedirectToPage("/Admin/Index");
-            }
-
-            await _knowledge.UpsertSubjectAsync(
-                subject.Id,
-                subject.Code,
-                subject.Name,
-                subject.Description,
-                cancellationToken,
-                new SubjectOwnerInfo(null, string.Empty, string.Empty));
-
-            TempData["Success"] = $"Đã gỡ môn {subject.DisplayName} khỏi {DisplayName(lecturer)}.";
-        }
-        catch (Exception ex) when (ex is InvalidOperationException)
-        {
-            TempData["Error"] = ToAdminUserError(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not unregister subject {SubjectId} from lecturer {UserId}", model.SubjectId, model.UserId);
-            TempData["Error"] = "Could not unregister this subject.";
-        }
-
+        TempData["Error"] = "Không thể gỡ môn sau khi đã assign. Chỉ Admin mới có quyền gỡ môn (liên hệ Admin)";
         return RedirectToPage("/Admin/Index");
     }
 
@@ -957,9 +945,9 @@ public sealed class IndexModel : PageModel
             return "Môn này đã được gán cho giảng viên khác.";
         }
 
-        if (message.Contains("Set role to Student before deleting", StringComparison.OrdinalIgnoreCase))
+        if (message.Contains("Set role to Student or Lecturer before deleting", StringComparison.OrdinalIgnoreCase))
         {
-            return "Set this user role to Student before deleting.";
+            return message;
         }
 
         if (message.Contains("Subject code is required", StringComparison.OrdinalIgnoreCase)
