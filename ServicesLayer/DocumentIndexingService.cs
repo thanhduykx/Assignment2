@@ -7,6 +7,16 @@ public sealed record DocumentUploadResult(Guid DocumentId, int ChunkCount, strin
 
 public sealed record DocumentUploaderInfo(Guid? UserId, string? Name, string? Email);
 
+public sealed record DocumentIndexingProgressUpdate(
+    Guid DocumentId,
+    string FileName,
+    string Subject,
+    string Chapter,
+    string Status,
+    string Stage,
+    int ProgressPercent,
+    string Message);
+
 public interface IDocumentIndexingService
 {
     Task<IReadOnlyList<IndexedDocument>> GetDocumentsAsync(CancellationToken cancellationToken = default);
@@ -28,7 +38,10 @@ public interface IDocumentIndexingService
         string uploadsRoot,
         DocumentUploaderInfo uploader,
         CancellationToken cancellationToken = default);
-    Task ProcessDocumentAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task ProcessDocumentAsync(
+        Guid documentId,
+        IProgress<DocumentIndexingProgressUpdate>? progress = null,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class DocumentIndexingService : IDocumentIndexingService
@@ -134,7 +147,10 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
         return new DocumentUploadResult(document.Id, 0, $"Queued {document.FileName} for indexing.");
     }
 
-    public async Task ProcessDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
+    public async Task ProcessDocumentAsync(
+        Guid documentId,
+        IProgress<DocumentIndexingProgressUpdate>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         var document = await _repository.GetDocumentAsync(documentId, cancellationToken);
         if (document is null)
@@ -151,6 +167,20 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             return;
         }
 
+        void ReportProgress(string stage, int progressPercent, string message)
+        {
+            progress?.Report(new DocumentIndexingProgressUpdate(
+                document.Id,
+                document.FileName,
+                document.Subject,
+                document.Chapter,
+                DocumentIndexStatus.Processing,
+                stage,
+                Math.Clamp(progressPercent, 0, 100),
+                message));
+        }
+
+        ReportProgress("Queued", 5, "Queued for indexing.");
         await _repository.MarkDocumentIndexProcessingAsync(document.Id, cancellationToken);
 
         var storedPath = Path.GetFullPath(document.StoredPath);
@@ -159,6 +189,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             throw new InvalidOperationException("Stored file was not found for indexing.");
         }
 
+        ReportProgress("Extracting", 18, "Extracting readable text from the source file.");
         string extractedText;
         await using (var stream = File.OpenRead(storedPath))
         {
@@ -170,6 +201,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             throw new InvalidOperationException("No readable text could be extracted from this document.");
         }
 
+        ReportProgress("Chunking", 42, "Creating searchable chunks from extracted content.");
         var chunkingResult = await _chunker.CreateChunkingResultAsync(extractedText, cancellationToken);
         var chunkTexts = chunkingResult.Chunks;
         if (chunkTexts.Count == 0)
@@ -177,7 +209,9 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             throw new InvalidOperationException("No indexable chunks could be created from this document.");
         }
 
+        ReportProgress("Embedding", 55, $"Generating embeddings for {chunkTexts.Count} chunks.");
         var chunks = new List<DocumentChunk>(chunkTexts.Count);
+        var progressStep = Math.Max(1, chunkTexts.Count / 8);
         foreach (var chunk in chunkTexts)
         {
             var embeddingInput = await _chunkEnrichment.BuildEmbeddingTextAsync(
@@ -202,8 +236,15 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
                 CharEnd = chunk.CharEnd,
                 Embedding = await _embeddingService.EmbedAsync(embeddingInput.EmbeddingText, cancellationToken)
             });
+
+            if (chunk.ChunkIndex == chunkTexts.Count || chunk.ChunkIndex % progressStep == 0)
+            {
+                var chunkProgress = 55 + (int)Math.Round((double)chunk.ChunkIndex / chunkTexts.Count * 30);
+                ReportProgress("Embedding", chunkProgress, $"Embedding chunk {chunk.ChunkIndex}/{chunkTexts.Count}.");
+            }
         }
 
+        ReportProgress("Saving", 92, "Saving indexed chunks and metadata.");
         await _repository.CompleteDocumentIndexAsync(
             document.Id,
             chunks,
@@ -211,6 +252,7 @@ public sealed class DocumentIndexingService : IDocumentIndexingService
             _embeddingService.Dimensions,
             EffectiveChunkingStrategy,
             cancellationToken);
+        ReportProgress("Completed", 100, $"Index completed with {chunks.Count} chunks.");
     }
 
     private IndexedDocument CreateProcessingDocument(

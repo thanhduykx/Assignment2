@@ -36,7 +36,7 @@ public sealed class OpenAICompatibleEmbeddingService : IEmbeddingService
 
         if (!_options.Enabled || string.IsNullOrWhiteSpace(_options.Token))
         {
-            throw new InvalidOperationException("OpenAICompatible token is required for embeddings. Set OpenAICompatible:Token in appsettings.json or HF_TOKEN before indexing documents.");
+            throw new InvalidOperationException("OpenAICompatible token is required for embeddings. Set OpenAICompatible:Token in appsettings.json before indexing documents.");
         }
 
         try
@@ -67,7 +67,7 @@ public sealed class OpenAICompatibleEmbeddingService : IEmbeddingService
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new InvalidOperationException("OpenAICompatible embedding request timed out. Check HF_TOKEN, network, provider status, or increase OpenAICompatible:TimeoutSeconds.");
+            throw new InvalidOperationException("OpenAICompatible embedding request timed out. Check OpenAICompatible:Token in appsettings.json, network, provider status, or increase OpenAICompatible:TimeoutSeconds.");
         }
     }
 

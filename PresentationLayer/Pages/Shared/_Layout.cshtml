@@ -9,6 +9,8 @@
         ?? "Account";
     var userInitial = string.IsNullOrWhiteSpace(displayName) ? "A" : displayName[..1].ToUpperInvariant();
     var accountEmail = User.FindFirstValue(ClaimTypes.Email) ?? "Admin Access";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+    var currentUserEmail = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
     var currentRole = AppRoles.Normalize(User.FindFirstValue(ClaimTypes.Role));
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var canChat = isAuthenticated;
@@ -272,6 +274,28 @@
                 &copy; 2026 - Course Assistant
             </div>
         </footer>
+    }
+    @if (isAuthenticated)
+    {
+        <section id="onlineUsersWidget" class="online-users-widget" data-current-user-id="@currentUserId" data-current-user-email="@currentUserEmail" data-connection-state="connecting" aria-live="polite">
+            <header class="online-users-widget__header">
+                <div>
+                    <h2>Online users</h2>
+                    <p data-online-users-summary>Connecting...</p>
+                </div>
+                <div class="online-users-widget__header-actions">
+                    <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
+                    <button type="button" class="online-users-widget__toggle" data-online-users-toggle aria-expanded="true" aria-label="Collapse online users">
+                        <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                    </button>
+                </div>
+            </header>
+            <div class="online-users-widget__body">
+                <ul id="onlineUsersList" class="online-users-widget__list">
+                    <li class="online-users-widget__empty">Loading online users...</li>
+                </ul>
+            </div>
+        </section>
     }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
