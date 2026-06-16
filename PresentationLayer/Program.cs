@@ -144,11 +144,17 @@ namespace PresentationLayer
             var geminiTimeoutSeconds = int.TryParse(geminiSection["TimeoutSeconds"], out var parsedGeminiTimeout)
                 ? parsedGeminiTimeout
                 : 60;
+            var geminiEmbeddingDimensions = int.TryParse(geminiSection["EmbeddingDimensions"], out var parsedGeminiEmbeddingDimensions)
+                ? parsedGeminiEmbeddingDimensions
+                : int.TryParse(builder.Configuration["Embedding:OutputDimensionality"], out var parsedEmbeddingDimensions)
+                    ? parsedEmbeddingDimensions
+                    : 768;
             var geminiOptions = new ServicesLayer.GeminiOptions(
                 geminiEnabled,
                 geminiApiKey,
-                geminiSection["ChatModel"] ?? "gemini-2.0-flash",
-                geminiSection["EmbeddingModel"] ?? "text-embedding-004",
+                geminiSection["ChatModel"] ?? "gemini-3.5-flash",
+                geminiSection["EmbeddingModel"] ?? "gemini-embedding-2",
+                geminiEmbeddingDimensions,
                 geminiTimeoutSeconds,
                 geminiSection["ChatBaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
                 geminiSection["EmbeddingBaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta");
