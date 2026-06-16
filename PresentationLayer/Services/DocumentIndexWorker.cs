@@ -1,4 +1,4 @@
-using DataAccessLayer;
+﻿using DataAccessLayer;
 using ServicesLayer;
 
 namespace PresentationLayer.Services;
@@ -72,7 +72,9 @@ public sealed class DocumentIndexWorker : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
                 var indexingService = scope.ServiceProvider.GetRequiredService<IDocumentIndexingService>();
-                await indexingService.ProcessDocumentAsync(documentId, cancellationToken);
+                var progress = new Progress<DocumentIndexingProgressUpdate>(update =>
+                    _ = _documentStatusNotifier.NotifyDocumentIndexProgressChangedAsync(update, CancellationToken.None));
+                await indexingService.ProcessDocumentAsync(documentId, progress, cancellationToken);
                 await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
                 return;
             }
@@ -108,3 +110,5 @@ public sealed class DocumentIndexWorker : BackgroundService
         }
     }
 }
+
+
