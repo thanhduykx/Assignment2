@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -35,42 +36,60 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
 
         if (!_options.Enabled || string.IsNullOrWhiteSpace(_options.ApiKey))
         {
-            throw new InvalidOperationException("Gemini API key is required for embeddings. Set Gemini:ApiKey in appsettings.json or GEMINI_API_KEY before indexing documents.");
+            throw new InvalidOperationException("Gemini API key is required for embeddings. Set Gemini:ApiKey in appsettings.json before indexing documents.");
         }
 
-        try
+        const int maxAttempts = 5;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, ResolveEmbeddingUrl());
-            request.Headers.TryAddWithoutValidation("x-goog-api-key", _options.ApiKey.Trim());
-            request.Content = JsonContent.Create(
-                new GeminiEmbeddingRequest(
-                    $"models/{ModelName.Trim().TrimStart('/')}",
-                    new GeminiContent([new GeminiPart(PrepareRetrievalText(text))]),
-                    Dimensions),
-                options: JsonOptions);
-
-            using var response = await _httpClient.SendAsync(request, cancellationToken);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var errorBody = await ReadErrorBodyAsync(response, cancellationToken);
-                var detail = string.IsNullOrWhiteSpace(errorBody) ? response.ReasonPhrase : errorBody;
-                throw new InvalidOperationException($"Gemini embedding request failed with HTTP {(int)response.StatusCode}. {detail}");
-            }
+                using var request = CreateEmbeddingRequest(text);
+                using var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await ReadErrorBodyAsync(response, cancellationToken);
+                    var detail = string.IsNullOrWhiteSpace(errorBody) ? response.ReasonPhrase : errorBody;
+                    if (IsTransientStatusCode(response.StatusCode) && attempt < maxAttempts)
+                    {
+                        await DelayBeforeRetryAsync(attempt, cancellationToken);
+                        continue;
+                    }
 
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            using var payload = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-            var values = ExtractEmbeddingVector(payload.RootElement);
-            if (values.Count == 0)
+                    throw new InvalidOperationException($"Gemini embedding request failed with HTTP {(int)response.StatusCode}. {detail}");
+                }
+
+                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                using var payload = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                var values = ExtractEmbeddingVector(payload.RootElement);
+                if (values.Count == 0)
+                {
+                    throw new InvalidOperationException("Gemini embedding response did not contain vector values.");
+                }
+
+                return EmbeddingVector.NormalizeDenseEmbedding(values);
+            }
+            catch (HttpRequestException) when (attempt < maxAttempts && !cancellationToken.IsCancellationRequested)
             {
-                throw new InvalidOperationException("Gemini embedding response did not contain vector values.");
+                await DelayBeforeRetryAsync(attempt, cancellationToken);
+                continue;
             }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested && attempt < maxAttempts)
+            {
+                await DelayBeforeRetryAsync(attempt, cancellationToken);
+                continue;
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw new InvalidOperationException("Gemini embedding request timed out. Check Gemini:ApiKey in appsettings.json, network, provider status, or increase Gemini:TimeoutSeconds.");
+            }
+            catch (HttpRequestException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw new InvalidOperationException($"Gemini embedding request failed due to a network error after {maxAttempts} attempts. {ex.Message}", ex);
+            }
+        }
 
-            return EmbeddingVector.NormalizeDenseEmbedding(values);
-        }
-        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new InvalidOperationException("Gemini embedding request timed out. Check GEMINI_API_KEY, network, provider status, or increase Gemini:TimeoutSeconds.");
-        }
+        throw new InvalidOperationException("Gemini embedding request failed.");
     }
 
     public double CosineSimilarity(IReadOnlyDictionary<int, double> left, IReadOnlyDictionary<int, double> right)
@@ -92,6 +111,39 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
             : _options.EmbeddingBaseUrl.Trim().TrimEnd('/');
         var model = ModelName.Trim().Trim('/');
         return $"{baseUrl}/models/{model}:embedContent";
+    }
+
+    private HttpRequestMessage CreateEmbeddingRequest(string text)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, ResolveEmbeddingUrl())
+        {
+            Version = HttpVersion.Version11,
+            VersionPolicy = HttpVersionPolicy.RequestVersionExact,
+            Content = JsonContent.Create(
+                new GeminiEmbeddingRequest(
+                    $"models/{ModelName.Trim().TrimStart('/')}",
+                    new GeminiContent([new GeminiPart(PrepareRetrievalText(text))]),
+                    Dimensions),
+                options: JsonOptions)
+        };
+        request.Headers.TryAddWithoutValidation("x-goog-api-key", _options.ApiKey.Trim());
+        request.Headers.ConnectionClose = true;
+        return request;
+    }
+
+    private static Task DelayBeforeRetryAsync(int attempt, CancellationToken cancellationToken)
+    {
+        return Task.Delay(TimeSpan.FromMilliseconds(500 * attempt * attempt), cancellationToken);
+    }
+
+    private static bool IsTransientStatusCode(HttpStatusCode statusCode)
+    {
+        return statusCode is HttpStatusCode.RequestTimeout
+            or HttpStatusCode.TooManyRequests
+            or HttpStatusCode.InternalServerError
+            or HttpStatusCode.BadGateway
+            or HttpStatusCode.ServiceUnavailable
+            or HttpStatusCode.GatewayTimeout;
     }
 
     private static async Task<string> ReadErrorBodyAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -169,7 +221,7 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
     private sealed record GeminiEmbeddingRequest(
         [property: JsonPropertyName("model")] string Model,
         [property: JsonPropertyName("content")] GeminiContent Content,
-        [property: JsonPropertyName("output_dimensionality")] int OutputDimensionality);
+        [property: JsonPropertyName("outputDimensionality")] int OutputDimensionality);
 
     private sealed record GeminiContent([property: JsonPropertyName("parts")] IReadOnlyList<GeminiPart> Parts);
 

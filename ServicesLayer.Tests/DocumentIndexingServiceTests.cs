@@ -43,7 +43,8 @@ public sealed class DocumentIndexingServiceTests
             Assert.Equal(DocumentIndexStatus.Processing, queuedDocument.Status);
             Assert.Equal(0, queuedDocument.ChunkCount);
 
-            await service.ProcessDocumentAsync(result.DocumentId);
+            var capturedProgress = new List<DocumentIndexingProgressUpdate>();
+            await service.ProcessDocumentAsync(result.DocumentId, new Progress<DocumentIndexingProgressUpdate>(update => capturedProgress.Add(update)));
 
             var indexedDocument = await repository.GetDocumentAsync(result.DocumentId);
             var chunks = await repository.GetDocumentChunksAsync(result.DocumentId);
@@ -56,6 +57,14 @@ public sealed class DocumentIndexingServiceTests
             Assert.Equal("paragraph-aware-950-0+test-enrichment-v1", indexedDocument.ChunkingStrategy);
             Assert.NotNull(indexedDocument.IndexedAt);
             Assert.NotEmpty(chunks);
+            Assert.NotEmpty(capturedProgress);
+            Assert.Contains(capturedProgress, update => update.Stage == "Queued" && update.ProgressPercent == 5);
+            Assert.Contains(capturedProgress, update => update.Stage == "Extracting");
+            Assert.Contains(capturedProgress, update => update.Stage == "Chunking");
+            Assert.Contains(capturedProgress, update => update.Stage == "Embedding");
+            Assert.Contains(capturedProgress, update => update.Stage == "Saving" && update.ProgressPercent == 92);
+            Assert.Contains(capturedProgress, update => update.Stage == "Completed" && update.ProgressPercent == 100);
+            Assert.All(capturedProgress, update => Assert.Equal(DocumentIndexStatus.Processing, update.Status));
             Assert.All(chunks, chunk =>
             {
                 Assert.Equal(indexedDocument.Id, chunk.DocumentId);

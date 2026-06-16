@@ -28,7 +28,9 @@ public sealed class GeminiEmbeddingServiceTests
 
         Assert.Equal("https://example.test/v1beta/models/gemini-embedding-2:embedContent", handler.RequestUri);
         Assert.Equal("test-key", handler.ApiKeyHeader);
-        Assert.Contains("\"output_dimensionality\":768", handler.Body);
+        Assert.Equal(HttpVersion.Version11, handler.Version);
+        Assert.Equal(HttpVersionPolicy.RequestVersionExact, handler.VersionPolicy);
+        Assert.Contains("\"outputDimensionality\":768", handler.Body);
         Assert.Contains("task: search result | query: hello world", handler.Body);
         Assert.Equal(768, service.Dimensions);
         Assert.Equal(0.6, vector[0], precision: 6);
@@ -58,6 +60,61 @@ public sealed class GeminiEmbeddingServiceTests
         Assert.Equal(1, vector[1], precision: 6);
     }
 
+    [Fact]
+    public async Task EmbedAsync_RetriesTransientNetworkFailure()
+    {
+        var handler = new CaptureHttpMessageHandler(
+            HttpStatusCode.OK,
+            """{"embedding":{"values":[1,0]}}""")
+        {
+            FailFirstRequest = true
+        };
+        var service = new GeminiEmbeddingService(
+            new HttpClient(handler),
+            new GeminiOptions(
+                true,
+                "test-key",
+                "gemini-3.5-flash",
+                "gemini-embedding-2",
+                768,
+                5,
+                "https://example.test/openai/chat/completions",
+                "https://example.test/v1beta"));
+
+        var vector = await service.EmbedAsync("hello");
+
+        Assert.Equal(2, handler.RequestCount);
+        Assert.Equal(1, vector[0], precision: 6);
+    }
+
+    [Fact]
+    public async Task EmbedAsync_RetriesTransientHttpFailure()
+    {
+        var handler = new CaptureHttpMessageHandler(
+            HttpStatusCode.OK,
+            """{"embedding":{"values":[0,1]}}""")
+        {
+            FirstStatusCode = HttpStatusCode.ServiceUnavailable
+        };
+        var service = new GeminiEmbeddingService(
+            new HttpClient(handler),
+            new GeminiOptions(
+                true,
+                "test-key",
+                "gemini-3.5-flash",
+                "gemini-embedding-2",
+                768,
+                5,
+                "https://example.test/openai/chat/completions",
+                "https://example.test/v1beta"));
+
+        var vector = await service.EmbedAsync("hello");
+
+        Assert.Equal(2, handler.RequestCount);
+        Assert.Equal(1, vector[1], precision: 6);
+    }
+
+
     private sealed class CaptureHttpMessageHandler : HttpMessageHandler
     {
         private readonly HttpStatusCode _statusCode;
@@ -75,9 +132,27 @@ public sealed class GeminiEmbeddingServiceTests
 
         public string Body { get; private set; } = string.Empty;
 
+        public bool FailFirstRequest { get; init; }
+
+        public HttpStatusCode? FirstStatusCode { get; init; }
+
+        public int RequestCount { get; private set; }
+
+        public Version? Version { get; private set; }
+
+        public HttpVersionPolicy VersionPolicy { get; private set; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestCount++;
+            if (FailFirstRequest && RequestCount == 1)
+            {
+                throw new HttpRequestException("transient socket failure");
+            }
+
             RequestUri = request.RequestUri?.ToString() ?? string.Empty;
+            Version = request.Version;
+            VersionPolicy = request.VersionPolicy;
             ApiKeyHeader = request.Headers.TryGetValues("x-goog-api-key", out var values)
                 ? values.FirstOrDefault() ?? string.Empty
                 : string.Empty;
@@ -85,7 +160,7 @@ public sealed class GeminiEmbeddingServiceTests
                 ? string.Empty
                 : await request.Content.ReadAsStringAsync(cancellationToken);
 
-            return new HttpResponseMessage(_statusCode)
+            return new HttpResponseMessage(RequestCount == 1 && FirstStatusCode.HasValue ? FirstStatusCode.Value : _statusCode)
             {
                 Content = new StringContent(_content, Encoding.UTF8, "application/json")
             };
