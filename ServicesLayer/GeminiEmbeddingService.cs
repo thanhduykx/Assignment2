@@ -21,10 +21,10 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
     }
 
     public string ModelName => string.IsNullOrWhiteSpace(_options.EmbeddingModel)
-        ? "text-embedding-004"
+        ? "gemini-embedding-2"
         : _options.EmbeddingModel.Trim();
 
-    public int Dimensions => InferDimensions(ModelName);
+    public int Dimensions => NormalizeDimensions(_options.EmbeddingDimensions);
 
     public async Task<Dictionary<int, double>> EmbedAsync(string text, CancellationToken cancellationToken = default)
     {
@@ -41,10 +41,12 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, ResolveEmbeddingUrl());
+            request.Headers.TryAddWithoutValidation("x-goog-api-key", _options.ApiKey.Trim());
             request.Content = JsonContent.Create(
                 new GeminiEmbeddingRequest(
                     $"models/{ModelName.Trim().TrimStart('/')}",
-                    new GeminiContent([new GeminiPart(text)])),
+                    new GeminiContent([new GeminiPart(PrepareRetrievalText(text))]),
+                    Dimensions),
                 options: JsonOptions);
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -89,7 +91,7 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
             ? "https://generativelanguage.googleapis.com/v1beta"
             : _options.EmbeddingBaseUrl.Trim().TrimEnd('/');
         var model = ModelName.Trim().Trim('/');
-        return $"{baseUrl}/models/{model}:embedContent?key={Uri.EscapeDataString(_options.ApiKey.Trim())}";
+        return $"{baseUrl}/models/{model}:embedContent";
     }
 
     private static async Task<string> ReadErrorBodyAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -129,27 +131,45 @@ public sealed class GeminiEmbeddingService : IEmbeddingService
         }
 
         var direct = new List<double>();
+        var nestedVectors = new List<IReadOnlyList<double>>();
         foreach (var item in element.EnumerateArray())
         {
             if (item.ValueKind == JsonValueKind.Number && item.TryGetDouble(out var value))
             {
                 direct.Add(value);
+                continue;
+            }
+
+            var nested = ExtractEmbeddingVector(item);
+            if (nested.Count > 0)
+            {
+                nestedVectors.Add(nested);
             }
         }
 
-        return direct;
+        if (direct.Count > 0)
+        {
+            return direct;
+        }
+
+        return nestedVectors.Count == 0 ? Array.Empty<double>() : nestedVectors[0];
     }
 
-    private static int InferDimensions(string modelName)
+    private static string PrepareRetrievalText(string text)
     {
-        return modelName.Contains("text-embedding-004", StringComparison.OrdinalIgnoreCase)
-            ? 768
-            : 3072;
+        var normalized = string.Join(" ", text.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
+        return $"task: search result | query: {normalized}";
+    }
+
+    private static int NormalizeDimensions(int dimensions)
+    {
+        return dimensions is >= 128 and <= 3072 ? dimensions : 768;
     }
 
     private sealed record GeminiEmbeddingRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("content")] GeminiContent Content);
+        [property: JsonPropertyName("content")] GeminiContent Content,
+        [property: JsonPropertyName("output_dimensionality")] int OutputDimensionality);
 
     private sealed record GeminiContent([property: JsonPropertyName("parts")] IReadOnlyList<GeminiPart> Parts);
 
