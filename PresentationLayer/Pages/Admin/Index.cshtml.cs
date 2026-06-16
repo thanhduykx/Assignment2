@@ -708,16 +708,6 @@ public sealed class IndexModel : PageModel
                 throw new InvalidOperationException("Only lecturers can be assigned to subjects.");
             }
 
-            // Each lecturer can manage at most 1 subject
-            var existingSubjects = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
-                .Where(s => s.OwnerUserId == lecturer.Id)
-                .ToList();
-            if (existingSubjects.Count > 0)
-            {
-                TempData["Error"] = $"Giảng viên {DisplayName(lecturer)} đã phụ trách môn {existingSubjects[0].DisplayName}. Mỗi giảng viên chỉ được quản lý 1 môn.";
-                return RedirectToPage("/Admin/Index");
-            }
-
             var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
                 .FirstOrDefault(item => item.Id == model.SubjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
@@ -736,7 +726,9 @@ public sealed class IndexModel : PageModel
                 cancellationToken,
                 new SubjectOwnerInfo(lecturer.Id, lecturer.FullName, lecturer.Email));
 
-            TempData["Success"] = $"Đã đăng ký môn {subject.DisplayName} cho {DisplayName(lecturer)}.";
+            TempData["Success"] = subject.OwnerUserId == lecturer.Id
+                ? $"Môn {subject.DisplayName} đã thuộc {DisplayName(lecturer)}."
+                : $"Đã đăng ký môn {subject.DisplayName} cho {DisplayName(lecturer)}.";
         }
         catch (Exception ex) when (ex is InvalidOperationException)
         {
