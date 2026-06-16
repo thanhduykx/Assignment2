@@ -1,10 +1,10 @@
 namespace ServicesLayer;
 
-public sealed record OpenRouterOptions(
+public sealed record GeminiOptions(
     bool Enabled,
     string ApiKey,
     string ChatModel,
+    string EmbeddingModel,
     int TimeoutSeconds,
     string ChatBaseUrl,
-    string Referer,
-    string Title);
+    string EmbeddingBaseUrl);

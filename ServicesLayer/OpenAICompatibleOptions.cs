@@ -1,6 +1,6 @@
 namespace ServicesLayer;
 
-public sealed record HuggingFaceOptions(
+public sealed record OpenAICompatibleOptions(
     bool Enabled,
     string Token,
     string ChatModel,

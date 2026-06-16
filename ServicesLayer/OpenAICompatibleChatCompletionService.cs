@@ -7,7 +7,7 @@ using DataAccessLayer;
 
 namespace ServicesLayer;
 
-public sealed class HuggingFaceChatCompletionService : ILocalChatCompletionService
+public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletionService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -15,9 +15,9 @@ public sealed class HuggingFaceChatCompletionService : ILocalChatCompletionServi
     };
 
     private readonly HttpClient _httpClient;
-    private readonly HuggingFaceOptions _options;
+    private readonly OpenAICompatibleOptions _options;
 
-    public HuggingFaceChatCompletionService(HttpClient httpClient, HuggingFaceOptions options)
+    public OpenAICompatibleChatCompletionService(HttpClient httpClient, OpenAICompatibleOptions options)
     {
         _httpClient = httpClient;
         _options = options;
@@ -234,11 +234,11 @@ public sealed class HuggingFaceChatCompletionService : ILocalChatCompletionServi
             using var request = new HttpRequestMessage(HttpMethod.Post, ResolveChatUrl());
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.Token);
             request.Content = JsonContent.Create(
-                new HuggingFaceChatRequest(
+                new OpenAICompatibleChatRequest(
                     ModelName,
                     [
-                        new HuggingFaceChatMessage("system", system),
-                        new HuggingFaceChatMessage("user", prompt)
+                        new OpenAICompatibleChatMessage("system", system),
+                        new OpenAICompatibleChatMessage("user", prompt)
                     ],
                     temperature,
                     maxTokens),
@@ -250,7 +250,7 @@ public sealed class HuggingFaceChatCompletionService : ILocalChatCompletionServi
                 return null;
             }
 
-            var payload = await response.Content.ReadFromJsonAsync<HuggingFaceChatResponse>(JsonOptions, cancellationToken);
+            var payload = await response.Content.ReadFromJsonAsync<OpenAICompatibleChatResponse>(JsonOptions, cancellationToken);
             var content = payload?.Choices?
                 .FirstOrDefault()?
                 .Message?
@@ -518,21 +518,21 @@ public sealed class HuggingFaceChatCompletionService : ILocalChatCompletionServi
         return compact.Length <= maxLength ? compact : compact[..maxLength] + "...";
     }
 
-    private sealed record HuggingFaceChatRequest(
+    private sealed record OpenAICompatibleChatRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] IReadOnlyList<HuggingFaceChatMessage> Messages,
+        [property: JsonPropertyName("messages")] IReadOnlyList<OpenAICompatibleChatMessage> Messages,
         [property: JsonPropertyName("temperature")] double Temperature,
         [property: JsonPropertyName("max_tokens")] int MaxTokens);
 
-    private sealed record HuggingFaceChatMessage(
+    private sealed record OpenAICompatibleChatMessage(
         [property: JsonPropertyName("role")] string Role,
         [property: JsonPropertyName("content")] string Content);
 
-    private sealed record HuggingFaceChatResponse(
-        [property: JsonPropertyName("choices")] IReadOnlyList<HuggingFaceChoice>? Choices);
+    private sealed record OpenAICompatibleChatResponse(
+        [property: JsonPropertyName("choices")] IReadOnlyList<OpenAICompatibleChoice>? Choices);
 
-    private sealed record HuggingFaceChoice(
-        [property: JsonPropertyName("message")] HuggingFaceChatMessage? Message);
+    private sealed record OpenAICompatibleChoice(
+        [property: JsonPropertyName("message")] OpenAICompatibleChatMessage? Message);
 
     private sealed record IntentResponse(
         [property: JsonPropertyName("intent")] string? Intent,

@@ -1,21 +1,21 @@
 namespace ServicesLayer;
 
-public sealed class OpenRouterChatCompletionService : ILocalChatCompletionService
+public sealed class GeminiChatCompletionService : ILocalChatCompletionService
 {
-    private readonly HuggingFaceChatCompletionService _inner;
+    private readonly OpenAICompatibleChatCompletionService _inner;
 
-    public OpenRouterChatCompletionService(HttpClient httpClient, OpenRouterOptions options)
+    public GeminiChatCompletionService(HttpClient httpClient, GeminiOptions options)
     {
-        _inner = new HuggingFaceChatCompletionService(
+        _inner = new OpenAICompatibleChatCompletionService(
             httpClient,
-            new HuggingFaceOptions(
+            new OpenAICompatibleOptions(
                 options.Enabled,
                 options.ApiKey,
                 options.ChatModel,
-                string.Empty,
+                options.EmbeddingModel,
                 options.TimeoutSeconds,
                 options.ChatBaseUrl,
-                string.Empty));
+                options.EmbeddingBaseUrl));
     }
 
     public bool IsEnabled => _inner.IsEnabled;
