@@ -1,0 +1,42 @@
+@page
+@model PresentationLayer.Pages.Home.OnlineUsersModel
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Online users";
+    ViewData["UseRblShell"] = true;
+    ViewData["ActiveNav"] = "online-users";
+    ViewData["ShellTitle"] = "Online users";
+    ViewData["ShellTitleI18n"] = "admin.navOnlineUsers";
+}
+
+<section class="ops-page ops-online-users-page">
+    <section class="ops-panel ops-online-users-panel">
+        <div class="ops-panel-head">
+            <div>
+                <span class="ops-eyebrow" data-i18n="onlineUsers.activeNow">Active now</span>
+                <h2 data-i18n="onlineUsers.title">Online users</h2>
+            </div>
+            <span class="ops-panel-note" data-i18n="onlineUsers.realtimeNote">Realtime presence</span>
+        </div>
+
+        <section id="onlineUsersWidget" class="online-users-widget online-users-widget--inline" data-current-user-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value" data-current-user-email="@User.FindFirst(ClaimTypes.Email)?.Value" data-connection-state="connecting" aria-live="polite">
+            <header class="online-users-widget__header">
+                <div>
+                    <h2 data-i18n="onlineUsers.title">Online users</h2>
+                    <p data-online-users-summary data-i18n="onlineUsers.connecting">Connecting...</p>
+                </div>
+                <div class="online-users-widget__header-actions">
+                    <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
+                    <button type="button" class="online-users-widget__toggle" data-online-users-toggle aria-expanded="true" aria-label="Collapse online users" data-i18n-aria-label="onlineUsers.collapse">
+                        <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                    </button>
+                </div>
+            </header>
+            <div class="online-users-widget__body">
+                <ul id="onlineUsersList" class="online-users-widget__list">
+                    <li class="online-users-widget__empty" data-i18n="onlineUsers.loading">Loading online users...</li>
+                </ul>
+            </div>
+        </section>
+    </section>
+</section>
