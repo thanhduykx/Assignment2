@@ -23,7 +23,10 @@
     var shellTitleI18n = ViewData["ShellTitleI18n"] as string;
     var chatNavClass = activeNav == "chat" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var documentsNavClass = activeNav == "documents" ? "rbl-nav-link is-active" : "rbl-nav-link";
+    var onlineUsersNavClass = activeNav == "online-users" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var adminNavClass = activeNav == "admin" ? "rbl-nav-link is-active" : "rbl-nav-link";
+    var currentAdminSection = (Context.Request.RouteValues["section"] as string ?? string.Empty).ToLowerInvariant();
+    string AdminSublinkClass(string sectionName) => currentAdminSection == sectionName ? "rbl-nav-sublink is-active" : "rbl-nav-sublink";
 }
 <!DOCTYPE html>
 <html lang="vi" class="i18n-pending">
@@ -75,7 +78,7 @@
                     </span>
                     <div>
                         <strong>Course Assistant</strong>
-                        <span data-i18n="shell.portal">Learning Ops / Vận hành học tập</span>
+                        <span data-i18n="shell.portal">Learning Portal</span>
                     </div>
                 </div>
 
@@ -84,14 +87,21 @@
                     {
                     <a class="@chatNavClass" asp-page="/Home/Chat">
                         <span class="material-symbols-outlined" aria-hidden="true">chat</span>
-                        <span data-i18n="shell.chatbot">Hỏi đáp / Chat</span>
+                        <span data-i18n="shell.chatbot">Chatbot</span>
                     </a>
                     }
                     @if (canViewDocuments)
                     {
                     <a class="@documentsNavClass" asp-page="/Home/Index">
                         <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
-                        <span data-i18n="shell.documents">Kho tài liệu / Documents</span>
+                        <span data-i18n="shell.documents">Document Repository</span>
+                    </a>
+                    }
+                    @if (isAuthenticated)
+                    {
+                    <a class="@onlineUsersNavClass" asp-page="/Home/OnlineUsers">
+                        <span class="material-symbols-outlined" aria-hidden="true">online_prediction</span>
+                        <span data-i18n="admin.navOnlineUsers">Online users</span>
                     </a>
                     }
                     @if (canManageUsers)
@@ -99,29 +109,29 @@
                     <details class="rbl-nav-dropdown" @((activeNav == "admin") ? "open" : "")>
                         <summary class="rbl-nav-link-summary @adminNavClass">
                             <span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
-                            <span>Người dùng / Users</span>
+                            <span data-i18n="shell.users">Users</span>
                             <span class="material-symbols-outlined rbl-dropdown-chevron" aria-hidden="true">expand_more</span>
                         </summary>
                         <div class="rbl-nav-sublist">
-                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="directory">
+                            <a class="@(AdminSublinkClass("directory"))" asp-page="/Admin/Index" asp-route-section="directory">
                                 <span class="material-symbols-outlined" aria-hidden="true">group</span>
-                                <span>Directory / Bảng người dùng</span>
+                                <span data-i18n="admin.navDirectory">Directory</span>
                             </a>
-                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="lecturer-table">
+                            <a class="@(AdminSublinkClass("lecturer-table"))" asp-page="/Admin/Index" asp-route-section="lecturer-table">
                                 <span class="material-symbols-outlined" aria-hidden="true">school</span>
-                                <span>Lecturer Table / Bảng giảng viên</span>
+                                <span data-i18n="admin.navLecturerTable">Lecturer table</span>
                             </a>
-                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="create-account">
+                            <a class="@(AdminSublinkClass("create-account"))" asp-page="/Admin/Index" asp-route-section="create-account">
                                 <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
-                                <span>Create Account / Thêm user</span>
+                                <span data-i18n="admin.navCreateAccount">Create account</span>
                             </a>
-                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="bulk-import">
+                            <a class="@(AdminSublinkClass("bulk-import"))" asp-page="/Admin/Index" asp-route-section="bulk-import">
                                 <span class="material-symbols-outlined" aria-hidden="true">group_add</span>
-                                <span>Bulk Import / Nhập từ Excel</span>
+                                <span data-i18n="admin.navImportExcel">Import from Excel</span>
                             </a>
-                            <a class="rbl-nav-sublink" asp-page="/Admin/Index" asp-route-section="create-subject">
+                            <a class="@(AdminSublinkClass("create-subject"))" asp-page="/Admin/Index" asp-route-section="create-subject">
                                 <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
-                                <span>Create Subject / Thêm môn</span>
+                                <span data-i18n="admin.navCreateSubject">Create subject</span>
                             </a>
                         </div>
                     </details>
@@ -215,6 +225,12 @@
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Home/Chat" data-i18n="nav.chat">Chat</a>
                                 </li>
                             }
+                            @if (isAuthenticated)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/Home/OnlineUsers" data-i18n="admin.navOnlineUsers">Online users</a>
+                                </li>
+                            }
                             @if (canManageUsers)
                             {
                                 <li class="nav-item">
@@ -274,28 +290,6 @@
                 &copy; 2026 - Course Assistant
             </div>
         </footer>
-    }
-    @if (isAuthenticated)
-    {
-        <section id="onlineUsersWidget" class="online-users-widget" data-current-user-id="@currentUserId" data-current-user-email="@currentUserEmail" data-connection-state="connecting" aria-live="polite">
-            <header class="online-users-widget__header">
-                <div>
-                    <h2>Online users</h2>
-                    <p data-online-users-summary>Connecting...</p>
-                </div>
-                <div class="online-users-widget__header-actions">
-                    <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
-                    <button type="button" class="online-users-widget__toggle" data-online-users-toggle aria-expanded="true" aria-label="Collapse online users">
-                        <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
-                    </button>
-                </div>
-            </header>
-            <div class="online-users-widget__body">
-                <ul id="onlineUsersList" class="online-users-widget__list">
-                    <li class="online-users-widget__empty">Loading online users...</li>
-                </ul>
-            </div>
-        </section>
     }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

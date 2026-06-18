@@ -7188,6 +7188,22 @@ body.rbl-body .rbl-main {
   backdrop-filter: blur(14px);
 }
 
+.online-users-widget--inline {
+  position: static;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  width: 100%;
+  max-height: none;
+  border-radius: 8px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.ops-online-users-panel .online-users-widget--inline {
+  margin-top: 14px;
+}
+
 .online-users-widget__header {
   display: flex;
   align-items: flex-start;
