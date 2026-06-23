@@ -33,57 +33,9 @@ EduVietRAG là web app ASP.NET Core Razor Pages hỗ trợ quản lý tài liệ
 
 ## Kiến Trúc Hệ Thống
 
-```mermaid
-flowchart TB
-    User["Người dùng"] --> UI
+![Sơ đồ kiến trúc EduVietRAG](docs/architecture-overview.png)
 
-    subgraph UI["Presentation Layer - ASP.NET Core Razor Pages"]
-        Pages["Razor Pages<br/>Home / Chat / Documents / Courses"]
-        Account["Account Pages<br/>Login / Google / Password"]
-        Admin["Admin Pages<br/>Users / Roles / Subjects"]
-        Store["UserAccountStore"]
-        Hub["SignalR DocumentStatusHub"]
-        Worker["DocumentIndexWorker"]
-    end
-
-    subgraph BAL["Business Access Layer - ServicesLayer"]
-        Rag["RagChatService<br/>Retrieve + Prompt + Answer"]
-        Chat["GeminiChatCompletionService"]
-        Embed["GeminiEmbeddingService / HashingEmbeddingService"]
-        Chunker["FlmSyllabusAwareTextChunker"]
-        Indexing["DocumentIndexingService<br/>Extract + Chunk + Embed"]
-        DocExtract["DocumentTextExtractor<br/>PDF / DOCX / PPTX / TXT"]
-        WebExtract["WebPageTextExtractor<br/>URL Extraction"]
-        Queue["DocumentIndexJobQueue"]
-    end
-
-    subgraph DAL["Data Access Layer"]
-        RepoInterface["IKnowledgeRepository"]
-        Repo["SqlKnowledgeRepository"]
-        Mapper["KnowledgeSqlMapper"]
-        DbContext["KnowledgeSqlDbContext"]
-        Schema["KnowledgeSqlSchemaInitializer<br/>EnsureCreated + Seed Catalog"]
-    end
-
-    subgraph External["External Services"]
-        Gemini["Gemini API<br/>Chat + Embedding"]
-        Google["Google OAuth"]
-        SMTP["SMTP Email Server"]
-    end
-
-    DB[("SQL Server")]
-
-    UI --> BAL
-    BAL --> DAL
-    DAL --> DB
-    Chat --> Gemini
-    Embed --> Gemini
-    Account --> Google
-    Store --> SMTP
-    Worker --> Queue
-    Queue --> Indexing
-    Indexing --> Hub
-```
+Sơ đồ trên thể hiện đúng các lớp chính của hệ thống: Presentation Layer xử lý Razor Pages, tài khoản và realtime status; BAL/ServicesLayer xử lý nghiệp vụ RAG, chunking, embedding và index tài liệu; Data Access Layer làm việc với repository, mapper, DbContext và SQL Server; các dịch vụ ngoài gồm Gemini API, Google OAuth và SMTP.
 
 ### Luồng RAG Tóm Tắt
 
@@ -115,47 +67,47 @@ sequenceDiagram
 
 ```text
 C:\Assignment2
-├── Group7_SE1950.sln
-├── README.md
-├── DataAccessLayer/
-│   ├── Context/                  # EF Core DbContext và factory
-│   ├── Entities/                 # Entity SQL cho document, chunk, chat, subject...
-│   ├── Enums/                    # Role, status, file type, message role...
-│   ├── Mapping/                  # Mapper entity <-> model nghiệp vụ
-│   ├── Repositories/             # SqlKnowledgeRepository
-│   ├── Schema/                   # Tự tạo/cập nhật schema và seed catalog môn học
-│   ├── IKnowledgeRepository.cs   # Contract truy cập dữ liệu RAG
-│   └── DataAccessLayer.csproj
-├── ServicesLayer/
-│   ├── DocumentIndexingService.cs        # Pipeline upload/index tài liệu
-│   ├── DocumentIndexJobQueue.cs          # Hàng đợi index background
-│   ├── DocumentTextExtractor.cs          # Extract PDF/DOCX/PPTX/TXT
-│   ├── WebPageTextExtractor.cs           # Extract nội dung URL
-│   ├── TextChunker.cs                    # Chunking thường và FLM syllabus-aware
-│   ├── EmbeddingService.cs               # Hashing fallback embedding
-│   ├── GeminiEmbeddingService.cs         # Embedding qua Gemini
-│   ├── GeminiChatCompletionService.cs    # Chat completion qua Gemini
-│   ├── ChunkRetrievalEnrichmentService.cs
-│   ├── RagChatService.cs                 # Orchestrator hỏi đáp RAG
-│   └── ServicesLayer.csproj
-├── PresentationLayer/
-│   ├── Pages/
-│   │   ├── Account/              # Login, Google callback, đổi/quên/reset password
-│   │   ├── Admin/                # Quản trị user, role, subject, import Excel
-│   │   ├── Home/                 # Chat, courses, documents, preview, online users
-│   │   └── Shared/               # Layout và partial view
-│   ├── Hubs/                     # SignalR hub cập nhật trạng thái document
-│   ├── Models/                   # ViewModel cho account, admin, home
-│   ├── Security/                 # AppRoles và AuthorizationPolicies
-│   ├── Services/                 # User store, SMTP sender, worker, notifier
-│   ├── wwwroot/                  # CSS, JS, fonts, images, client libraries
-│   ├── Program.cs                # DI, auth, SignalR, hosted service, routing
-│   └── Group07MVC.csproj
-├── ServicesLayer.Tests/
-│   ├── *Tests.cs                 # Unit/integration tests cho service layer
-│   └── ServicesLayer.Tests.csproj
-└── TestData/
-    └── qa-test-50-vi-q-a.txt     # Bộ câu hỏi/đáp án kiểm thử thủ công
+|-- Group7_SE1950.sln
+|-- README.md
+|-- DataAccessLayer/
+|   |-- Context/                  # EF Core DbContext và factory
+|   |-- Entities/                 # Entity SQL cho document, chunk, chat, subject...
+|   |-- Enums/                    # Role, status, file type, message role...
+|   |-- Mapping/                  # Mapper entity <-> model nghiệp vụ
+|   |-- Repositories/             # SqlKnowledgeRepository
+|   |-- Schema/                   # Tự tạo/cập nhật schema và seed catalog môn học
+|   |-- IKnowledgeRepository.cs   # Contract truy cập dữ liệu RAG
+|   `-- DataAccessLayer.csproj
+|-- ServicesLayer/
+|   |-- DocumentIndexingService.cs        # Pipeline upload/index tài liệu
+|   |-- DocumentIndexJobQueue.cs          # Hàng đợi index background
+|   |-- DocumentTextExtractor.cs          # Extract PDF/DOCX/PPTX/TXT
+|   |-- WebPageTextExtractor.cs           # Extract nội dung URL
+|   |-- TextChunker.cs                    # Chunking thường và FLM syllabus-aware
+|   |-- EmbeddingService.cs               # Hashing fallback embedding
+|   |-- GeminiEmbeddingService.cs         # Embedding qua Gemini
+|   |-- GeminiChatCompletionService.cs    # Chat completion qua Gemini
+|   |-- ChunkRetrievalEnrichmentService.cs
+|   |-- RagChatService.cs                 # Orchestrator hỏi đáp RAG
+|   `-- ServicesLayer.csproj
+|-- PresentationLayer/
+|   |-- Pages/
+|   |   |-- Account/              # Login, Google callback, đổi/quên/reset password
+|   |   |-- Admin/                # Quản trị user, role, subject, import Excel
+|   |   |-- Home/                 # Chat, courses, documents, preview, online users
+|   |   `-- Shared/               # Layout và partial view
+|   |-- Hubs/                     # SignalR hub cập nhật trạng thái document
+|   |-- Models/                   # ViewModel cho account, admin, home
+|   |-- Security/                 # AppRoles và AuthorizationPolicies
+|   |-- Services/                 # User store, SMTP sender, worker, notifier
+|   |-- wwwroot/                  # CSS, JS, fonts, images, client libraries
+|   |-- Program.cs                # DI, auth, SignalR, hosted service, routing
+|   `-- Group07MVC.csproj
+|-- ServicesLayer.Tests/
+|   |-- *Tests.cs                 # Unit/integration tests cho service layer
+|   `-- ServicesLayer.Tests.csproj
+`-- TestData/
+    `-- qa-test-50-vi-q-a.txt     # Bộ câu hỏi/đáp án kiểm thử thủ công
 ```
 
 ## Phân Quyền Người Dùng
