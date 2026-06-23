@@ -1,5 +1,6 @@
 using DataAccessLayer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PresentationLayer.Security;
 using PresentationLayer.Services;
@@ -26,18 +27,19 @@ public sealed class CoursesModel : HomePageModelBase
     public IReadOnlyList<CourseWorkspaceCardViewModel> Courses { get; private set; } = Array.Empty<CourseWorkspaceCardViewModel>();
     public string? LoadErrorMessage { get; private set; }
 
-    public async Task OnGetAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
+        if (CurrentRole() == AppRoles.Student)
+        {
+            return Forbid();
+        }
+
         try
         {
-            var scope = BuildDocumentAccessScope(CurrentRole() == AppRoles.Student
-                ? DocumentAccessMode.Chat
-                : DocumentAccessMode.DocumentUi);
+            var scope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
             var documents = await _repository.GetDocumentsAsync(scope, null, cancellationToken);
             var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
-            var visibleCatalog = CurrentRole() == AppRoles.Student
-                ? BuildSynchronizedCourseCatalogForView(catalog, documents)
-                : BuildSynchronizedCourseCatalogForView(FilterCourseCatalogForCurrentUser(catalog), documents);
+            var visibleCatalog = BuildSynchronizedCourseCatalogForView(FilterCourseCatalogForCurrentUser(catalog), documents);
 
             Courses = visibleCatalog
                 .Select(subject =>
@@ -56,15 +58,17 @@ public sealed class CoursesModel : HomePageModelBase
                         subjectDocuments.Count,
                         subjectDocuments.Count(document => document.Status == DocumentIndexStatus.Indexed));
                 })
-                .Where(course => course.DocumentCount > 0 || CurrentRole() != AppRoles.Student)
                 .OrderBy(course => course.Code)
                 .ToList();
+
+            return Page();
         }
         catch (Exception ex) when (IsDataAccessTimeout(ex))
         {
             _logger.LogWarning(ex, "Courses page could not load because the database was unavailable.");
             Courses = Array.Empty<CourseWorkspaceCardViewModel>();
             LoadErrorMessage = "Database unavailable/timeout. Course workspaces could not be loaded.";
+            return Page();
         }
     }
 }
