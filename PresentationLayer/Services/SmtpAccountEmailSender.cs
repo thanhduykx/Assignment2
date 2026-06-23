@@ -125,14 +125,28 @@ public sealed class SmtpAccountEmailSender : IAccountEmailSender
 
     private async Task SendAsync(MailMessage message, CancellationToken cancellationToken)
     {
+        var password = NormalizeCredentialPassword(_options.Host, _options.Password);
         using var client = new SmtpClient(_options.Host, _options.Port)
         {
             EnableSsl = _options.EnableSsl,
-            Credentials = new NetworkCredential(_options.UserName, _options.Password),
+            Credentials = new NetworkCredential(_options.UserName, password),
             DeliveryMethod = SmtpDeliveryMethod.Network
         };
 
         await client.SendMailAsync(message, cancellationToken);
+    }
+
+    private static string NormalizeCredentialPassword(string host, string password)
+    {
+        if (!host.Equals("smtp.gmail.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return password;
+        }
+
+        var compactPassword = string.Concat(password.Where(character => !char.IsWhiteSpace(character)));
+        return compactPassword.Length == 16 && compactPassword.All(char.IsLetterOrDigit)
+            ? compactPassword
+            : password;
     }
 
     private void ValidateOptions()
