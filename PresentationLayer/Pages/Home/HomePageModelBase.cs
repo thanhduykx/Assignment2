@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.Text;
-using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PresentationLayer.Models;
 using PresentationLayer.Security;
@@ -12,7 +12,7 @@ namespace PresentationLayer.Pages.Home;
 public abstract class HomePageModelBase : PageModel
 {
     protected readonly ILogger<HomePageModelBase> _logger;
-    protected readonly IKnowledgeRepository _repository;
+    protected readonly IKnowledgeService _repository;
     protected readonly IDocumentIndexingService _indexingService;
     protected readonly IWebPageTextExtractor _webPageTextExtractor;
     protected readonly IRagChatService _chatService;
@@ -22,7 +22,7 @@ public abstract class HomePageModelBase : PageModel
 
     protected HomePageModelBase(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeRepository repository,
+        IKnowledgeService repository,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
