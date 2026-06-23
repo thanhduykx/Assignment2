@@ -93,7 +93,6 @@ public sealed class LoginModel : PageModel
 
         if (IsPrivateIpHost(Request.Host.Host))
         {
-            TempData["AuthError"] = "Google sign-in does not support this private IP address. Use email/password on LAN, or access Google sign-in through localhost or a configured HTTPS domain.";
             return RedirectToPage("/Account/Login", new { returnUrl });
         }
 
@@ -178,7 +177,6 @@ public sealed class LoginModel : PageModel
         if (IsGoogleLoginEnabled && IsPrivateIpHost(Request.Host.Host))
         {
             IsGoogleLoginEnabled = false;
-            GoogleLoginUnavailableMessage = "Dang nhap Google khong ho tro khi truy cap bang IP noi bo. Hay dung email/mat khau trong LAN, hoac dung localhost/domain HTTPS da cau hinh OAuth.";
         }
     }
 
