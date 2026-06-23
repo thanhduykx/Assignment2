@@ -9,34 +9,36 @@
     ViewData["ShellTitleI18n"] = "admin.navOnlineUsers";
 }
 
-<section class="ops-page ops-online-users-page">
-    <section class="ops-panel ops-online-users-panel">
-        <div class="ops-panel-head">
+<section id="onlineUsersWidget" class="ops-page ops-online-users-page online-users-layout" data-current-user-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value" data-current-user-email="@User.FindFirst(ClaimTypes.Email)?.Value" data-connection-state="connecting" aria-live="polite">
+    <aside class="online-users-left" aria-label="Online users list">
+        <div class="online-users-page-heading">
+            <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
             <div>
                 <span class="ops-eyebrow" data-i18n="onlineUsers.activeNow">Active now</span>
                 <h2 data-i18n="onlineUsers.title">Online users</h2>
+                <p data-online-users-summary data-i18n="onlineUsers.connecting">Connecting...</p>
             </div>
-            <span class="ops-panel-note" data-i18n="onlineUsers.realtimeNote">Realtime presence</span>
         </div>
 
-        <section id="onlineUsersWidget" class="online-users-widget online-users-widget--inline" data-current-user-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value" data-current-user-email="@User.FindFirst(ClaimTypes.Email)?.Value" data-connection-state="connecting" aria-live="polite">
-            <header class="online-users-widget__header">
-                <div>
-                    <h2 data-i18n="onlineUsers.title">Online users</h2>
-                    <p data-online-users-summary data-i18n="onlineUsers.connecting">Connecting...</p>
-                </div>
-                <div class="online-users-widget__header-actions">
-                    <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
-                    <button type="button" class="online-users-widget__toggle" data-online-users-toggle aria-expanded="true" aria-label="Collapse online users" data-i18n-aria-label="onlineUsers.collapse">
-                        <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
-                    </button>
-                </div>
-            </header>
-            <div class="online-users-widget__body">
-                <ul id="onlineUsersList" class="online-users-widget__list">
-                    <li class="online-users-widget__empty" data-i18n="onlineUsers.loading">Loading online users...</li>
-                </ul>
+        <ul id="onlineUsersList" class="online-users-widget__list online-users-page-list">
+            <li class="online-users-widget__empty" data-i18n="onlineUsers.loading">Loading online users...</li>
+        </ul>
+    </aside>
+
+    <section class="online-users-right" aria-label="Realtime status">
+        <div class="online-users-status-panel">
+            <span class="material-symbols-outlined" aria-hidden="true">online_prediction</span>
+            <div>
+                <strong data-i18n="onlineUsers.realtimeNote">Realtime presence</strong>
+                <p data-i18n="onlineUsers.statusHelp">This list updates when users connect or leave.</p>
             </div>
-        </section>
+        </div>
+        <div class="online-users-status-panel">
+            <span class="material-symbols-outlined" aria-hidden="true">person</span>
+            <div>
+                <strong>@User.Identity?.Name</strong>
+                <p>@User.FindFirst(ClaimTypes.Email)?.Value</p>
+            </div>
+        </div>
     </section>
 </section>

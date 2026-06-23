@@ -22,6 +22,7 @@
     var hideAssistantLauncher = ViewData["HideAssistantLauncher"] as bool? ?? false;
     var shellTitleI18n = ViewData["ShellTitleI18n"] as string;
     var chatNavClass = activeNav == "chat" ? "rbl-nav-link is-active" : "rbl-nav-link";
+    var coursesNavClass = activeNav == "courses" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var documentsNavClass = activeNav == "documents" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var onlineUsersNavClass = activeNav == "online-users" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var adminNavClass = activeNav == "admin" ? "rbl-nav-link is-active" : "rbl-nav-link";
@@ -88,6 +89,10 @@
                     <a class="@chatNavClass" asp-page="/Home/Chat">
                         <span class="material-symbols-outlined" aria-hidden="true">chat</span>
                         <span data-i18n="shell.chatbot">Chatbot</span>
+                    </a>
+                    <a class="@coursesNavClass" asp-page="/Home/Courses">
+                        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+                        <span data-i18n="shell.courses">Courses</span>
                     </a>
                     }
                     @if (canViewDocuments)
@@ -223,6 +228,9 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Home/Chat" data-i18n="nav.chat">Chat</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/Home/Courses" data-i18n="shell.courses">Courses</a>
                                 </li>
                             }
                             @if (isAuthenticated)

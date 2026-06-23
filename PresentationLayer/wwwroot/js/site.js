@@ -7,6 +7,7 @@ const translations = {
     "nav.register": "Create account",
     "shell.portal": "Learning Portal",
     "shell.chatbot": "Chatbot",
+    "shell.courses": "Courses",
     "shell.documents": "Document Repository",
     "shell.users": "Users",
     "shell.help": "Help",
@@ -38,6 +39,7 @@ const translations = {
     "onlineUsers.empty": "No active users right now.",
     "onlineUsers.activeNow": "Active now",
     "onlineUsers.realtimeNote": "Realtime presence",
+    "onlineUsers.statusHelp": "This list updates when users connect or leave.",
     "onlineUsers.summaryOne": "1 online user (active now)",
     "onlineUsers.summaryMany": "{count} online users (active now)",
     "onlineUsers.youAreOnline": "You are online",
@@ -112,6 +114,7 @@ const translations = {
     "chat.send": "Send",
     "chat.relatedLabel": "Related questions",
     "chat.relatedAria": "Related questions",
+    "chat.allSubjects": "All subjects",
     "chat.defaultSessionTitle": "Session without a question",
     "chat.sessionActions": "Session actions",
     "chat.starSession": "Star",
@@ -139,6 +142,7 @@ const translations = {
     "nav.register": "Tạo tài khoản",
     "shell.portal": "Cổng học tập",
     "shell.chatbot": "Chatbot",
+    "shell.courses": "Môn học",
     "shell.documents": "Kho tài liệu",
     "shell.users": "Người dùng",
     "shell.help": "Trợ giúp",
@@ -170,6 +174,7 @@ const translations = {
     "onlineUsers.empty": "Hiện không có người dùng nào hoạt động.",
     "onlineUsers.activeNow": "Đang hoạt động",
     "onlineUsers.realtimeNote": "Trạng thái realtime",
+    "onlineUsers.statusHelp": "Danh sách tự cập nhật khi người dùng vào hoặc rời hệ thống.",
     "onlineUsers.summaryOne": "1 người dùng online (đang hoạt động)",
     "onlineUsers.summaryMany": "{count} người dùng online (đang hoạt động)",
     "onlineUsers.youAreOnline": "Bạn đang online",
@@ -244,6 +249,7 @@ const translations = {
     "chat.send": "Gửi",
     "chat.relatedLabel": "Câu hỏi liên quan",
     "chat.relatedAria": "Câu hỏi liên quan",
+    "chat.allSubjects": "Tất cả môn",
     "chat.defaultSessionTitle": "Phiên chưa có câu hỏi",
     "chat.sessionActions": "Thao tác phiên",
     "chat.starSession": "Ghim",
@@ -564,6 +570,23 @@ function bindSubjectSuggestionButtons() {
       questionInput?.focus();
     });
   });
+}
+
+function applyInitialSubjectFromUrl() {
+  if (!chatPage) {
+    return;
+  }
+
+  const subject = new URLSearchParams(window.location.search).get("subject") || "";
+  if (!subject.trim()) {
+    return;
+  }
+
+  const matchingChip = [...document.querySelectorAll(".chat-subject-chip")]
+    .find((button) => (button.dataset.subjectFilter || "").toLowerCase() === subject.trim().toLowerCase());
+  if (matchingChip) {
+    setSelectedSubjectFilter(matchingChip.dataset.subjectFilter || "");
+  }
 }
 
 function normalizeQuestionForMemory(question) {
@@ -2259,6 +2282,7 @@ function initAdminRoleUpdateForms() {
 bindSuggestionButtons();
 bindSessionButtons();
 bindSubjectFilterChips();
+applyInitialSubjectFromUrl();
 bindDocumentPreviewButtons();
 initSubjectCards();
 initAdminCreateUserForm();
