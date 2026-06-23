@@ -6,8 +6,6 @@
     ViewData["UseRblShell"] = true;
     ViewData["ActiveNav"] = "courses";
     ViewData["ShellTitle"] = "Course workspace";
-
-    string DateLabel(DateTimeOffset value) => value.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
 }
 
 <section class="ops-page course-workspace-page">
@@ -25,7 +23,7 @@
         <div>
             <span class="ops-eyebrow">Course workspace</span>
             <h1>@Model.Subject.DisplayName</h1>
-            <p>@(string.IsNullOrWhiteSpace(Model.Subject.Description) ? "Course dashboard for documents, learning practice, and chat activity." : Model.Subject.Description)</p>
+            <p>@(string.IsNullOrWhiteSpace(Model.Subject.Description) ? "Course workspace for documents, chapters, and subject chat." : Model.Subject.Description)</p>
         </div>
         <div class="ops-subject-header-actions">
             <a class="ops-button ops-button--primary" asp-page="/Home/Chat" asp-route-subject="@Model.Subject.DisplayName">
@@ -57,11 +55,6 @@
             <span>Lecturer</span>
             <strong>@(string.IsNullOrWhiteSpace(Model.Subject.OwnerName) ? "Unassigned" : Model.Subject.OwnerName)</strong>
             <small>@(string.IsNullOrWhiteSpace(Model.Subject.OwnerEmail) ? "No owner email" : Model.Subject.OwnerEmail)</small>
-        </article>
-        <article class="ops-kpi">
-            <span>Learners</span>
-            <strong>@Model.Analytics.LearnerCount</strong>
-            <small>@(Model.CanSeeAnalytics ? "students with course questions" : "analytics available to lecturers")</small>
         </article>
     </section>
 
@@ -97,150 +90,5 @@
                 </div>
             }
         </section>
-
-        <aside class="ops-panel">
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Students</span>
-                    <h2>Learning activity</h2>
-                </div>
-            </div>
-            @if (Model.CanSeeAnalytics && Model.Analytics.Learners.Count > 0)
-            {
-                <div class="course-learner-list">
-                    @foreach (var learner in Model.Analytics.Learners)
-                    {
-                        <div class="course-learner-row">
-                            <strong>@(string.IsNullOrWhiteSpace(learner.Name) ? learner.Email : learner.Name)</strong>
-                            <small>@learner.QuestionCount questions - @DateLabel(learner.LastAskedAt)</small>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <p class="ops-muted">Student activity appears after learners ask questions about this course.</p>
-            }
-        </aside>
     </section>
-
-    <section class="course-learning-grid">
-        <section class="ops-panel">
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Student learning mode</span>
-                    <h2>Summary</h2>
-                </div>
-            </div>
-            <ul class="course-learning-list">
-                @foreach (var bullet in Model.SummaryBullets)
-                {
-                    <li>@bullet</li>
-                }
-            </ul>
-        </section>
-
-        <section class="ops-panel">
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Practice</span>
-                    <h2>Quiz</h2>
-                </div>
-            </div>
-            <div class="course-quiz-list">
-                @foreach (var item in Model.Quiz)
-                {
-                    <details class="course-practice-item">
-                        <summary>@item.Question</summary>
-                        <p><strong>Answer:</strong> @item.Answer</p>
-                        <small>@item.Chapter</small>
-                    </details>
-                }
-            </div>
-        </section>
-
-        <section class="ops-panel">
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Memory</span>
-                    <h2>Flashcards</h2>
-                </div>
-            </div>
-            <div class="course-flashcard-grid">
-                @foreach (var card in Model.Flashcards)
-                {
-                    <article class="course-flashcard">
-                        <strong>@card.Front</strong>
-                        <p>@card.Back</p>
-                    </article>
-                }
-            </div>
-        </section>
-
-        <section class="ops-panel">
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Plan</span>
-                    <h2>Checklist</h2>
-                </div>
-            </div>
-            <ul class="course-checklist">
-                @foreach (var item in Model.Checklist)
-                {
-                    <li><span class="material-symbols-outlined" aria-hidden="true">check_circle</span>@item</li>
-                }
-            </ul>
-        </section>
-    </section>
-
-    @if (Model.CanSeeAnalytics)
-    {
-        <section class="ops-panel course-analytics-panel">
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Lecturer analytics</span>
-                    <h2>Questions, coverage, and weak retrieval areas</h2>
-                </div>
-                <span class="ops-panel-note">@Model.Analytics.QuestionCount course questions</span>
-            </div>
-            <section class="course-analytics-grid">
-                <div>
-                    <h3>Popular questions</h3>
-                    @if (Model.Analytics.PopularQuestions.Count == 0)
-                    {
-                        <p class="ops-muted">No repeated course questions yet.</p>
-                    }
-                    else
-                    {
-                        <ol class="course-ranked-list">
-                            @foreach (var question in Model.Analytics.PopularQuestions)
-                            {
-                                <li><strong>@question.Count</strong><span>@question.Question</span></li>
-                            }
-                        </ol>
-                    }
-                </div>
-                <div>
-                    <h3>Coverage gaps</h3>
-                    @if (Model.Analytics.CoverageGaps.Count == 0)
-                    {
-                        <p class="ops-muted">No obvious coverage gap detected.</p>
-                    }
-                    else
-                    {
-                        <div class="course-gap-list">
-                            @foreach (var gap in Model.Analytics.CoverageGaps)
-                            {
-                                <article>
-                                    <strong>@gap.Chapter</strong>
-                                    <small>@gap.DocumentCount docs - @gap.ChunkCount chunks - @gap.QuestionCount questions</small>
-                                    <p>@gap.Recommendation</p>
-                                </article>
-                            }
-                        </div>
-                    }
-                </div>
-            </section>
-        </section>
-    }
 </section>

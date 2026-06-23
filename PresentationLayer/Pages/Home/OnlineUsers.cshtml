@@ -4,13 +4,15 @@
 @{
     ViewData["Title"] = "Online users";
     ViewData["UseRblShell"] = true;
-    ViewData["ActiveNav"] = "online-users";
+    ViewData["ActiveNav"] = User.IsInRole(PresentationLayer.Security.AppRoles.Admin) ? "admin" : "online-users";
+    ViewData["AdminSection"] = "online-users";
     ViewData["ShellTitle"] = "Online users";
     ViewData["ShellTitleI18n"] = "admin.navOnlineUsers";
+    ViewData["HideSidebarOnlineUsers"] = true;
 }
 
 <section id="onlineUsersWidget" class="ops-page ops-online-users-page online-users-layout" data-current-user-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value" data-current-user-email="@User.FindFirst(ClaimTypes.Email)?.Value" data-connection-state="connecting" aria-live="polite">
-    <aside class="online-users-left" aria-label="Online users list">
+    <div class="online-users-content" aria-label="Online users list">
         <div class="online-users-page-heading">
             <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
             <div>
@@ -23,22 +25,5 @@
         <ul id="onlineUsersList" class="online-users-widget__list online-users-page-list">
             <li class="online-users-widget__empty" data-i18n="onlineUsers.loading">Loading online users...</li>
         </ul>
-    </aside>
-
-    <section class="online-users-right" aria-label="Realtime status">
-        <div class="online-users-status-panel">
-            <span class="material-symbols-outlined" aria-hidden="true">online_prediction</span>
-            <div>
-                <strong data-i18n="onlineUsers.realtimeNote">Realtime presence</strong>
-                <p data-i18n="onlineUsers.statusHelp">This list updates when users connect or leave.</p>
-            </div>
-        </div>
-        <div class="online-users-status-panel">
-            <span class="material-symbols-outlined" aria-hidden="true">person</span>
-            <div>
-                <strong>@User.Identity?.Name</strong>
-                <p>@User.FindFirst(ClaimTypes.Email)?.Value</p>
-            </div>
-        </div>
-    </section>
+    </div>
 </section>

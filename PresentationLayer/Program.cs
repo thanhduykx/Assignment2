@@ -135,22 +135,6 @@ namespace PresentationLayer
                     policy.RequireRole(AppRoles.Admin));
             });
 
-            var openAiCompatibleSection = builder.Configuration.GetSection("OpenAICompatible");
-            var openAiCompatibleToken = openAiCompatibleSection["Token"] ?? string.Empty;
-            var openAiCompatibleEnabled = !bool.TryParse(openAiCompatibleSection["Enabled"], out var parsedOpenAiCompatibleEnabled)
-                || parsedOpenAiCompatibleEnabled;
-            var openAiCompatibleTimeoutSeconds = int.TryParse(openAiCompatibleSection["TimeoutSeconds"], out var parsedOpenAiCompatibleTimeout)
-                ? parsedOpenAiCompatibleTimeout
-                : 60;
-            var openAiCompatibleOptions = new ServicesLayer.OpenAICompatibleOptions(
-                openAiCompatibleEnabled,
-                openAiCompatibleToken,
-                openAiCompatibleSection["ChatModel"] ?? "Qwen/Qwen2.5-7B-Instruct:fastest",
-                openAiCompatibleSection["EmbeddingModel"] ?? "Qwen/Qwen3-Embedding-0.6B",
-                openAiCompatibleTimeoutSeconds,
-                openAiCompatibleSection["ChatBaseUrl"] ?? "https://router.huggingface.co/v1/chat/completions",
-                openAiCompatibleSection["EmbeddingBaseUrl"] ?? "https://router.huggingface.co/hf-inference/models");
-
             var geminiSection = builder.Configuration.GetSection("Gemini");
             var geminiApiKey = geminiSection["ApiKey"] ?? string.Empty;
             var geminiEnabled = !bool.TryParse(geminiSection["Enabled"], out var parsedGeminiEnabled)
@@ -183,7 +167,6 @@ namespace PresentationLayer
                 smtpSection["UserName"] ?? string.Empty,
                 smtpSection["Password"] ?? string.Empty);
 
-            builder.Services.AddSingleton(openAiCompatibleOptions);
             builder.Services.AddSingleton(geminiOptions);
             builder.Services.AddSingleton(smtpOptions);
 
@@ -217,31 +200,10 @@ namespace PresentationLayer
                         geminiOptions);
                 }
 
-                if (!embeddingProvider.Equals("OpenAICompatible", StringComparison.OrdinalIgnoreCase))
-                {
-                    return new ServicesLayer.HashingEmbeddingService();
-                }
-
-                return new ServicesLayer.OpenAICompatibleEmbeddingService(
-                    new HttpClient
-                    {
-                        Timeout = TimeSpan.FromSeconds(Math.Max(5, openAiCompatibleOptions.TimeoutSeconds))
-                    },
-                    openAiCompatibleOptions);
+                return new ServicesLayer.HashingEmbeddingService();
             });
             builder.Services.AddSingleton<ServicesLayer.ILocalChatCompletionService>(_ =>
             {
-                var chatProvider = builder.Configuration["ChatCompletion:Provider"] ?? "Gemini";
-                if (chatProvider.Equals("OpenAICompatible", StringComparison.OrdinalIgnoreCase))
-                {
-                    return new ServicesLayer.OpenAICompatibleChatCompletionService(
-                        new HttpClient
-                        {
-                            Timeout = TimeSpan.FromSeconds(Math.Max(5, openAiCompatibleOptions.TimeoutSeconds))
-                        },
-                        openAiCompatibleOptions);
-                }
-
                 var httpClient = new HttpClient
                 {
                     Timeout = TimeSpan.FromSeconds(Math.Max(5, geminiOptions.TimeoutSeconds))
