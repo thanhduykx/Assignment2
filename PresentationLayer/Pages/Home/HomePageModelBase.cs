@@ -190,8 +190,10 @@ public abstract class HomePageModelBase : PageModel
 
             if (IsLecturer())
             {
+                var currentUserId = CurrentUserId();
                 return documents
-                    .Where(DocumentBelongsToCurrentUser)
+                    .Where(document => DocumentBelongsToCurrentUser(document)
+                                       || DocumentBelongsToOwnedSubject(document, catalog, currentUserId))
                     .ToList();
             }
 
@@ -233,8 +235,23 @@ public abstract class HomePageModelBase : PageModel
 
         protected async Task<bool> CanManageDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
-            return IsAdmin() || (IsLecturer() && DocumentBelongsToCurrentUser(document));
+            if (IsAdmin())
+            {
+                return true;
+            }
+
+            if (!IsLecturer())
+            {
+                return false;
+            }
+
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
         }
 
         protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
@@ -253,6 +270,20 @@ public abstract class HomePageModelBase : PageModel
             return !document.UploadedByUserId.HasValue
                    && !string.IsNullOrWhiteSpace(currentEmail)
                    && document.UploadedByEmail.Equals(currentEmail.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        protected static bool DocumentBelongsToOwnedSubject(
+            IndexedDocument document,
+            IEnumerable<CourseSubject> catalog,
+            Guid? userId)
+        {
+            if (!userId.HasValue)
+            {
+                return false;
+            }
+
+            var subject = FindSubjectForDocumentSubject(catalog, document.Subject);
+            return subject?.OwnerUserId == userId.Value;
         }
 
         protected static bool IsDataAccessTimeout(Exception exception)

@@ -1,10 +1,11 @@
 @page "{section?}"
 @model PresentationLayer.Pages.Admin.IndexModel
 @{
-    ViewData["Title"] = "Người dùng / Users";
+    ViewData["Title"] = "Users";
     ViewData["UseRblShell"] = true;
     ViewData["ActiveNav"] = "admin";
-    ViewData["ShellTitle"] = "Người dùng / Users";
+    ViewData["ShellTitle"] = "Users";
+    ViewData["ShellTitleI18n"] = "admin.usersTitle";
 
     var section = Model.CurrentSection;
     var isDirectory = section == IndexModel.AdminSection.Directory;
@@ -41,14 +42,6 @@
 }
 
 <section class="ops-page ops-admin-page">
-    <header class="ops-page-header">
-        <div>
-            <span class="ops-eyebrow">Access control</span>
-            <h1>Người dùng / User roles</h1>
-            <p>Quản lý tài khoản, vai trò và phân công môn phụ trách cho giảng viên.</p>
-        </div>
-    </header>
-
     @if (TempData["Success"] is string success)
     {
         <div class="rbl-alert is-success">@success</div>
@@ -179,7 +172,8 @@
                                                 disabled="@user.IsLastAdmin"
                                                 data-admin-role-update-select
                                                 data-admin-role-user="@user.Email"
-                                                title="Đổi role sẽ hỏi xác nhận và tự lưu">
+                                                title="Changing a role asks for confirmation and saves automatically."
+                                                data-i18n-title="admin.roleChangeTitle">
                                                 @foreach (var role in Model.Roles)
                                                 {
                                                     if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
@@ -325,61 +319,27 @@
 
     @if (isBulkImport)
     {
-        @* === BULK IMPORT: Import Excel file / Nhập từ Excel === *@
+        @* === IMPORT EXCEL: Import users from Excel === *@
         <section class="ops-panel">
             <div class="ops-panel-head">
                 <div>
-                    <span class="ops-eyebrow">Bulk import</span>
-                    <h2>Import Excel file / Nhập từ Excel</h2>
+                    <span class="ops-eyebrow" data-i18n="admin.importExcelEyebrow">Excel</span>
+                    <h2 data-i18n="admin.importExcelTitle">Import from Excel</h2>
                 </div>
             </div>
-            <form asp-page-handler="ImportUsers" method="post" enctype="multipart/form-data" class="ops-stacked-form" data-admin-user-role-subject-form data-confirm="Tạo user hàng loạt và gửi email welcome cho danh sách này?">
+            <form asp-page-handler="ImportUsers" method="post" enctype="multipart/form-data" class="ops-stacked-form" data-admin-user-role-subject-form data-confirm-en="Create these users in bulk and send welcome emails?" data-confirm-vi="Tạo người dùng hàng loạt và gửi email chào mừng?">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="Role" value="@PresentationLayer.Security.AppRoles.Student" />
                 <label class="ops-field">
-                    <span>Excel file / File Excel</span>
+                    <span data-i18n="admin.excelFile">Excel file</span>
                     <input name="ExcelFile" type="file" accept=".xlsx" required style="padding: 0.5rem 0;" />
-                    <small>Hệ thống tự động trích xuất cột chứa Họ & Tên và Email.</small>
+                    <small data-i18n="admin.excelImportHint">The system automatically extracts the full name and email columns.</small>
                 </label>
-                <label class="ops-field">
-                    <span>Default role</span>
-                    <select name="Role" data-admin-role-select>
-                        @foreach (var role in Model.Roles)
-                        {
-                            if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
-                            {
-                                <option value="@role" selected>@role</option>
-                            }
-                            else
-                            {
-                                <option value="@role">@role</option>
-                            }
-                        }
-                    </select>
-                </label>
-                <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
-                    <legend>Default subjects for lecturer</legend>
-                    @if (unassignedSubjects.Count == 0)
-                    {
-                        <span class="ops-muted">No unassigned subjects</span>
-                    }
-                    else
-                    {
-                        <div class="ops-subject-options">
-                            @foreach (var subject in unassignedSubjects)
-                            {
-                                <label class="ops-subject-option">
-                                    <input type="checkbox" name="SubjectIds" value="@subject.Id" />
-                                    <span>@subject.DisplayName</span>
-                                </label>
-                            }
-                        </div>
-                    }
-                </fieldset>
                 <button type="submit" class="ops-button ops-button--primary">
                     <span class="material-symbols-outlined" aria-hidden="true">group_add</span>
-                    Import users
+                    <span data-i18n="admin.importUsers">Import users</span>
                 </button>
-                <small class="ops-muted">Welcome email sẽ có role và môn/quyền truy cập.</small>
+                <small class="ops-muted" data-i18n="admin.importWelcomeNote">Welcome emails will include each user's role and subject access.</small>
             </form>
         </section>
     }

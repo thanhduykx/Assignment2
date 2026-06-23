@@ -1,0 +1,94 @@
+@page "{id:guid}"
+@using DataAccessLayer
+@model PresentationLayer.Pages.Home.CourseWorkspaceModel
+@{
+    ViewData["Title"] = Model.Subject.DisplayName;
+    ViewData["UseRblShell"] = true;
+    ViewData["ActiveNav"] = "courses";
+    ViewData["ShellTitle"] = "Course workspace";
+}
+
+<section class="ops-page course-workspace-page">
+    <a class="ops-back-link" asp-page="/Home/Courses">
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+        Back to courses
+    </a>
+
+    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+    {
+        <div class="rbl-alert is-error">@Model.LoadErrorMessage</div>
+    }
+
+    <header class="ops-page-header course-workspace-hero">
+        <div>
+            <span class="ops-eyebrow">Course workspace</span>
+            <h1>@Model.Subject.DisplayName</h1>
+            <p>@(string.IsNullOrWhiteSpace(Model.Subject.Description) ? "Course workspace for documents, chapters, and subject chat." : Model.Subject.Description)</p>
+        </div>
+        <div class="ops-subject-header-actions">
+            <a class="ops-button ops-button--primary" asp-page="/Home/Chat" asp-route-subject="@Model.Subject.DisplayName">
+                <span class="material-symbols-outlined" aria-hidden="true">chat</span>
+                Chat this course
+            </a>
+            @if (Model.CanManageCourse)
+            {
+                <a class="ops-button ops-button--secondary" asp-page="/Home/SubjectDocuments" asp-route-id="@Model.Subject.Id">
+                    <span class="material-symbols-outlined" aria-hidden="true">folder_managed</span>
+                    Manage documents
+                </a>
+            }
+        </div>
+    </header>
+
+    <section class="ops-kpi-grid course-workspace-kpis" aria-label="Course metrics">
+        <article class="ops-kpi">
+            <span>Documents</span>
+            <strong>@Model.Documents.Count</strong>
+            <small>@Model.Documents.Count(document => document.Status == DocumentIndexStatus.Indexed) indexed</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Chapters</span>
+            <strong>@Model.Chapters.Count</strong>
+            <small>@Model.Chapters.Sum(chapter => chapter.ChunkCount) chunks</small>
+        </article>
+        <article class="ops-kpi">
+            <span>Lecturer</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.Subject.OwnerName) ? "Unassigned" : Model.Subject.OwnerName)</strong>
+            <small>@(string.IsNullOrWhiteSpace(Model.Subject.OwnerEmail) ? "No owner email" : Model.Subject.OwnerEmail)</small>
+        </article>
+    </section>
+
+    <section class="course-workspace-grid">
+        <section class="ops-panel course-workspace-main-panel">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow">Course map</span>
+                    <h2>Chapters and documents</h2>
+                </div>
+            </div>
+            @if (Model.Chapters.Count == 0)
+            {
+                <div class="ops-empty">
+                    <strong>No chapter has indexed content yet.</strong>
+                    <p>Upload documents or ask the lecturer to add course material.</p>
+                </div>
+            }
+            else
+            {
+                <div class="course-chapter-list">
+                    @foreach (var chapter in Model.Chapters)
+                    {
+                        <article class="course-chapter-row">
+                            <div>
+                                <strong>@chapter.Title</strong>
+                                <p>@chapter.Summary</p>
+                            </div>
+                            <span>@chapter.DocumentCount docs</span>
+                            <span>@chapter.ChunkCount chunks</span>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </section>
+</section>

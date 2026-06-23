@@ -1,0 +1,29 @@
+@page
+@model PresentationLayer.Pages.Home.OnlineUsersModel
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Online users";
+    ViewData["UseRblShell"] = true;
+    ViewData["ActiveNav"] = User.IsInRole(PresentationLayer.Security.AppRoles.Admin) ? "admin" : "online-users";
+    ViewData["AdminSection"] = "online-users";
+    ViewData["ShellTitle"] = "Online users";
+    ViewData["ShellTitleI18n"] = "admin.navOnlineUsers";
+    ViewData["HideSidebarOnlineUsers"] = true;
+}
+
+<section id="onlineUsersWidget" class="ops-page ops-online-users-page online-users-layout" data-current-user-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value" data-current-user-email="@User.FindFirst(ClaimTypes.Email)?.Value" data-connection-state="connecting" aria-live="polite">
+    <div class="online-users-content" aria-label="Online users list">
+        <div class="online-users-page-heading">
+            <span class="online-users-widget__status" data-online-users-status aria-hidden="true"></span>
+            <div>
+                <span class="ops-eyebrow" data-i18n="onlineUsers.activeNow">Active now</span>
+                <h2 data-i18n="onlineUsers.title">Online users</h2>
+                <p data-online-users-summary data-i18n="onlineUsers.connecting">Connecting...</p>
+            </div>
+        </div>
+
+        <ul id="onlineUsersList" class="online-users-widget__list online-users-page-list">
+            <li class="online-users-widget__empty" data-i18n="onlineUsers.loading">Loading online users...</li>
+        </ul>
+    </div>
+</section>

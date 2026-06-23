@@ -21,7 +21,7 @@ public sealed class GeminiEmbeddingServiceTests
                 "gemini-embedding-2",
                 768,
                 5,
-                "https://example.test/openai/chat/completions",
+                "https://example.test/gemini/chat/completions",
                 "https://example.test/v1beta"));
 
         var vector = await service.EmbedAsync("hello world");
@@ -51,7 +51,7 @@ public sealed class GeminiEmbeddingServiceTests
                 "gemini-embedding-2",
                 768,
                 5,
-                "https://example.test/openai/chat/completions",
+                "https://example.test/gemini/chat/completions",
                 "https://example.test/v1beta"));
 
         var vector = await service.EmbedAsync("hello");
@@ -78,7 +78,7 @@ public sealed class GeminiEmbeddingServiceTests
                 "gemini-embedding-2",
                 768,
                 5,
-                "https://example.test/openai/chat/completions",
+                "https://example.test/gemini/chat/completions",
                 "https://example.test/v1beta"));
 
         var vector = await service.EmbedAsync("hello");
@@ -105,7 +105,7 @@ public sealed class GeminiEmbeddingServiceTests
                 "gemini-embedding-2",
                 768,
                 5,
-                "https://example.test/openai/chat/completions",
+                "https://example.test/gemini/chat/completions",
                 "https://example.test/v1beta"));
 
         var vector = await service.EmbedAsync("hello");
@@ -167,3 +167,4 @@ public sealed class GeminiEmbeddingServiceTests
         }
     }
 }
+

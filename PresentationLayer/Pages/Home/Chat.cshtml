@@ -87,7 +87,7 @@
             @if (subjectOptions.Count > 0)
             {
                 <div class="chat-subject-filter" aria-label="Subject filter">
-                    <button type="button" class="chat-subject-chip is-active" data-subject-filter="">Tất cả môn</button>
+                    <button type="button" class="chat-subject-chip is-active" data-subject-filter="" data-i18n="chat.allSubjects">All subjects</button>
                     @foreach (var subject in subjectOptions)
                     {
                         <button type="button" class="chat-subject-chip" data-subject-filter="@subject">@subject</button>
