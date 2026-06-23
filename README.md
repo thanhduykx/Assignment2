@@ -1,159 +1,366 @@
-# EduVietRAG - Chatbot hoi dap tai lieu mon hoc
+# EduVietRAG - Course Document Assistant
 
-EduVietRAG la web app ASP.NET MVC cho phep sinh vien upload tai lieu mon hoc, index noi dung bang RAG va hoi dap dua tren cac tai lieu da dua vao he thong. Project duoc xay dung theo 3 lop: Presentation Layer, Services Layer va Data Access Layer.
+EduVietRAG là web app ASP.NET Core Razor Pages hỗ trợ quản lý tài liệu môn học và hỏi đáp theo mô hình RAG (Retrieval-Augmented Generation). Hệ thống cho phép giảng viên tải lên tài liệu, tự động trích xuất nội dung, chia đoạn, tạo embedding, sau đó sinh viên có thể đặt câu hỏi và nhận câu trả lời có trích dẫn nguồn.
 
-## Yeu cau de bai da xu ly
+> Mục tiêu chính: câu trả lời phải bám vào tài liệu đã index, có citation rõ ràng, hạn chế trả lời ngoài phạm vi dữ liệu của môn học.
 
-- Quan ly tai lieu: upload PDF, DOCX, PPTX/slide va TXT.
-- Tu dong trich xuat text, chunk tai lieu va tao embedding.
-- Quan ly tai lieu theo mon hoc/chuong.
-- Xem danh sach tai lieu da index va xem lai tai lieu goc.
-- Chat hoi dap theo ngu canh hoi thoai.
-- Tra loi co citation ve tai lieu/chunk nguon.
-- Gioi han cau tra loi trong pham vi tai lieu; neu khong du can cu thi tu choi tra loi.
-- Luu lich su hoi thoai theo phien.
-- Chi su dung RAG cho hoi dap; khong dung baseline train rieng.
-- HuggingFace la provider AI cho chat completion va embedding.
+## Mục Lục
 
-## Cau truc project
+- [Tính năng chính](#tính-năng-chính)
+- [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
+- [Cấu trúc source code](#cấu-trúc-source-code)
+- [Phân quyền người dùng](#phân-quyền-người-dùng)
+- [Luồng nghiệp vụ](#luồng-nghiệp-vụ)
+- [Cấu hình môi trường](#cấu-hình-môi-trường)
+- [Hướng dẫn chạy project](#hướng-dẫn-chạy-project)
+- [Hướng dẫn sử dụng](#hướng-dẫn-sử-dụng)
+- [Kiểm thử](#kiểm-thử)
+- [Lưu ý vận hành](#lưu-ý-vận-hành)
 
-```text
-DataAccessLayer/       Entity, DbContext, repository SQL Server
-ServicesLayer/         Xu ly upload/index, embedding, RAG chat, benchmark RBL
-PresentationLayer/     ASP.NET MVC controller, Razor view, auth, static assets
-README.md             Tai lieu nop bai, audit yeu cau va test set 50 cau
-```
+## Tính Năng Chính
 
-## Luong RAG
-
-1. Nguoi dung upload tai lieu hoac URL.
-2. He thong trich xuat text tu PDF/DOCX/PPTX/TXT/web page.
-3. Text duoc chia chunk va embed.
-4. Nguoi dung dat cau hoi trong chat.
-5. He thong rewrite cau hoi theo lich su neu can.
-6. Retrieval lay cac chunk lien quan, yeu cau co bang chung noi dung trong text.
-7. Model chi duoc tra loi tu context da retrieve.
-8. He thong kiem tra cau tra loi co bam context hay khong; neu khong, fallback ve cau tra loi trich xuat hoac tu choi.
-9. Cau tra loi va citation duoc luu vao SQL Server.
-
-## AI provider
-
-Ung dung chi dung RAG:
-
-- Embedding: Gemini `gemini-embedding-2` mac dinh.
-- Chat completion: Gemini `gemini-3.5-flash` mac dinh.
-- Chunking: paragraph-aware chunker noi bo.
-- Khong co baseline train rieng hoac endpoint phu ngoai pipeline RAG.
-
-## Audit de bai
-
-| Yeu cau | Trang thai hien tai |
+| Nhóm chức năng | Mô tả |
 |---|---|
-| Upload PDF/DOCX/PPTX/TXT | Dat |
-| Tu dong chunk va embed | Dat |
-| Quan ly mon hoc/chuong | Dat: co CRUD `rag_subjects` va `rag_chapters` tren trang Kho tai lieu |
-| Xem danh sach tai lieu da index | Dat |
-| Chat theo ngu canh hoi thoai | Dat |
-| Citation nguon tai lieu goc | Dat |
-| Gioi han tra loi trong pham vi tai lieu | Dat sau toi uu: retrieval can bang chung text va co answer-grounding guard |
-| Lich su hoi thoai theo phien | Dat |
-| So sanh RAG voi baseline train rieng | Khong ap dung: project chi dung RAG |
-| Benchmark nhieu chunking strategy | Dat |
-| Benchmark nhieu embedding model | Khong ap dung trong ban hien tai: dung HuggingFace embedding cho RAG |
-| Dashboard/Bang RAGAS | Dat ve code/UI; so lieu that can chay benchmark voi DB/API key |
+| Xác thực | Đăng nhập bằng tài khoản nội bộ, hỗ trợ Google OAuth khi cấu hình client id/secret. |
+| Quản trị người dùng | Admin tạo tài khoản, import Excel, đổi role, gán môn cho lecturer, gửi email welcome qua SMTP. |
+| Quản lý môn học | Seed sẵn danh mục môn, tạo thêm môn, gán môn cho giảng viên phụ trách. |
+| Quản lý tài liệu | Upload tài liệu PDF, DOCX, PPTX, TXT hoặc lấy nội dung từ URL. |
+| Index tài liệu | Trích xuất text, chia chunk theo ngữ cảnh syllabus, tạo embedding, lưu vào SQL Server. |
+| Chat RAG | Hỏi đáp theo phiên chat, truy xuất chunk liên quan, sinh câu trả lời từ context và lưu lịch sử. |
+| Citation | Câu trả lời kèm nguồn tài liệu/chunk để người dùng kiểm tra lại. |
+| Realtime status | SignalR cập nhật trạng thái index tài liệu cho giao diện. |
+| Kiểm thử | Có test project riêng cho chunking, retrieval, embedding, indexing và RAG service. |
 
-## Bo test set 50 cau DBA103
+## Kiến Trúc Hệ Thống
 
-```text
-DBA103 là môn học gì? | DBA103 là môn Nhạc cụ truyền thống - Đàn Bầu, tên tiếng Anh là Traditional musical instrument.
-Tên tiếng Anh của syllabus DBA103 là gì? | Tên tiếng Anh của syllabus là Traditional musical instrument.
-DBA103 có bao nhiêu tín chỉ? | DBA103 có 3 tín chỉ.
-Cấp độ của môn DBA103 là gì? | Degree Level của môn là Sơ cấp / Beginner.
-Thời lượng học trên lớp của DBA103 là bao nhiêu? | Môn học có 30 slot trên lớp, mỗi slot 90 phút.
-DBA103 có môn tiên quyết không? | Pre-Requisite của DBA103 là Không / None.
-Mục tiêu kiến thức của DBA103 là gì? | Sinh viên nắm đặc trưng lịch sử phát triển, cấu trúc Đàn Bầu, làm quen nhạc lý và kỹ thuật cơ bản của Đàn Bầu.
-Mục tiêu kỹ năng của DBA103 là gì? | Sinh viên đánh được tối thiểu 3 bài, trong đó có 1 bài nhạc nước ngoài thông dụng và vận dụng đúng kỹ thuật cơ bản.
-Quy mô lớp DBA103 khoảng bao nhiêu sinh viên? | Môn học được triển khai theo lớp có khoảng 15 sinh viên.
-Nội dung chính của DBA103 gồm những gì? | Nội dung gồm lịch sử Đàn Bầu ở Việt Nam, cấu trúc và đặc điểm Đàn Bầu, tư thế đánh đàn, nhạc lý, kỹ thuật cơ bản và luyện tập các bài nhạc.
-DBA103 dạy những kỹ thuật cơ bản nào? | Kỹ thuật cơ bản gồm gảy dây buông và nhấn lên/xuống quãng 2.
-Sinh viên luyện tập bài Việt Nam nào trong DBA103? | Sinh viên luyện tập Cò lả và Lý cây đa theo hình thức hòa tấu.
-Bài quốc tế trong DBA103 là bài nào? | Bài quốc tế là Auld lang syne, dân ca Scotland.
-Học phần DBA103 áp dụng CNTT như thế nào? | Giảng viên cung cấp địa chỉ website, clip nhạc truyền thống và tài nguyên trên mạng cho sinh viên.
-Tài nguyên online trong DBA103 được sử dụng theo nguyên tắc nào? | Giảng viên sử dụng tài nguyên có chọn lọc theo nguyên tắc học phần và hướng dẫn sinh viên tìm thông tin theo chủ đề.
-DBA103 phát triển kỹ năng mềm nào? | Môn học rèn luyện tính kiên trì, giúp sinh viên tự tin hơn trước đám đông.
-DBA103 có phát triển kỹ năng làm việc nhóm không? | Có, môn học phát triển kỹ năng làm việc nhóm và làm việc độc lập qua nhiệm vụ giảng viên giao.
-Điều kiện tham dự thi cuối môn DBA103 là gì? | Sinh viên phải tham dự tối thiểu 80% thời lượng môn học để đủ điều kiện thi cuối môn.
-Sinh viên cần làm gì trước khi đến lớp DBA103? | Sinh viên cần ôn tập bài cũ và tìm hiểu tài liệu bài học mới trước khi đến lớp.
-Sinh viên cần luyện tập DBA103 ở đâu? | Sinh viên cần luyện tập và thực hành trên lớp và ở nhà.
-Sinh viên cần tham gia hoạt động lớp như thế nào? | Sinh viên cần tích cực phát biểu, hỏi đáp, trao đổi, làm việc nhóm, thực hành và làm Portfolio.
-Công cụ học tập của DBA103 là gì? | Công cụ là nhạc cụ cho từng sinh viên.
-Thang điểm của DBA103 là bao nhiêu? | Scoring Scale của môn là 10.
-Điểm assignment của DBA103 chiếm bao nhiêu phần trăm? | Assignment chiếm 15%.
-Điểm tham gia lớp của DBA103 chiếm bao nhiêu phần trăm? | Participation chiếm 15%.
-Thi cuối môn DBA103 chiếm bao nhiêu phần trăm? | Final exam chiếm 70% và yêu cầu điểm thực hành chơi nhạc cụ theo yêu cầu.
-Tổng điểm FE cần đạt trong DBA103 là bao nhiêu? | Final Result yêu cầu >=5.
-MinAvgMarkToPass của DBA103 là bao nhiêu? | MinAvgMarkToPass là 5.
-Tài liệu chính của DBA103 là gì? | Tài liệu chính là Sách học Đàn Bầu.
-Tác giả Sách học Đàn Bầu là ai? | Tác giả là Nguyễn Thanh Tâm và Trần Quốc Lộc.
-Tài liệu luyện tập kỹ thuật trong DBA103 là gì? | Tài liệu là Bài tập luyện kỹ thuật đàn Bầu / Exercises to practice techniques of Dan Bau.
-Danh mục bài nhạc có thể sử dụng trong học phần có bao nhiêu bài? | Danh mục có 12 bài nhạc có thể sử dụng trong học phần.
-Kể tên một số bài nhạc trong danh mục DBA103. | Danh mục gồm Bắc Kim Thang, Inh lả ơi, Xòe hoa, Lý cây đa, Trống cơm, Đội kèn tí hon, Auld lang syne và các bài khác.
-CLO1 của DBA103 là gì? | CLO1 là hiểu biết cơ bản về lịch sử và sự phát triển hình thành của nền âm nhạc truyền thống Việt Nam.
-CLO2 của DBA103 là gì? | CLO2 là chơi được một số bài cơ bản của nhạc truyền thống Việt Nam và nước ngoài.
-Syllabus ghi có bao nhiêu session? | Syllabus ghi 30 sessions.
-Nội dung session 1 của DBA103 là gì? | Session 1 gồm tìm hiểu lịch sử, tên gọi nhạc cụ, cấu tạo cây đàn, tư thế ngồi chơi đàn và cách gảy đàn.
-Bài đầu tiên sinh viên bắt đầu học trong DBA103 là bài nào? | Bài đầu tiên là Đội kèn tí hon, bắt đầu ở session 7.
-Lý cây đa được giới thiệu ở session nào? | Lý cây đa được học ở session 9.
-Kiểm tra giữa kỳ DBA103 diễn ra ở session nào và nội dung gì? | Session 15 kiểm tra giữa kỳ 2 bài Lý cây đa và Đội kèn tí hon.
-Bài Cò lả được luyện trong những session nào? | Bài Cò lả được áp dụng/luyện tập trong các session 17 đến 19.
-Auld lang syne được học trong những session nào? | Auld lang syne được học và luyện từ session 20 đến 23.
-Session 25 đến 27 của DBA103 tập trung vào nội dung gì? | Sinh viên hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
-Session 28 của DBA103 có yêu cầu gì đặc biệt? | Session 28 có hòa tấu Lý cây đa, Cò lả và thu bài luận / submit essays.
-Thi kết thúc khóa học DBA103 diễn ra ở session nào? | Thi kết thúc khóa học diễn ra ở session 29 và 30.
-DBA103 có bao nhiêu assessment? | Syllabus ghi 3 assessment.
-Assignment của DBA103 có thể chấm sản phẩm nào? | Assignment có thể chấm bài thuyết trình, slides, bài luận hoặc sản phẩm từ workshop.
-Participation của DBA103 được ghi nhận dựa trên gì? | Participation dựa trên việc sinh viên tích cực tham gia hoạt động lớp, đi học đầy đủ và nộp bài luận.
-Thời lượng thi cuối môn cho mỗi sinh viên là bao nhiêu? | Final exam có thời lượng 5 phút mỗi sinh viên.
-Thi cuối môn DBA103 yêu cầu sinh viên chơi mấy bài? | Sinh viên chơi 3 bài gồm 2 bài hòa tấu và 1 bài độc tấu, trong đó có 2 bài dân ca Việt Nam và 1 bài quốc tế.
+```mermaid
+flowchart TB
+    User["Người dùng"] --> UI
+
+    subgraph UI["Presentation Layer - ASP.NET Core Razor Pages"]
+        Pages["Razor Pages<br/>Home / Chat / Documents / Courses"]
+        Account["Account Pages<br/>Login / Google / Password"]
+        Admin["Admin Pages<br/>Users / Roles / Subjects"]
+        Store["UserAccountStore"]
+        Hub["SignalR DocumentStatusHub"]
+        Worker["DocumentIndexWorker"]
+    end
+
+    subgraph BAL["Business Access Layer - ServicesLayer"]
+        Rag["RagChatService<br/>Retrieve + Prompt + Answer"]
+        Chat["GeminiChatCompletionService"]
+        Embed["GeminiEmbeddingService / HashingEmbeddingService"]
+        Chunker["FlmSyllabusAwareTextChunker"]
+        Indexing["DocumentIndexingService<br/>Extract + Chunk + Embed"]
+        DocExtract["DocumentTextExtractor<br/>PDF / DOCX / PPTX / TXT"]
+        WebExtract["WebPageTextExtractor<br/>URL Extraction"]
+        Queue["DocumentIndexJobQueue"]
+    end
+
+    subgraph DAL["Data Access Layer"]
+        RepoInterface["IKnowledgeRepository"]
+        Repo["SqlKnowledgeRepository"]
+        Mapper["KnowledgeSqlMapper"]
+        DbContext["KnowledgeSqlDbContext"]
+        Schema["KnowledgeSqlSchemaInitializer<br/>EnsureCreated + Seed Catalog"]
+    end
+
+    subgraph External["External Services"]
+        Gemini["Gemini API<br/>Chat + Embedding"]
+        Google["Google OAuth"]
+        SMTP["SMTP Email Server"]
+    end
+
+    DB[("SQL Server")]
+
+    UI --> BAL
+    BAL --> DAL
+    DAL --> DB
+    Chat --> Gemini
+    Embed --> Gemini
+    Account --> Google
+    Store --> SMTP
+    Worker --> Queue
+    Queue --> Indexing
+    Indexing --> Hub
 ```
 
-## Cach chay
+### Luồng RAG Tóm Tắt
 
-Yeu cau:
+```mermaid
+sequenceDiagram
+    actor Lecturer as Lecturer/Admin
+    actor Student as Student
+    participant UI as Razor Pages
+    participant Worker as DocumentIndexWorker
+    participant Indexing as DocumentIndexingService
+    participant Repo as SqlKnowledgeRepository
+    participant AI as Gemini API
+    participant Chat as RagChatService
 
-- .NET SDK 9.x.
-- SQL Server LocalDB/Express/Developer.
-- HuggingFace token trong bien moi truong `HF_TOKEN` de index/chat bang RAG.
+    Lecturer->>UI: Upload tài liệu hoặc URL
+    UI->>Worker: Đưa job vào hàng đợi index
+    Worker->>Indexing: Trích xuất text và chia chunk
+    Indexing->>AI: Tạo embedding cho chunk
+    Indexing->>Repo: Lưu document, chunk, embedding
+    Student->>UI: Đặt câu hỏi trong chat
+    UI->>Chat: Gửi câu hỏi + lịch sử phiên
+    Chat->>Repo: Retrieve chunk liên quan
+    Chat->>AI: Sinh câu trả lời từ context
+    Chat->>Repo: Lưu message và citation
+    UI-->>Student: Hiển thị answer + nguồn trích dẫn
+```
 
-Lenh chay nhanh:
+## Cấu Trúc Source Code
+
+```text
+C:\Assignment2
+├── Group7_SE1950.sln
+├── README.md
+├── DataAccessLayer/
+│   ├── Context/                  # EF Core DbContext và factory
+│   ├── Entities/                 # Entity SQL cho document, chunk, chat, subject...
+│   ├── Enums/                    # Role, status, file type, message role...
+│   ├── Mapping/                  # Mapper entity <-> model nghiệp vụ
+│   ├── Repositories/             # SqlKnowledgeRepository
+│   ├── Schema/                   # Tự tạo/cập nhật schema và seed catalog môn học
+│   ├── IKnowledgeRepository.cs   # Contract truy cập dữ liệu RAG
+│   └── DataAccessLayer.csproj
+├── ServicesLayer/
+│   ├── DocumentIndexingService.cs        # Pipeline upload/index tài liệu
+│   ├── DocumentIndexJobQueue.cs          # Hàng đợi index background
+│   ├── DocumentTextExtractor.cs          # Extract PDF/DOCX/PPTX/TXT
+│   ├── WebPageTextExtractor.cs           # Extract nội dung URL
+│   ├── TextChunker.cs                    # Chunking thường và FLM syllabus-aware
+│   ├── EmbeddingService.cs               # Hashing fallback embedding
+│   ├── GeminiEmbeddingService.cs         # Embedding qua Gemini
+│   ├── GeminiChatCompletionService.cs    # Chat completion qua Gemini
+│   ├── ChunkRetrievalEnrichmentService.cs
+│   ├── RagChatService.cs                 # Orchestrator hỏi đáp RAG
+│   └── ServicesLayer.csproj
+├── PresentationLayer/
+│   ├── Pages/
+│   │   ├── Account/              # Login, Google callback, đổi/quên/reset password
+│   │   ├── Admin/                # Quản trị user, role, subject, import Excel
+│   │   ├── Home/                 # Chat, courses, documents, preview, online users
+│   │   └── Shared/               # Layout và partial view
+│   ├── Hubs/                     # SignalR hub cập nhật trạng thái document
+│   ├── Models/                   # ViewModel cho account, admin, home
+│   ├── Security/                 # AppRoles và AuthorizationPolicies
+│   ├── Services/                 # User store, SMTP sender, worker, notifier
+│   ├── wwwroot/                  # CSS, JS, fonts, images, client libraries
+│   ├── Program.cs                # DI, auth, SignalR, hosted service, routing
+│   └── Group07MVC.csproj
+├── ServicesLayer.Tests/
+│   ├── *Tests.cs                 # Unit/integration tests cho service layer
+│   └── ServicesLayer.Tests.csproj
+└── TestData/
+    └── qa-test-50-vi-q-a.txt     # Bộ câu hỏi/đáp án kiểm thử thủ công
+```
+
+## Phân Quyền Người Dùng
+
+Hệ thống có 3 role chính, được định nghĩa trong `PresentationLayer/Security/AppRoles.cs`.
+
+| Role | Quyền truy cập | Ghi chú nghiệp vụ |
+|---|---|---|
+| Student | Chat, xem phiên chat, tạo/đổi tên/ghim/xóa phiên chat, xem chính sách trả lời. | Không được upload/quản lý tài liệu. Mặc định dùng toàn bộ tài liệu đã index theo phạm vi app hiện tại. |
+| Lecturer | Toàn bộ quyền chat + quản lý tài liệu/môn được phụ trách. | Có thể upload tài liệu, xem document, preview, chỉnh sửa metadata, quản lý workspace môn học. |
+| Admin | Toàn quyền Lecturer + trang Admin. | Tạo/import user, đổi role, gán môn cho lecturer, tạo subject, quản lý danh mục tài khoản. |
+
+### Policy Trong Code
+
+| Policy | Role được phép | Dùng cho |
+|---|---|---|
+| `ChatAccess` | Student, Lecturer, Admin | Các trang chat, course workspace, privacy/answer policy. |
+| `DocumentRead` | Lecturer, Admin | Đọc tài liệu nếu cần policy tách riêng. |
+| `DocumentManagement` | Lecturer, Admin | Upload, xem, preview, sửa, quản lý tài liệu. |
+| `AdminOnly` | Admin | Trang `/Admin/Index`. |
+
+### Quy Tắc Tài Khoản
+
+- Người dùng không tự đăng ký. Trang Register sẽ chuyển về Login và báo liên hệ Nhà trường để được cấp tài khoản.
+- Admin seed được tạo tự động nếu `SeedAdmin.Enabled = true` và database chưa có admin hợp lệ.
+- Không được hạ quyền hoặc xóa seed admin.
+- Không được xóa admin trực tiếp; cần đổi role về Student/Lecturer trước nếu nghiệp vụ cho phép.
+- Google OAuth chỉ đăng nhập được khi đã cấu hình và email tồn tại/được cấp trong hệ thống theo luồng hiện tại.
+
+## Luồng Nghiệp Vụ
+
+### 1. Quản Trị Tài Khoản
+
+```mermaid
+flowchart LR
+    Admin["Admin"] --> Create["Tạo user hoặc import Excel"]
+    Create --> Role["Chọn role: Student / Lecturer / Admin"]
+    Role --> Subject{"Là Lecturer?"}
+    Subject -- Có --> Assign["Gán môn phụ trách"]
+    Subject -- Không --> Save["Lưu tài khoản"]
+    Assign --> Save
+    Save --> Email["Gửi welcome email qua SMTP"]
+```
+
+### 2. Index Tài Liệu
+
+```mermaid
+flowchart LR
+    Upload["Upload file / URL"] --> Extract["Extract text"]
+    Extract --> Chunk["Chunk theo syllabus/context"]
+    Chunk --> Embedding["Tạo embedding"]
+    Embedding --> Save["Lưu SQL Server"]
+    Save --> Notify["SignalR báo trạng thái"]
+```
+
+### 3. Hỏi Đáp RAG
+
+```mermaid
+flowchart LR
+    Question["Câu hỏi"] --> Retrieve["Retrieve chunk liên quan"]
+    Retrieve --> Prompt["Tạo prompt có context"]
+    Prompt --> Answer["Gemini sinh câu trả lời"]
+    Answer --> Guard["Kiểm tra bám context"]
+    Guard --> Citation["Gắn citation"]
+    Citation --> History["Lưu lịch sử chat"]
+```
+
+## Cấu Hình Môi Trường
+
+### Yêu Cầu
+
+- .NET SDK 9.x
+- SQL Server LocalDB, Express, Developer hoặc instance SQL Server tương đương
+- Gemini API key nếu dùng provider `Gemini`
+- SMTP account nếu muốn gửi email welcome/reset password
+- Google OAuth client nếu muốn bật đăng nhập Google
+
+### File Cấu Hình Chính
+
+`PresentationLayer/appsettings.json` chứa các nhóm cấu hình sau:
+
+| Nhóm | Ý nghĩa |
+|---|---|
+| `ConnectionStrings:DefaultConnection` | Chuỗi kết nối SQL Server. |
+| `SeedAdmin` | Tài khoản admin mặc định khi khởi tạo. |
+| `Embedding` | Bật/tắt embedding, chọn provider `Gemini` hoặc fallback hashing. |
+| `Gemini` | API key, model chat, model embedding, timeout, base URL. |
+| `Smtp` | Host, port, SSL, email gửi, username, password. |
+| `Authentication:Google` | Google client id và client secret. |
+
+Khuyến nghị thực tế: không commit API key, OAuth secret, SMTP password hoặc mật khẩu database thật. Dùng User Secrets, biến môi trường hoặc file cấu hình riêng theo môi trường deploy.
+
+Ví dụ cấu hình biến môi trường trên PowerShell:
 
 ```powershell
-cd C:\Assignment1
+$env:Gemini__ApiKey="YOUR_GEMINI_API_KEY"
+$env:ConnectionStrings__DefaultConnection="Server=localhost;Database=EduVietRAG;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;"
+```
+
+## Hướng Dẫn Chạy Project
+
+Chạy từ thư mục solution:
+
+```powershell
+cd C:\Assignment2
 dotnet restore
 dotnet build Group7_SE1950.sln
 dotnet run --project PresentationLayer\Group07MVC.csproj --urls http://0.0.0.0:9999
 ```
 
-Connection string va Google auth duoc cau hinh trong `PresentationLayer/appsettings.json` cho demo. `HF_TOKEN` nen dat bang bien moi truong/User Secrets, khong commit token that.
-Google callback khong tu tao user moi; email Google phai trung voi tai khoan da duoc admin cap.
-
-Mo web:
+Mở trình duyệt:
 
 ```text
 http://localhost:9999
 ```
 
-May khac trong cung mang LAN truy cap bang:
+Máy khác trong cùng LAN có thể truy cập bằng IP máy chạy app:
 
 ```text
 http://<IP-may-chay-app>:9999
 ```
 
-## Ghi chu nghiep vu
+Khi app khởi động, hệ thống sẽ:
 
-- Metadata nhu ma mon, ten file, chuong chi dung de gioi han/tang hang retrieval; khong duoc xem la bang chung tra loi.
-- Cau tra loi theo tai lieu phai co citation.
-- Cau hoi ngoai pham vi tai lieu phai tra ve thong bao khong du du lieu.
-- Sinh vien khong tu dang ky; admin cap tai khoan. Neu khong co tai khoan, man dang nhap bao lien he Nha truong de xin cap tai khoan.
-- Tai lieu da index bang model embedding cu can re-index sau khi doi sang HuggingFace.
-- Neu chia se public repo, nen thay API key/OAuth secret demo bang gia tri rieng cua moi moi truong.
+1. Kết nối SQL Server theo `DefaultConnection`.
+2. Tạo/bổ sung schema cần thiết nếu thiếu.
+3. Seed danh mục môn mặc định.
+4. Seed admin nếu cấu hình bật.
+5. Khởi động hosted service xử lý hàng đợi index tài liệu.
+
+## Hướng Dẫn Sử Dụng
+
+### Admin
+
+1. Đăng nhập bằng seed admin hoặc tài khoản admin đã có.
+2. Vào trang Admin để quản lý người dùng.
+3. Tạo tài khoản mới hoặc import Excel danh sách user.
+4. Chọn role phù hợp: Student, Lecturer hoặc Admin.
+5. Với Lecturer, gán môn phụ trách nếu có.
+6. Kiểm tra SMTP nếu hệ thống không gửi được welcome email.
+
+### Lecturer
+
+1. Đăng nhập vào hệ thống.
+2. Vào khu vực quản lý tài liệu/môn học.
+3. Upload file PDF, DOCX, PPTX, TXT hoặc nhập URL cần index.
+4. Chờ trạng thái index hoàn tất. SignalR sẽ cập nhật trạng thái trên giao diện.
+5. Kiểm tra preview/document nếu cần xác nhận nội dung đã index đúng.
+6. Dùng chat để kiểm thử câu trả lời trên tài liệu vừa đưa vào.
+
+### Student
+
+1. Đăng nhập bằng tài khoản được cấp.
+2. Vào trang Chat.
+3. Tạo phiên chat mới hoặc tiếp tục phiên cũ.
+4. Đặt câu hỏi liên quan đến tài liệu môn học.
+5. Kiểm tra citation để biết câu trả lời lấy từ tài liệu nào.
+6. Nếu hệ thống báo không đủ dữ liệu, cần hỏi lại rõ hơn hoặc liên hệ lecturer/admin để bổ sung tài liệu.
+
+## Kiểm Thử
+
+Chạy toàn bộ test:
+
+```powershell
+dotnet test Group7_SE1950.sln
+```
+
+Các nhóm test hiện có:
+
+| File test | Mục đích |
+|---|---|
+| `RagChatServiceTests.cs` | Kiểm thử luồng hỏi đáp RAG và citation. |
+| `DocumentIndexingServiceTests.cs` | Kiểm thử upload/index tài liệu. |
+| `DocumentAccessScopeTests.cs` | Kiểm thử phạm vi truy cập tài liệu. |
+| `ParagraphAwareTextChunkerTests.cs` | Kiểm thử chunking theo đoạn. |
+| `FlmSyllabusAwareTextChunkerTests.cs` | Kiểm thử chunking theo cấu trúc syllabus. |
+| `GeminiEmbeddingServiceTests.cs` | Kiểm thử embedding service. |
+| `CompatibleChatCompletionServiceTests.cs` | Kiểm thử adapter chat completion. |
+| `AiChunkRetrievalEnrichmentServiceTests.cs` | Kiểm thử enrichment cho retrieval. |
+
+Bộ câu hỏi/đáp án kiểm thử thủ công nằm ở:
+
+```text
+TestData/qa-test-50-vi-q-a.txt
+```
+
+## Lưu Ý Vận Hành
+
+- Không đưa secret thật lên repository public.
+- Sau khi đổi model embedding hoặc số chiều embedding, nên re-index tài liệu cũ để tránh lệch vector.
+- Metadata như mã môn, chương, tên file chỉ hỗ trợ lọc/tăng hạng retrieval; không nên xem là bằng chứng trả lời nếu nội dung chunk không có dữ kiện.
+- Câu trả lời học thuật phải có citation. Nếu không có chunk đủ căn cứ, hệ thống nên từ chối hoặc yêu cầu bổ sung tài liệu.
+- Với Google OAuth, callback mặc định là `/signin-google`; cần cấu hình đúng redirect URI trên Google Cloud Console.
+- Google sign-in bị ẩn khi truy cập bằng private IP LAN để tránh lỗi OAuth redirect không hợp lệ.
+- SQL schema được tạo bằng `EnsureCreated` và các câu lệnh bổ sung cột/index. Nếu deploy production nghiêm túc, nên chuyển sang migration có kiểm soát.
+- User account hiện được lưu trong bảng `app_users`, còn dữ liệu RAG dùng các bảng `rag_*`.
+
+## Công Nghệ Sử Dụng
+
+| Thành phần | Công nghệ |
+|---|---|
+| Web app | ASP.NET Core Razor Pages, .NET 9 |
+| Auth | Cookie Authentication, Google OAuth |
+| Realtime | SignalR |
+| Database | SQL Server, EF Core SQL Server |
+| AI | Gemini chat + embedding, hashing embedding fallback |
+| Document parsing | OpenXML, PdfPig, text extractor nội bộ |
+| Test | xUnit, Microsoft.NET.Test.Sdk, coverlet |
