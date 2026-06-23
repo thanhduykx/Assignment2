@@ -7,11 +7,46 @@ const translations = {
     "nav.register": "Create account",
     "shell.portal": "Learning Portal",
     "shell.chatbot": "Chatbot",
+    "shell.courses": "Courses",
     "shell.documents": "Document Repository",
+    "shell.users": "Users",
     "shell.help": "Help",
     "shell.search": "Search the system...",
     "shell.notifications": "Notifications",
     "shell.history": "History",
+    "admin.usersTitle": "Users",
+    "admin.navDirectory": "Directory",
+    "admin.navOnlineUsers": "Online users",
+    "admin.navLecturerTable": "Lecturer table",
+    "admin.navCreateAccount": "Create account",
+    "admin.navImportExcel": "Import from Excel",
+    "admin.navCreateSubject": "Create subject",
+    "admin.importExcelEyebrow": "Excel",
+    "admin.importExcelTitle": "Import from Excel",
+    "admin.excelFile": "Excel file",
+    "admin.excelImportHint": "The system automatically extracts the full name and email columns.",
+    "admin.defaultRole": "Default role",
+    "admin.defaultLecturerSubjects": "Default subjects for lecturers",
+    "admin.noUnassignedSubjects": "No unassigned subjects",
+    "admin.importUsers": "Import users",
+    "admin.importWelcomeNote": "Welcome emails will include each user's role and subject access.",
+    "admin.confirmImportUsers": "Create these users in bulk and send welcome emails?",
+    "admin.confirmRoleChange": "Change {user} to {role}?",
+    "admin.roleChangeTitle": "Changing a role asks for confirmation and saves automatically.",
+    "onlineUsers.title": "Online users",
+    "onlineUsers.connecting": "Connecting...",
+    "onlineUsers.loading": "Loading online users...",
+    "onlineUsers.empty": "No active users right now.",
+    "onlineUsers.activeNow": "Active now",
+    "onlineUsers.realtimeNote": "Realtime presence",
+    "onlineUsers.statusHelp": "This list updates when users connect or leave.",
+    "onlineUsers.summaryOne": "1 online user (active now)",
+    "onlineUsers.summaryMany": "{count} online users (active now)",
+    "onlineUsers.youAreOnline": "You are online",
+    "onlineUsers.online": "Online",
+    "onlineUsers.tabs": "{count} tabs",
+    "onlineUsers.expand": "Expand online users",
+    "onlineUsers.collapse": "Collapse online users",
     "documents.shellTitle": "Document Repository",
     "documents.manageTitle": "Document repository management",
     "documents.manageSubtitle": "Upload learning materials, extract content, and index them so the chatbot can answer with sources.",
@@ -79,6 +114,7 @@ const translations = {
     "chat.send": "Send",
     "chat.relatedLabel": "Related questions",
     "chat.relatedAria": "Related questions",
+    "chat.allSubjects": "All subjects",
     "chat.defaultSessionTitle": "Session without a question",
     "chat.sessionActions": "Session actions",
     "chat.starSession": "Star",
@@ -106,11 +142,46 @@ const translations = {
     "nav.register": "Tạo tài khoản",
     "shell.portal": "Cổng học tập",
     "shell.chatbot": "Chatbot",
+    "shell.courses": "Môn học",
     "shell.documents": "Kho tài liệu",
+    "shell.users": "Người dùng",
     "shell.help": "Trợ giúp",
     "shell.search": "Tìm kiếm trong hệ thống...",
     "shell.notifications": "Thông báo",
     "shell.history": "Lịch sử",
+    "admin.usersTitle": "Người dùng",
+    "admin.navDirectory": "Bảng người dùng",
+    "admin.navOnlineUsers": "Người dùng online",
+    "admin.navLecturerTable": "Bảng giảng viên",
+    "admin.navCreateAccount": "Thêm tài khoản",
+    "admin.navImportExcel": "Nhập từ Excel",
+    "admin.navCreateSubject": "Thêm môn",
+    "admin.importExcelEyebrow": "Excel",
+    "admin.importExcelTitle": "Nhập từ Excel",
+    "admin.excelFile": "File Excel",
+    "admin.excelImportHint": "Hệ thống tự động trích xuất cột Họ & Tên và Email.",
+    "admin.defaultRole": "Vai trò mặc định",
+    "admin.defaultLecturerSubjects": "Môn mặc định cho giảng viên",
+    "admin.noUnassignedSubjects": "Không còn môn chưa gán",
+    "admin.importUsers": "Nhập người dùng",
+    "admin.importWelcomeNote": "Email chào mừng sẽ có vai trò và quyền truy cập môn học.",
+    "admin.confirmImportUsers": "Tạo người dùng hàng loạt và gửi email chào mừng?",
+    "admin.confirmRoleChange": "Đổi vai trò của {user} sang {role}?",
+    "admin.roleChangeTitle": "Đổi vai trò sẽ hỏi xác nhận và tự lưu.",
+    "onlineUsers.title": "Người dùng online",
+    "onlineUsers.connecting": "Đang kết nối...",
+    "onlineUsers.loading": "Đang tải người dùng online...",
+    "onlineUsers.empty": "Hiện không có người dùng nào hoạt động.",
+    "onlineUsers.activeNow": "Đang hoạt động",
+    "onlineUsers.realtimeNote": "Trạng thái realtime",
+    "onlineUsers.statusHelp": "Danh sách tự cập nhật khi người dùng vào hoặc rời hệ thống.",
+    "onlineUsers.summaryOne": "1 người dùng online (đang hoạt động)",
+    "onlineUsers.summaryMany": "{count} người dùng online (đang hoạt động)",
+    "onlineUsers.youAreOnline": "Bạn đang online",
+    "onlineUsers.online": "Online",
+    "onlineUsers.tabs": "{count} tab",
+    "onlineUsers.expand": "Mở danh sách người dùng online",
+    "onlineUsers.collapse": "Thu gọn danh sách người dùng online",
     "documents.shellTitle": "Kho tài liệu",
     "documents.manageTitle": "Quản lý kho tài liệu",
     "documents.manageSubtitle": "Upload tài liệu học tập, trích xuất nội dung và index để chatbot trả lời có nguồn.",
@@ -178,6 +249,7 @@ const translations = {
     "chat.send": "Gửi",
     "chat.relatedLabel": "Câu hỏi liên quan",
     "chat.relatedAria": "Câu hỏi liên quan",
+    "chat.allSubjects": "Tất cả môn",
     "chat.defaultSessionTitle": "Phiên chưa có câu hỏi",
     "chat.sessionActions": "Thao tác phiên",
     "chat.starSession": "Ghim",
@@ -223,6 +295,7 @@ const onlineUsersSummary = document.querySelector("[data-online-users-summary]")
 const onlineUsersToggle = document.querySelector("[data-online-users-toggle]");
 const onlineUsersWidgetStateKey = "courseAssistantOnlineUsersWidgetCollapsed";
 let isSending = false;
+let latestOnlineUsersSnapshot = null;
 const subjectQuestionSubjects = readSubjectQuestionSubjects();
 const relatedQuestionPool = readRelatedQuestionPool();
 
@@ -433,6 +506,9 @@ function applyLanguage() {
   updateSuggestionButtons();
   updateRelatedQuestionButtons();
   updateDropzoneDefaultText();
+  if (latestOnlineUsersSnapshot) {
+    renderOnlineUsersSnapshot(latestOnlineUsersSnapshot);
+  }
   document.documentElement.classList.remove("i18n-pending");
   document.documentElement.classList.add("i18n-ready");
 }
@@ -494,6 +570,23 @@ function bindSubjectSuggestionButtons() {
       questionInput?.focus();
     });
   });
+}
+
+function applyInitialSubjectFromUrl() {
+  if (!chatPage) {
+    return;
+  }
+
+  const subject = new URLSearchParams(window.location.search).get("subject") || "";
+  if (!subject.trim()) {
+    return;
+  }
+
+  const matchingChip = [...document.querySelectorAll(".chat-subject-chip")]
+    .find((button) => (button.dataset.subjectFilter || "").toLowerCase() === subject.trim().toLowerCase());
+  if (matchingChip) {
+    setSelectedSubjectFilter(matchingChip.dataset.subjectFilter || "");
+  }
 }
 
 function normalizeQuestionForMemory(question) {
@@ -994,12 +1087,16 @@ function normalizeOnlineUsersPayload(payload) {
   };
 }
 
-function applyOnlineUsersChanged(payload) {
+function formatOnlineUsersSummary(count) {
+  const key = count === 1 ? "onlineUsers.summaryOne" : "onlineUsers.summaryMany";
+  return t(key).replace("{count}", String(count));
+}
+
+function renderOnlineUsersSnapshot(snapshot) {
   if (!onlineUsersWidget || !onlineUsersList || !onlineUsersSummary) {
     return;
   }
 
-  const snapshot = normalizeOnlineUsersPayload(payload);
   if (!snapshot) {
     return;
   }
@@ -1016,19 +1113,19 @@ function applyOnlineUsersChanged(payload) {
     return left.displayName.localeCompare(right.displayName, undefined, { sensitivity: "base" });
   });
 
-  onlineUsersSummary.textContent = snapshot.onlineUserCount + " online users (" + snapshot.windowLabel + ")";
+  onlineUsersSummary.textContent = formatOnlineUsersSummary(snapshot.onlineUserCount);
 
   if (users.length === 0) {
-    onlineUsersList.innerHTML = "<li class=\"online-users-widget__empty\">No active users right now.</li>";
+    onlineUsersList.innerHTML = "<li class=\"online-users-widget__empty\">" + escapeHtml(t("onlineUsers.empty")) + "</li>";
     return;
   }
 
   onlineUsersList.innerHTML = users.map((user) => {
     const isCurrentUser = (currentUserId && user.userId === currentUserId) || (currentUserEmail && user.email.trim().toUpperCase() === currentUserEmail);
     const statusIcon = isCurrentUser ? "visibility" : "chat";
-    const statusTitle = isCurrentUser ? "You are online" : "Online";
+    const statusTitle = isCurrentUser ? t("onlineUsers.youAreOnline") : t("onlineUsers.online");
     const roleLabel = user.role ? "<span class=\"online-users-widget__role\">" + escapeHtml(user.role) + "</span>" : "";
-    const connectionLabel = user.connectionCount > 1 ? "<span class=\"online-users-widget__connections\">" + user.connectionCount + " tabs</span>" : "";
+    const connectionLabel = user.connectionCount > 1 ? "<span class=\"online-users-widget__connections\">" + escapeHtml(t("onlineUsers.tabs").replace("{count}", String(user.connectionCount))) + "</span>" : "";
 
     return [
       "<li class=\"online-users-widget__item" + (isCurrentUser ? " is-current-user" : "") + "\">",
@@ -1041,6 +1138,16 @@ function applyOnlineUsersChanged(payload) {
       "</li>"
     ].join("");
   }).join("");
+}
+
+function applyOnlineUsersChanged(payload) {
+  const snapshot = normalizeOnlineUsersPayload(payload);
+  if (!snapshot) {
+    return;
+  }
+
+  latestOnlineUsersSnapshot = snapshot;
+  renderOnlineUsersSnapshot(snapshot);
 }
 function formatPreviewBytes(bytes) {
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -1419,7 +1526,7 @@ function applyOnlineUsersWidgetState() {
   const collapsed = localStorage.getItem(onlineUsersWidgetStateKey) === "true";
   onlineUsersWidget.classList.toggle("is-collapsed", collapsed);
   onlineUsersToggle.setAttribute("aria-expanded", String(!collapsed));
-  onlineUsersToggle.setAttribute("aria-label", collapsed ? "Expand online users" : "Collapse online users");
+  onlineUsersToggle.setAttribute("aria-label", collapsed ? t("onlineUsers.expand") : t("onlineUsers.collapse"));
   const icon = onlineUsersToggle.querySelector(".material-symbols-outlined");
   if (icon) {
     icon.textContent = collapsed ? "expand_less" : "expand_more";
@@ -2092,14 +2199,16 @@ function initAdminCreateUserForm() {
 }
 
 function initConfirmForms() {
-  document.querySelectorAll("form[data-confirm]").forEach((form) => {
+  document.querySelectorAll("form[data-confirm], form[data-confirm-en], form[data-confirm-vi]").forEach((form) => {
     if (form.dataset.confirmBound === "true") {
       return;
     }
 
     form.dataset.confirmBound = "true";
     form.addEventListener("submit", (event) => {
-      const message = form.dataset.confirm || "Are you sure you want to continue?";
+      const message = getLanguage() === "vi"
+        ? (form.dataset.confirmVi || form.dataset.confirm || "Bạn có chắc muốn tiếp tục?")
+        : (form.dataset.confirmEn || form.dataset.confirm || "Are you sure you want to continue?");
       if (!window.confirm(message)) {
         event.preventDefault();
       }
@@ -2156,7 +2265,10 @@ function initAdminRoleUpdateForms() {
 
       const nextRole = select.value || "";
       const userLabel = select.dataset.adminRoleUser || "this user";
-      if (!window.confirm(`Đổi role của ${userLabel} sang ${nextRole}?`)) {
+      const confirmMessage = t("admin.confirmRoleChange")
+        .replace("{user}", userLabel)
+        .replace("{role}", nextRole);
+      if (!window.confirm(confirmMessage)) {
         select.value = select.dataset.previousValue || "";
         return;
       }
@@ -2170,6 +2282,7 @@ function initAdminRoleUpdateForms() {
 bindSuggestionButtons();
 bindSessionButtons();
 bindSubjectFilterChips();
+applyInitialSubjectFromUrl();
 bindDocumentPreviewButtons();
 initSubjectCards();
 initAdminCreateUserForm();

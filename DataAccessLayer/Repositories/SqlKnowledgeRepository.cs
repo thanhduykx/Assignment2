@@ -35,7 +35,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         CancellationToken cancellationToken = default)
     {
         await using var context = CreateContext();
-        var documents = ApplyDocumentScope(context.Documents.AsNoTracking(), scope);
+        var documents = ApplyDocumentScope(context.Documents.AsNoTracking(), scope, context.CourseSubjects.AsNoTracking());
         documents = ApplyDocumentListQuery(documents, query);
 
         return await documents
@@ -84,7 +84,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
             .AsNoTracking()
             .Where(chunk => chunk.Document.Status == DocumentIndexStatus.Indexed);
 
-        chunks = ApplyChunkScope(chunks, scope);
+        chunks = ApplyChunkScope(chunks, scope, context.CourseSubjects.AsNoTracking());
 
         var subjects = NormalizeSubjectFilters(allowedSubjects);
         if (subjects.Count > 0)
@@ -115,7 +115,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         CancellationToken cancellationToken = default)
     {
         await using var context = CreateContext();
-        return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope)
+        return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope, context.CourseSubjects.AsNoTracking())
             .Where(document => document.Status == DocumentIndexStatus.Indexed
                                && document.Subject != string.Empty)
             .Select(document => document.Subject)
@@ -134,7 +134,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         var normalizedModel = (embeddingModel ?? string.Empty).Trim();
         var normalizedChunkingStrategy = (chunkingStrategy ?? string.Empty).Trim();
         await using var context = CreateContext();
-        return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope)
+        return await ApplyDocumentScope(context.Documents.AsNoTracking(), scope, context.CourseSubjects.AsNoTracking())
             .Where(document => document.Status == DocumentIndexStatus.Indexed)
             .Where(document => document.ChunkCount == 0
                                || document.EmbeddingModel != normalizedModel
@@ -697,7 +697,8 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
 
     private static IQueryable<KnowledgeSqlDocument> ApplyDocumentScope(
         IQueryable<KnowledgeSqlDocument> query,
-        DocumentAccessScope scope)
+        DocumentAccessScope scope,
+        IQueryable<KnowledgeSqlCourseSubject> subjects)
     {
         if (scope.IsAdmin)
         {
@@ -716,7 +717,11 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
                 document.UploadedByUserId == userId
                 || (!document.UploadedByUserId.HasValue
                     && email != string.Empty
-                    && document.UploadedByEmail == email));
+                    && document.UploadedByEmail == email)
+                || subjects.Any(subject =>
+                    subject.OwnerUserId == userId
+                    && (document.Subject == subject.Code
+                        || document.Subject.StartsWith(subject.Code + " - "))));
         }
 
         return query.Where(_ => false);
@@ -724,7 +729,8 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
 
     private static IQueryable<KnowledgeSqlChunk> ApplyChunkScope(
         IQueryable<KnowledgeSqlChunk> query,
-        DocumentAccessScope scope)
+        DocumentAccessScope scope,
+        IQueryable<KnowledgeSqlCourseSubject> subjects)
     {
         if (scope.IsAdmin || (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent))
         {
@@ -738,7 +744,11 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
                 chunk.Document.UploadedByUserId == userId
                 || (!chunk.Document.UploadedByUserId.HasValue
                     && email != string.Empty
-                    && chunk.Document.UploadedByEmail == email));
+                    && chunk.Document.UploadedByEmail == email)
+                || subjects.Any(subject =>
+                    subject.OwnerUserId == userId
+                    && (chunk.Document.Subject == subject.Code
+                        || chunk.Document.Subject.StartsWith(subject.Code + " - "))));
         }
 
         return query.Where(_ => false);

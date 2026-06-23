@@ -40,8 +40,8 @@ README.md             Tai lieu nop bai, audit yeu cau va test set 50 cau
 
 Ung dung chi dung RAG:
 
-- Embedding: HuggingFace `Qwen/Qwen3-Embedding-0.6B` mac dinh.
-- Chat completion: HuggingFace OpenAI-compatible endpoint voi `Qwen/Qwen2.5-7B-Instruct:fastest` mac dinh.
+- Embedding: Gemini `gemini-embedding-2` mac dinh.
+- Chat completion: Gemini `gemini-3.5-flash` mac dinh.
 - Chunking: paragraph-aware chunker noi bo.
 - Khong co baseline train rieng hoac endpoint phu ngoai pipeline RAG.
 

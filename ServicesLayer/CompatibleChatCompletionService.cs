@@ -7,7 +7,7 @@ using DataAccessLayer;
 
 namespace ServicesLayer;
 
-public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletionService
+public sealed class CompatibleChatCompletionService : ILocalChatCompletionService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -15,15 +15,15 @@ public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletion
     };
 
     private readonly HttpClient _httpClient;
-    private readonly OpenAICompatibleOptions _options;
+    private readonly CompatibleChatOptions _options;
 
-    public OpenAICompatibleChatCompletionService(HttpClient httpClient, OpenAICompatibleOptions options)
+    public CompatibleChatCompletionService(HttpClient httpClient, CompatibleChatOptions options)
     {
         _httpClient = httpClient;
         _options = options;
     }
 
-    public bool IsEnabled => _options.Enabled && !string.IsNullOrWhiteSpace(_options.Token);
+    public bool IsEnabled => _options.Enabled && !string.IsNullOrWhiteSpace(_options.ApiKey);
 
     public async Task<QueryIntentDecision> ClassifyQuestionAsync(
         string question,
@@ -232,13 +232,13 @@ public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletion
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, ResolveChatUrl());
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.Token);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
             request.Content = JsonContent.Create(
-                new OpenAICompatibleChatRequest(
+                new CompatibleChatRequest(
                     ModelName,
                     [
-                        new OpenAICompatibleChatMessage("system", system),
-                        new OpenAICompatibleChatMessage("user", prompt)
+                        new CompatibleChatMessage("system", system),
+                        new CompatibleChatMessage("user", prompt)
                     ],
                     temperature,
                     maxTokens),
@@ -250,7 +250,7 @@ public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletion
                 return null;
             }
 
-            var payload = await response.Content.ReadFromJsonAsync<OpenAICompatibleChatResponse>(JsonOptions, cancellationToken);
+            var payload = await response.Content.ReadFromJsonAsync<CompatibleChatResponse>(JsonOptions, cancellationToken);
             var content = payload?.Choices?
                 .FirstOrDefault()?
                 .Message?
@@ -271,15 +271,15 @@ public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletion
         }
     }
 
-    private string ModelName => string.IsNullOrWhiteSpace(_options.ChatModel)
-        ? "Qwen/Qwen2.5-7B-Instruct:fastest"
-        : _options.ChatModel.Trim();
+    private string ModelName => string.IsNullOrWhiteSpace(_options.Model)
+        ? "gemini-3.5-flash"
+        : _options.Model.Trim();
 
     private string ResolveChatUrl()
     {
-        return string.IsNullOrWhiteSpace(_options.ChatBaseUrl)
+        return string.IsNullOrWhiteSpace(_options.BaseUrl)
             ? "https://router.huggingface.co/v1/chat/completions"
-            : _options.ChatBaseUrl.Trim();
+            : _options.BaseUrl.Trim();
     }
 
     private static QueryIntentDecision ParseIntentDecision(string? response)
@@ -518,21 +518,21 @@ public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletion
         return compact.Length <= maxLength ? compact : compact[..maxLength] + "...";
     }
 
-    private sealed record OpenAICompatibleChatRequest(
+    private sealed record CompatibleChatRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] IReadOnlyList<OpenAICompatibleChatMessage> Messages,
+        [property: JsonPropertyName("messages")] IReadOnlyList<CompatibleChatMessage> Messages,
         [property: JsonPropertyName("temperature")] double Temperature,
         [property: JsonPropertyName("max_tokens")] int MaxTokens);
 
-    private sealed record OpenAICompatibleChatMessage(
+    private sealed record CompatibleChatMessage(
         [property: JsonPropertyName("role")] string Role,
         [property: JsonPropertyName("content")] string Content);
 
-    private sealed record OpenAICompatibleChatResponse(
-        [property: JsonPropertyName("choices")] IReadOnlyList<OpenAICompatibleChoice>? Choices);
+    private sealed record CompatibleChatResponse(
+        [property: JsonPropertyName("choices")] IReadOnlyList<CompatibleChoice>? Choices);
 
-    private sealed record OpenAICompatibleChoice(
-        [property: JsonPropertyName("message")] OpenAICompatibleChatMessage? Message);
+    private sealed record CompatibleChoice(
+        [property: JsonPropertyName("message")] CompatibleChatMessage? Message);
 
     private sealed record IntentResponse(
         [property: JsonPropertyName("intent")] string? Intent,
@@ -553,3 +553,4 @@ public sealed class OpenAICompatibleChatCompletionService : ILocalChatCompletion
         [property: JsonPropertyName("confidence")] double Confidence,
         [property: JsonPropertyName("reason")] string? Reason);
 }
+

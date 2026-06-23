@@ -1,0 +1,49 @@
+@page
+@model PresentationLayer.Pages.Home.CoursesModel
+@{
+    ViewData["Title"] = "Courses";
+    ViewData["UseRblShell"] = true;
+    ViewData["ActiveNav"] = "courses";
+    ViewData["ShellTitle"] = "Courses";
+}
+
+<section class="ops-page course-list-page">
+    @if (!string.IsNullOrWhiteSpace(Model.LoadErrorMessage))
+    {
+        <div class="rbl-alert is-error">@Model.LoadErrorMessage</div>
+    }
+
+    <header class="ops-page-header">
+        <div>
+            <span class="ops-eyebrow">Course workspace</span>
+            <h1>Courses</h1>
+            <p>Open a course workspace to view documents, chapters, and subject chat.</p>
+        </div>
+    </header>
+
+    @if (Model.Courses.Count == 0)
+    {
+        <section class="ops-panel ops-empty">
+            <strong>No course workspace is available.</strong>
+            <p>Upload and index course documents first, then come back here.</p>
+        </section>
+    }
+    else
+    {
+        <section class="course-card-grid">
+            @foreach (var course in Model.Courses)
+            {
+                <a class="course-workspace-card" asp-page="/Home/CourseWorkspace" asp-route-id="@course.Id">
+                    <span class="material-symbols-outlined" aria-hidden="true">school</span>
+                    <strong>@course.DisplayName</strong>
+                    <small>@(string.IsNullOrWhiteSpace(course.Description) ? "No description yet." : course.Description)</small>
+                    <span class="course-card-meta">
+                        <span>@course.OwnerName</span>
+                        <span>@course.ChapterCount chapters</span>
+                        <span>@course.IndexedDocumentCount/@course.DocumentCount indexed</span>
+                    </span>
+                </a>
+            }
+        </section>
+    }
+</section>
