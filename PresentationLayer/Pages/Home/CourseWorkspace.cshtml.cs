@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Security;
@@ -14,7 +14,7 @@ public sealed class CourseWorkspaceModel : HomePageModelBase
     private static readonly Regex SentenceRegex = new(@"(?<=[.!?。])\s+|\r?\n+", RegexOptions.Compiled);
     public CourseWorkspaceModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeRepository repository,
+        IKnowledgeService repository,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,

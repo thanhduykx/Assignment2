@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using PresentationLayer.Hubs;
 using PresentationLayer.Security;
+using ServicesLayer;
 
 namespace PresentationLayer
 {
@@ -170,9 +171,7 @@ namespace PresentationLayer
             builder.Services.AddSingleton(geminiOptions);
             builder.Services.AddSingleton(smtpOptions);
 
-            builder.Services.AddSingleton<DataAccessLayer.IKnowledgeRepository>(_ =>
-                new DataAccessLayer.Repositories.SqlKnowledgeRepository(
-                    builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty));
+            builder.Services.AddKnowledgeBusinessServices(builder.Configuration);
             builder.Services.AddSingleton<PresentationLayer.Services.IUserAccountStore>(_ =>
             {
                 var seedAdminSection = builder.Configuration.GetSection("SeedAdmin");
@@ -228,7 +227,7 @@ namespace PresentationLayer
             builder.Services.AddHostedService<PresentationLayer.Services.DocumentIndexWorker>();
 
             var app = builder.Build();
-            _ = app.Services.GetRequiredService<DataAccessLayer.IKnowledgeRepository>();
+            _ = app.Services.GetRequiredService<ServicesLayer.IKnowledgeService>();
             _ = app.Services.GetRequiredService<PresentationLayer.Services.IUserAccountStore>()
                 .HasAnyUsersAsync()
                 .GetAwaiter()

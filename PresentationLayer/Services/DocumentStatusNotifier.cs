@@ -1,4 +1,4 @@
-﻿using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.SignalR;
 using PresentationLayer.Hubs;
 using ServicesLayer;
@@ -36,12 +36,12 @@ public interface IDocumentStatusNotifier
 public sealed class SignalRDocumentStatusNotifier : IDocumentStatusNotifier
 {
     private readonly IHubContext<DocumentStatusHub> _hubContext;
-    private readonly IKnowledgeRepository _repository;
+    private readonly IKnowledgeService _repository;
     private readonly ILogger<SignalRDocumentStatusNotifier> _logger;
 
     public SignalRDocumentStatusNotifier(
         IHubContext<DocumentStatusHub> hubContext,
-        IKnowledgeRepository repository,
+        IKnowledgeService repository,
         ILogger<SignalRDocumentStatusNotifier> logger)
     {
         _hubContext = hubContext;

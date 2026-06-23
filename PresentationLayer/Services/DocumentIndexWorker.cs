@@ -1,4 +1,4 @@
-﻿using DataAccessLayer;
+using BusinessObjects;
 using ServicesLayer;
 
 namespace PresentationLayer.Services;
@@ -55,7 +55,7 @@ public sealed class DocumentIndexWorker : BackgroundService
     private async Task EnqueueProcessingDocumentsAsync(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IKnowledgeRepository>();
+        var repository = scope.ServiceProvider.GetRequiredService<IKnowledgeService>();
         var pendingDocuments = await repository.GetDocumentsByStatusAsync(DocumentIndexStatus.Processing, cancellationToken);
         foreach (var document in pendingDocuments)
         {
@@ -95,7 +95,7 @@ public sealed class DocumentIndexWorker : BackgroundService
 
         using (var scope = _scopeFactory.CreateScope())
         {
-            var repository = scope.ServiceProvider.GetRequiredService<IKnowledgeRepository>();
+            var repository = scope.ServiceProvider.GetRequiredService<IKnowledgeService>();
             await repository.MarkDocumentIndexFailedAsync(
                 documentId,
                 lastError?.Message ?? "Document indexing failed.",
