@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using PresentationLayer.Models;
 using PresentationLayer.Security;
 using PresentationLayer.Services;
+using ServicesLayer;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -20,13 +21,13 @@ namespace PresentationLayer.Pages.Admin;
 public sealed class IndexModel : PageModel
 {
     private readonly IUserAccountStore _users;
-    private readonly IKnowledgeRepository _knowledge;
+    private readonly IKnowledgeService _knowledge;
     private readonly IAccountEmailSender _emailSender;
     private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(
         IUserAccountStore users,
-        IKnowledgeRepository knowledge,
+        IKnowledgeService knowledge,
         IAccountEmailSender emailSender,
         ILogger<IndexModel> logger)
     {

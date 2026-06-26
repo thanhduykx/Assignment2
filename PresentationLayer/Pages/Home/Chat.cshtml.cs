@@ -1,4 +1,4 @@
-using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using PresentationLayer.Models;
 using PresentationLayer.Security;
@@ -12,7 +12,7 @@ public sealed class ChatModel : HomePageModelBase
 {
     public ChatModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeRepository repository,
+        IKnowledgeService repository,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
