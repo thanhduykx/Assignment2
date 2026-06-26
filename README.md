@@ -53,12 +53,24 @@ sequenceDiagram
     Lecturer->>UI: Upload tài liệu hoặc URL
     UI->>Worker: Đưa job vào hàng đợi index
     Worker->>Indexing: Trích xuất text và chia chunk
+    
     Indexing->>AI: Tạo embedding cho chunk
+    %% Bổ sung trả về từ Gemini lúc tạo embedding
+    AI-->>Indexing: Trả về vector embedding 
+    
     Indexing->>Repo: Lưu document, chunk, embedding
+    
     Student->>UI: Đặt câu hỏi trong chat
     UI->>Chat: Gửi câu hỏi + lịch sử phiên
+    
     Chat->>Repo: Retrieve chunk liên quan
+    %% Bổ sung trả về từ Database lúc tìm ngữ cảnh
+    Repo-->>Chat: Trả về các chunk phù hợp (Context)
+    
     Chat->>AI: Sinh câu trả lời từ context
+    %% Bổ sung trả về từ Gemini lúc sinh câu trả lời
+    AI-->>Chat: Trả về câu trả lời (Text)
+    
     Chat->>Repo: Lưu message và citation
     UI-->>Student: Hiển thị answer + nguồn trích dẫn
 ```
