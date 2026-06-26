@@ -1,4 +1,4 @@
-using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -15,7 +15,7 @@ public sealed class DeleteChatSessionModel : HomePageModelBase
 {
     public DeleteChatSessionModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeRepository repository,
+        IKnowledgeService repository,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,

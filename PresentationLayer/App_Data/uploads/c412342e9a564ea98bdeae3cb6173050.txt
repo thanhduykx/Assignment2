@@ -1,0 +1,323 @@
+Nguồn: FLM Syllabus 11835
+URL: https://flm.fpt.edu.vn/gui/role/student/SyllabusDetails?sylID=11835
+Tiêu đề trang: FPT University Learning Materials - Syllabus Details
+Ngày lấy: 2026-05-28T09:08:03.858Z
+
+===== TỔNG QUAN MÔN HỌC =====
+Mã môn: DBA103
+Tên môn: Nhạc cụ truyền thống - Đàn Bầu
+Tên tiếng Anh: Traditional musical instrument
+Số tín chỉ: 3
+Trình độ: Sơ cấp / Beginner
+Thời lượng: 30 slots trên lớp, mỗi slot 90 phút
+Hình thức học: Offline, học lý thuyết kết hợp thực hành nhạc cụ.
+Môn tiên quyết: Không có.
+Điểm đạt môn tối thiểu: 5/10.
+Thang điểm: 10.
+Tình trạng: Approved, active.
+Ngày phê duyệt: 16/08/2024.
+Quyết định: 862/QĐ-ĐHFPT dated 08/16/2024.
+
+DBA103 là môn học 3 tín chỉ về nhạc cụ truyền thống Việt Nam, tập trung vào Đàn Bầu. Môn học giúp sinh viên hiểu lịch sử phát triển, cấu trúc, đặc điểm của Đàn Bầu và thực hành các kỹ thuật cơ bản để chơi một số bài nhạc Việt Nam và nước ngoài.
+
+===== MÔ TẢ MÔN HỌC =====
+Kiến thức:
+- Nắm được những nét đặc trưng về lịch sử phát triển và cấu trúc Đàn Bầu.
+- Hiểu các đặc điểm cơ bản của Đàn Bầu trong âm nhạc truyền thống Việt Nam.
+- Làm quen với nhạc lý và các kỹ thuật cơ bản của Đàn Bầu.
+
+Kỹ năng:
+- Sinh viên có thể chơi tối thiểu 3 bài nhạc, trong đó có 1 bài nhạc nước ngoài.
+- Sinh viên vận dụng đúng các kỹ thuật cơ bản của Đàn Bầu khi thực hành.
+- Sinh viên được rèn luyện biểu diễn cá nhân, biểu diễn hòa tấu và tự tin trước đám đông.
+
+Quy mô lớp:
+- Môn học được tổ chức theo lớp khoảng 15 sinh viên/lớp.
+
+Nội dung học chính:
+- Lịch sử phát triển của Đàn Bầu ở Việt Nam.
+- Cấu trúc và đặc điểm của Đàn Bầu.
+- Tư thế ngồi và tư thế tay khi chơi Đàn Bầu.
+- Cách gảy dây buông.
+- Kỹ thuật nhấn lên, nhấn xuống quãng 2.
+- Luyện tập các bài Việt Nam như Cò lả, Lý cây đa, Đội kèn tí hon.
+- Luyện tập bài quốc tế Auld Lang Syne.
+- Hòa tấu Đàn Bầu với các nhạc cụ khác.
+
+===== ÁP DỤNG CNTT VÀ NGUỒN HỌC ONLINE =====
+Giảng viên có thể cung cấp thông tin, địa chỉ website và clip nhạc truyền thống trên Internet.
+Giảng viên chọn lọc tài nguyên online phù hợp với mục tiêu học phần rồi cung cấp cho sinh viên.
+Sinh viên được hướng dẫn tìm kiếm thông tin theo các chủ đề nhất định trên Internet.
+
+===== KỸ NĂNG MỀM VÀ PHÁT TRIỂN CÁ NHÂN =====
+Môn DBA103 giúp sinh viên:
+- Rèn luyện tính kiên trì.
+- Tự tin hơn khi biểu diễn trước đám đông.
+- Phát triển kỹ năng làm việc nhóm.
+- Phát triển khả năng hoạt động độc lập thông qua các nhiệm vụ giảng viên giao.
+
+===== SINH VIÊN CẦN LÀM GÌ TRONG DBA103 =====
+Sinh viên cần:
+- Tham dự tối thiểu 80% thời lượng môn học để đủ điều kiện thi cuối môn.
+- Có thái độ học tập nghiêm túc.
+- Ôn tập bài cũ trước khi đến lớp.
+- Đọc và tìm hiểu tài liệu bài mới trước khi đến lớp.
+- Luyện tập và thực hành trên lớp.
+- Luyện tập và thực hành tại nhà.
+- Tích cực tham gia các hoạt động trên lớp do giảng viên yêu cầu: phát biểu, hỏi đáp, trao đổi, làm việc nhóm, thực hành.
+- Làm portfolio cho môn học nếu giảng viên yêu cầu.
+
+===== DỤNG CỤ HỌC TẬP =====
+Dụng cụ chính: Nhạc cụ Đàn Bầu cho từng sinh viên.
+
+===== TÀI LIỆU VÀ NGUỒN HỌC =====
+Tài liệu 1:
+- Tên: Sách học Đàn Bầu.
+- Tác giả: Nguyễn Thanh Tâm, Trần Quốc Lộc.
+- Đơn vị xuất bản/nguồn: Học viện Âm nhạc Quốc gia Việt Nam.
+- Ghi chú: Tài liệu chính để học tư thế, kỹ thuật và bài tập Đàn Bầu.
+
+Tài liệu 2:
+- Tên: Bài tập luyện kỹ thuật Đàn Bầu.
+- Mục đích: Luyện tập các kỹ thuật cơ bản của Đàn Bầu.
+
+Tài liệu 3:
+- Tên: Danh mục các bài nhạc có thể sử dụng trong học phần.
+- Các bài nhạc gồm:
+  1. Bắc Kim Thang - dân ca Nam Bộ.
+  2. Inh lả ơi - dân ca Thái.
+  3. Xòe hoa - dân ca Thái.
+  4. Lý cây đa - dân ca Bắc Bộ.
+  5. Trống cơm - dân ca Bắc Bộ.
+  6. Đội kèn tí hon - sáng tác Phan Huỳnh Điểu.
+  7. Auld Lang Syne - dân ca Scotland.
+  8. Chờ người nơi ấy - sáng tác Huy Tuấn.
+  9. Độ ta không độ nàng - nhạc Hoa.
+  10. Futari No Kimochi - nhạc Nhật.
+  11. Thằng Cuội - sáng tác Lê Thương.
+  12. Từ đó - sáng tác Phan Mạnh Quỳnh.
+
+===== CHUẨN ĐẦU RA CLO =====
+CLO1:
+- Sinh viên hiểu biết cơ bản về lịch sử và sự phát triển hình thành của nền âm nhạc truyền thống Việt Nam.
+- English: Understand the history and development of Vietnamese traditional music.
+
+CLO2:
+- Sinh viên chơi được một số bài cơ bản của nhạc truyền thống Việt Nam và nước ngoài.
+- English: Be able to play some simple Vietnamese and foreign traditional songs.
+
+===== ĐÁNH GIÁ VÀ TỶ LỆ ĐIỂM DBA103 =====
+DBA103 có 3 thành phần đánh giá, tổng 100%.
+
+1. Bài tập / Assignment:
+- Loại: On-going.
+- Tỷ trọng: 15%.
+- Tiêu chí hoàn thành: >0.
+- Nội dung có thể gồm thuyết trình, workshop, viết luận, slides, bài luận hoặc sản phẩm do giảng viên giao.
+- Kiến thức kỹ năng đánh giá: Kiến thức về loại nhạc cụ sinh viên học.
+- Thang điểm: 10.
+
+2. Tham gia trên lớp / Participation:
+- Loại: On-going.
+- Tỷ trọng: 15%.
+- Tiêu chí hoàn thành: >0.
+- Ghi nhận mức độ sinh viên tích cực tham gia hoạt động trên lớp, đi học đầy đủ và nộp bài luận.
+- Thang điểm: 10.
+
+3. Thi cuối kỳ / Final exam:
+- Loại: Final exam.
+- Tỷ trọng: 70%.
+- Tiêu chí hoàn thành: 4.
+- Thời lượng: 5 phút mỗi sinh viên.
+- Hình thức: Thực hành chơi nhạc cụ.
+- Nội dung: Sinh viên chơi 3 bài, gồm 2 bài hòa tấu và 1 bài độc tấu.
+- Yêu cầu bài thi: Sinh viên chọn 3 bài, trong đó có 2 bài dân ca Việt Nam và 1 bài quốc tế.
+- Ghi chú: Bài dân ca có thể được hòa tấu với các nhạc cụ khác.
+- Tổng điểm FE cần đạt: >=5.
+- Điểm trung bình tối thiểu để qua môn: 5.
+
+===== TRẢ LỜI NHANH CÁC CÂU HỎI THƯỜNG GẶP =====
+DBA103 có bao nhiêu tín chỉ?
+- DBA103 có 3 tín chỉ.
+
+DBA103 là môn gì?
+- DBA103 là môn Nhạc cụ truyền thống - Đàn Bầu, dạy về lịch sử, cấu trúc và kỹ thuật cơ bản của Đàn Bầu.
+
+DBA103 học trong bao lâu?
+- DBA103 có 30 slots trên lớp, mỗi slot 90 phút.
+
+DBA103 có môn tiên quyết không?
+- DBA103 không có môn tiên quyết.
+
+DBA103 cần điểm bao nhiêu để qua môn?
+- Điểm tối thiểu để qua môn là 5/10.
+
+DBA103 đánh giá như thế nào?
+- Assignment 15%, Participation 15%, Final exam 70%.
+
+Thi cuối kỳ DBA103 làm gì?
+- Sinh viên thực hành chơi 3 bài nhạc: 2 bài dân ca Việt Nam và 1 bài quốc tế; thời lượng 5 phút/sinh viên.
+
+Sinh viên DBA103 cần làm gì?
+- Tham dự ít nhất 80%, học nghiêm túc, ôn bài, chuẩn bị bài mới, luyện tập trên lớp và ở nhà, tham gia hoạt động lớp và làm portfolio nếu được yêu cầu.
+
+DBA103 dùng tài liệu hoặc nguồn học nào?
+- Sách học Đàn Bầu của Nguyễn Thanh Tâm và Trần Quốc Lộc, bài tập luyện kỹ thuật Đàn Bầu, danh mục bài nhạc luyện tập và các nguồn online/clip nhạc truyền thống do giảng viên chọn lọc.
+
+DBA103 có chuẩn đầu ra nào?
+- CLO1: Hiểu lịch sử và phát triển của âm nhạc truyền thống Việt Nam.
+- CLO2: Chơi được một số bài cơ bản của nhạc truyền thống Việt Nam và nước ngoài.
+
+===== LỊCH HỌC TÓM TẮT THEO GIAI ĐOẠN =====
+Giai đoạn 1 - Nền tảng lý thuyết và kỹ thuật cơ bản, sessions 1-6:
+- Học lịch sử, tên gọi, cấu tạo Đàn Bầu.
+- Học tư thế ngồi, tư thế tay phải, tay trái và cách gảy đàn.
+- Tập gảy dây buông, tìm điểm đàn, đọc nốt nhạc.
+- Học kỹ thuật nhấn lên quãng 2 và nhận biết nốt nhạc.
+
+Giai đoạn 2 - Bài Việt Nam đầu tiên và kiểm tra giữa kỳ, sessions 7-15:
+- Luyện nốt nhạc trên Đàn Bầu.
+- Học bài Đội kèn tí hon.
+- Học bài Lý cây đa.
+- Luyện 2 bài Lý cây đa và Đội kèn tí hon.
+- Kiểm tra giữa kỳ 2 bài Lý cây đa và Đội kèn tí hon.
+
+Giai đoạn 3 - Nâng cao kỹ thuật và bài quốc tế, sessions 16-23:
+- Luyện kỹ thuật nhấn lên, nhấn xuống.
+- Học và luyện bài Cò lả.
+- Học bài quốc tế Auld Lang Syne.
+- Luyện nối câu và biểu diễn bài quốc tế trước lớp.
+
+Giai đoạn 4 - Hòa tấu, nộp bài và thi cuối khóa, sessions 24-30:
+- Hòa tấu Lý cây đa và Cò lả với nhạc cụ khác.
+- Luyện tập cùng các lớp khác.
+- Thu bài luận.
+- Thi kết thúc khóa học trong sessions 29-30.
+
+===== LỊCH HỌC CHI TIẾT 30 SESSIONS =====
+Session 1:
+- Lý thuyết: Tìm hiểu lịch sử, tên gọi của nhạc cụ; cấu tạo Đàn Bầu; tư thế ngồi; cách gảy đàn.
+- Thực hành: Giảng viên làm mẫu kỹ thuật đầu tiên; hướng dẫn cầm que đàn và tạo âm thanh; thực hành gảy tay phải; sửa tư thế tay.
+- Nhiệm vụ sinh viên: Đọc sách học Đàn Bầu về tư thế chơi đàn và tư thế tay.
+
+Session 2:
+- Luyện tập tư thế gảy tay phải.
+- Học nốt nhạc ứng với điểm đàn.
+- Giảng viên chỉnh sửa lỗi kỹ thuật.
+
+Session 3:
+- Luyện gảy dây buông.
+- Học cách tìm điểm đàn.
+- Nhiệm vụ sinh viên: Đọc sách về tư thế và cách gảy.
+
+Session 4:
+- Ôn kỹ thuật gảy dây buông.
+- Kết hợp tiết tấu với bài luyện dây buông.
+- Học kỹ thuật nhấn lên quãng 2.
+- Nhiệm vụ sinh viên: Đọc sách về tư thế và cách gảy ngón.
+
+Session 5:
+- Học hệ thống nốt nhạc mới.
+- Học các âm hình tiết tấu thường gặp.
+- Luyện kỹ thuật nhấn lên quãng 2.
+- Nhiệm vụ sinh viên: Học cách nhận biết nốt nhạc.
+
+Session 6:
+- Luyện đọc nốt nhạc và liên hệ nốt trên Đàn Bầu.
+- Ôn tập và thực hành các kỹ thuật đã học.
+
+Session 7:
+- Luyện nhớ nốt nhạc trên Đàn Bầu bằng cách vừa đọc vừa gảy dây.
+- Luyện ngón nhấn lên quãng 2.
+- Bắt đầu học bài Đội kèn tí hon.
+- Nhiệm vụ sinh viên: Đọc thuộc giai điệu và nốt nhạc bài Đội kèn tí hon.
+
+Session 8:
+- Học thuộc từng câu bài Đội kèn tí hon.
+- Tìm nốt nhạc tương ứng trên Đàn Bầu và thực hành từng câu.
+
+Session 9:
+- Luyện kỹ thuật nhấn xuống.
+- Học bài Lý cây đa.
+
+Session 10:
+- Đọc thuộc bài Lý cây đa.
+- Thực hành bài Lý cây đa trên Đàn Bầu.
+
+Session 11:
+- Thực hành bài Lý cây đa trên Đàn Bầu.
+
+Session 12:
+- Tập luyện bài Lý cây đa.
+- Nhiệm vụ sinh viên: Đọc thuộc giai điệu và nốt nhạc bài Lý cây đa.
+
+Session 13:
+- Luyện tập 2 bài Lý cây đa và Đội kèn tí hon.
+
+Session 14:
+- Thực hành 2 bài đã học để chuẩn bị kiểm tra giữa kỳ.
+
+Session 15:
+- Kiểm tra giữa kỳ: chơi 2 bài Lý cây đa và Đội kèn tí hon.
+
+Session 16:
+- Tiếp tục luyện kỹ thuật nhấn trong bài Lý cây đa.
+
+Session 17:
+- Áp dụng kỹ thuật nhấn xuống và nhấn lên vào bài Cò lả.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên YouTube.
+
+Session 18:
+- Luyện kỹ thuật nhấn xuống và thực hành vào bài Cò lả.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên YouTube.
+
+Session 19:
+- Học hết bài Cò lả.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên YouTube.
+
+Session 20:
+- Học bài nước ngoài Auld Lang Syne, dân ca Scotland.
+- Giảng viên chơi mẫu, chép bài lên bảng, chia bài thành 4 câu.
+- Sinh viên học ca miệng từng câu, chú ý đúng tiết tấu.
+- Thực hành 2 câu đầu trên Đàn Bầu.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên Internet.
+
+Session 21:
+- Ôn 2 câu đã học của Auld Lang Syne.
+- Thực hành 2 câu còn lại.
+- Luyện nối các câu thành bài hoàn chỉnh.
+- Nhiệm vụ sinh viên: Học thuộc nốt nhạc và giai điệu tác phẩm.
+
+Session 22:
+- Luyện bài nước ngoài cho liền mạch.
+- Giảng viên sửa cao độ tay nhấn.
+
+Session 23:
+- Sinh viên luyện chơi một mình trước lớp bài nước ngoài.
+
+Session 24:
+- Luyện bài Lý cây đa theo hình thức hòa tấu với các nhạc cụ khác.
+- Nhiệm vụ sinh viên: Nghe và học thuộc giai điệu.
+
+Session 25:
+- Hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
+
+Session 26:
+- Tiếp tục hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
+
+Session 27:
+- Tiếp tục hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
+
+Session 28:
+- Hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
+- Thu bài luận.
+
+Session 29:
+- Tổ chức thi kết thúc khóa học.
+
+Session 30:
+- Tổ chức thi kết thúc khóa học.
+
+===== LIÊN KẾT LIÊN QUAN =====
+- Trang FLM Home: https://flm.fpt.edu.vn/Home
+- Mapping CLO/PLO: https://flm.fpt.edu.vn/CLOMapping/View?syllabusID=11835
