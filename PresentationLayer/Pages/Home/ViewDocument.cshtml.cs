@@ -1,5 +1,5 @@
 using System.Text;
-using DataAccessLayer;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Security;
@@ -13,7 +13,7 @@ public sealed class ViewDocumentModel : HomePageModelBase
 {
     public ViewDocumentModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeRepository repository,
+        IKnowledgeService repository,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
