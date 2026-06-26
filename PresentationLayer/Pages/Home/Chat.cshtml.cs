@@ -12,8 +12,7 @@ public sealed class ChatModel : HomePageModelBase
 {
     public ChatModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
-        IDocumentIndexingService indexingService,
+        IKnowledgeRepository repository,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
