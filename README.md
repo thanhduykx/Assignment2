@@ -328,3 +328,11 @@ TestData/qa-test-50-vi-q-a.txt
 | AI | Gemini chat + embedding, hashing embedding fallback |
 | Document parsing | OpenXML, PdfPig, text extractor nội bộ |
 | Test | xUnit, Microsoft.NET.Test.Sdk, coverlet |
+### Student
+
+1. Đăng nhập bằng tài khoản được cấp.
+2. Vào trang Chat.
+3. Tạo phiên chat mới hoặc tiếp tục phiên cũ.
+4. Đặt câu hỏi liên quan đến tài liệu môn học.
+5. Kiểm tra citation để biết câu trả lời lấy từ tài liệu nào.
+6. Nếu hệ thống báo không đủ dữ liệu, cần hỏi lại rõ hơn hoặc liên hệ lecturer/admin để bổ sung tài liệu.
