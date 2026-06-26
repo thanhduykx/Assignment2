@@ -164,29 +164,7 @@
                                         <span>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
                                     </td>
                                     <td data-label="Role / Vai trò">
-                                        <form asp-page-handler="UpdateRole" method="post" class="ops-role-form" data-admin-role-update-form>
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="UserId" value="@user.Id" />
-                                            <select
-                                                name="Role"
-                                                disabled="@user.IsLastAdmin"
-                                                data-admin-role-update-select
-                                                data-admin-role-user="@user.Email"
-                                                title="Changing a role asks for confirmation and saves automatically."
-                                                data-i18n-title="admin.roleChangeTitle">
-                                                @foreach (var role in Model.Roles)
-                                                {
-                                                    if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
-                                                    {
-                                                        <option value="@role" selected>@role</option>
-                                                    }
-                                                    else
-                                                    {
-                                                        <option value="@role">@role</option>
-                                                    }
-                                                }
-                                            </select>
-                                        </form>
+                                        <span class="ops-role-badge">@user.Role</span>
                                     </td>
                                     <td data-label="Subjects">
                                         @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)

@@ -47,6 +47,7 @@ public sealed class IndexModel : HomePageModelBase
     public string? Query { get; private set; }
     public string? SubjectFilter { get; private set; }
     public string? StatusFilter { get; private set; }
+    public string CurrentSection { get; private set; } = DocumentSections.List;
     public new bool IsAdmin { get; private set; }
     public new bool IsLecturer { get; private set; }
     public int TotalDocumentCount { get; private set; }
@@ -60,7 +61,7 @@ public sealed class IndexModel : HomePageModelBase
     public int StaleEmbeddingDocumentCount { get; private set; }
     public string? LoadErrorMessage { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(string? q, string? subjectFilter, string? statusFilter, CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(string? section, string? q, string? subjectFilter, string? statusFilter, CancellationToken cancellationToken)
     {
         var normalizedQuery = q?.Trim();
         var normalizedSubjectFilter = subjectFilter?.Trim();
@@ -68,6 +69,14 @@ public sealed class IndexModel : HomePageModelBase
         var scope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
         var userIsAdmin = base.IsAdmin();
         var userIsLecturer = base.IsLecturer();
+        var normalizedSection = NormalizeSection(section);
+        if (normalizedSection is DocumentSections.Upload or DocumentSections.Catalog
+            && !userIsAdmin
+            && !userIsLecturer)
+        {
+            normalizedSection = DocumentSections.List;
+        }
+
         IReadOnlyList<IndexedDocument> accessibleDocuments;
         IReadOnlyList<IndexedDocument> documents;
         IReadOnlyList<CourseSubject> allCourseCatalog;
@@ -124,6 +133,8 @@ public sealed class IndexModel : HomePageModelBase
         Query = normalizedQuery;
         SubjectFilter = normalizedSubjectFilter;
         StatusFilter = normalizedStatusFilter;
+        CurrentSection = normalizedSection;
+        ViewData["DocumentSection"] = CurrentSection;
         IsAdmin = userIsAdmin;
         IsLecturer = userIsLecturer;
         TotalDocumentCount = accessibleDocuments.Count;
@@ -139,6 +150,23 @@ public sealed class IndexModel : HomePageModelBase
             : indexedDocuments.Average(document => document.ChunkCount);
 
         return Page();
+    }
+
+    private static string NormalizeSection(string? section)
+    {
+        return section?.Trim().ToLowerInvariant() switch
+        {
+            DocumentSections.Upload => DocumentSections.Upload,
+            DocumentSections.Catalog => DocumentSections.Catalog,
+            _ => DocumentSections.List
+        };
+    }
+
+    private static class DocumentSections
+    {
+        public const string List = "list";
+        public const string Upload = "upload";
+        public const string Catalog = "catalog";
     }
 
     public async Task<IActionResult> OnPostSaveSubjectAsync([FromForm] SubjectCatalogViewModel model, CancellationToken cancellationToken)

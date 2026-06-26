@@ -51,7 +51,7 @@ public sealed class EditDocumentModel : HomePageModelBase
             return NotFound();
         }
 
-        if (!await CanManageDocumentAsync(document, cancellationToken))
+        if (!await CanEditDocumentAsync(document, cancellationToken))
         {
             return Forbid();
         }
@@ -66,7 +66,7 @@ public sealed class EditDocumentModel : HomePageModelBase
         {
             var existing = await _repository.GetDocumentAsync(Id, cancellationToken)
                 ?? throw new InvalidOperationException("Document not found.");
-            if (!await CanManageDocumentAsync(existing, cancellationToken)
+            if (!await CanEditDocumentAsync(existing, cancellationToken)
                 || !await CanManageSubjectAsync(Subject, cancellationToken))
             {
                 return Forbid();

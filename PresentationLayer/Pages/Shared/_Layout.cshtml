@@ -28,7 +28,14 @@
     var coursesNavClass = activeNav == "courses" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var documentsNavClass = activeNav == "documents" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var adminNavClass = activeNav == "admin" ? "rbl-nav-link is-active" : "rbl-nav-link";
+    var currentDocumentSection = (ViewData["DocumentSection"] as string ?? Context.Request.Query["section"].ToString() ?? string.Empty).ToLowerInvariant();
+    if (string.IsNullOrWhiteSpace(currentDocumentSection))
+    {
+        currentDocumentSection = "list";
+    }
+
     var currentAdminSection = (ViewData["AdminSection"] as string ?? Context.Request.RouteValues["section"] as string ?? string.Empty).ToLowerInvariant();
+    string DocumentSublinkClass(string sectionName) => currentDocumentSection == sectionName ? "rbl-nav-sublink is-active" : "rbl-nav-sublink";
     string AdminSublinkClass(string sectionName) => currentAdminSection == sectionName ? "rbl-nav-sublink is-active" : "rbl-nav-sublink";
 }
 <!DOCTYPE html>
@@ -102,10 +109,30 @@
                     }
                     @if (canViewDocuments)
                     {
-                    <a class="@documentsNavClass" asp-page="/Home/Index">
-                        <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
-                        <span data-i18n="shell.documents">Document Repository</span>
-                    </a>
+                    <details class="rbl-nav-dropdown" @((activeNav == "documents") ? "open" : "")>
+                        <summary class="rbl-nav-link-summary @documentsNavClass">
+                            <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
+                            <span data-i18n="shell.documents">Document Repository</span>
+                            <span class="material-symbols-outlined rbl-dropdown-chevron" aria-hidden="true">expand_more</span>
+                        </summary>
+                        <div class="rbl-nav-sublist">
+                            <a class="@(DocumentSublinkClass("list"))" asp-page="/Home/Index" asp-route-section="list">
+                                <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                                <span data-i18n="documents.navList">Document list</span>
+                            </a>
+                            @if (canManageDocuments)
+                            {
+                            <a class="@(DocumentSublinkClass("upload"))" asp-page="/Home/Index" asp-route-section="upload">
+                                <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                <span data-i18n="documents.navUpload">Upload & index</span>
+                            </a>
+                            <a class="@(DocumentSublinkClass("catalog"))" asp-page="/Home/Index" asp-route-section="catalog">
+                                <span class="material-symbols-outlined" aria-hidden="true">topic</span>
+                                <span data-i18n="documents.navCatalog">Course catalog</span>
+                            </a>
+                            }
+                        </div>
+                    </details>
                     }
                     @if (canManageUsers)
                     {
