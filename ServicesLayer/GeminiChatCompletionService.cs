@@ -20,7 +20,7 @@ public sealed class GeminiChatCompletionService : ILocalChatCompletionService
 
     public Task<QueryIntentDecision> ClassifyQuestionAsync(
         string question,
-        IReadOnlyList<DataAccessLayer.ChatMessage> history,
+        IReadOnlyList<BusinessObjects.ChatMessage> history,
         string language,
         CancellationToken cancellationToken = default)
     {
@@ -29,7 +29,7 @@ public sealed class GeminiChatCompletionService : ILocalChatCompletionService
 
     public Task<string> RewriteQuestionAsync(
         string question,
-        IReadOnlyList<DataAccessLayer.ChatMessage> history,
+        IReadOnlyList<BusinessObjects.ChatMessage> history,
         CancellationToken cancellationToken = default)
     {
         return _inner.RewriteQuestionAsync(question, history, cancellationToken);
@@ -37,7 +37,7 @@ public sealed class GeminiChatCompletionService : ILocalChatCompletionService
 
     public Task<IReadOnlyList<string>> RewriteQueriesAsync(
         string question,
-        IReadOnlyList<DataAccessLayer.ChatMessage> history,
+        IReadOnlyList<BusinessObjects.ChatMessage> history,
         CancellationToken cancellationToken = default)
     {
         return _inner.RewriteQueriesAsync(question, history, cancellationToken);
@@ -45,7 +45,7 @@ public sealed class GeminiChatCompletionService : ILocalChatCompletionService
 
     public Task<IReadOnlyList<ChatChunkRerankResult>> RerankChunksAsync(
         string question,
-        IReadOnlyList<DataAccessLayer.DocumentChunk> chunks,
+        IReadOnlyList<BusinessObjects.DocumentChunk> chunks,
         string language,
         CancellationToken cancellationToken = default)
     {
@@ -55,8 +55,8 @@ public sealed class GeminiChatCompletionService : ILocalChatCompletionService
     public Task<string?> GenerateAnswerAsync(
         string question,
         string subject,
-        IReadOnlyList<DataAccessLayer.ChatMessage> history,
-        IReadOnlyList<DataAccessLayer.DocumentChunk> chunks,
+        IReadOnlyList<BusinessObjects.ChatMessage> history,
+        IReadOnlyList<BusinessObjects.DocumentChunk> chunks,
         string language,
         CancellationToken cancellationToken = default)
     {
@@ -66,7 +66,7 @@ public sealed class GeminiChatCompletionService : ILocalChatCompletionService
     public Task<GroundingDecision?> ValidateGroundingAsync(
         string question,
         string answer,
-        IReadOnlyList<DataAccessLayer.DocumentChunk> chunks,
+        IReadOnlyList<BusinessObjects.DocumentChunk> chunks,
         string language,
         CancellationToken cancellationToken = default)
     {
