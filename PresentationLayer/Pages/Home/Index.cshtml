@@ -13,6 +13,9 @@
     var documentTree = Model.DocumentTree.OrderBy(item => item.Code).ThenBy(item => item.Name).ToList();
     var isAdmin = Model.IsAdmin;
     var canManageDocuments = Model.IsAdmin || Model.IsLecturer;
+    var isListSection = Model.CurrentSection == "list";
+    var isUploadSection = Model.CurrentSection == "upload";
+    var isCatalogSection = Model.CurrentSection == "catalog";
     var totalDocuments = Model.TotalDocumentCount;
     var visibleDocuments = documents.Count;
     var totalChunks = Model.TotalChunkCount;
@@ -148,17 +151,9 @@
         </article>
     </section>
 
-    @if (canManageDocuments)
+    @if (canManageDocuments && isUploadSection)
     {
-        <details class="ops-panel ops-upload-panel">
-            <summary class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Ingestion</span>
-                    <h2>Upload & index</h2>
-                </div>
-                <span class="ops-panel-note">Open upload form</span>
-            </summary>
-
+        <section id="upload-index" class="ops-panel ops-upload-panel">
             <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-upload-form">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Language" value="vi" data-language-field />
@@ -211,30 +206,27 @@
                     </button>
                 </div>
             </form>
-        </details>
+        </section>
     }
 
-    <section class="ops-panel">
-        <div class="ops-panel-head">
-            <div>
-                <span class="ops-eyebrow">Repository</span>
-                <h2>Danh sách tài liệu / Document table</h2>
-            </div>
+    @if (isListSection)
+    {
+    <section id="document-list" class="ops-panel">
+        @if (isAdmin && Model.StaleEmbeddingDocumentCount > 0)
+        {
             <div class="ops-panel-actions">
-                @if (isAdmin && Model.StaleEmbeddingDocumentCount > 0)
-                {
-                    <form asp-page-handler="ReindexStaleEmbeddings" method="post" data-confirm="Re-index tất cả tài liệu đang cần cập nhật embedding?">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="ops-button ops-button--secondary">
-                            <span class="material-symbols-outlined" aria-hidden="true">sync</span>
-                            Re-index stale
-                        </button>
-                    </form>
-                }
+                <form asp-page-handler="ReindexStaleEmbeddings" method="post" data-confirm="Re-index tất cả tài liệu đang cần cập nhật embedding?">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="ops-button ops-button--secondary">
+                        <span class="material-symbols-outlined" aria-hidden="true">sync</span>
+                        Re-index stale
+                    </button>
+                </form>
             </div>
-        </div>
+        }
 
         <form asp-page="/Home/Index" method="get" class="ops-filter-bar">
+            <input type="hidden" name="section" value="list" />
             <label class="ops-field ops-field--search">
                 <span>Search / Tìm kiếm</span>
                 <input name="q" value="@Model.Query" placeholder="File, subject, chapter, uploader..." />
@@ -290,7 +282,7 @@
             <button type="submit" class="ops-button ops-button--secondary">Filter</button>
             @if (hasActiveFilters)
             {
-                <a class="ops-button ops-button--ghost" asp-page="/Home/Index">Clear</a>
+                <a class="ops-button ops-button--ghost" asp-page="/Home/Index" asp-route-section="list">Clear</a>
             }
         </form>
 
@@ -362,7 +354,7 @@
                                     {
                                         <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem / View" disabled title="@StatusTitle(document)">View</button>
                                     }
-                                    @if (canManageDocuments)
+                                    @if (canManageDocuments && Model.CanEditDocumentMetadata(document, courseCatalog))
                                     {
                                         <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa / Edit</a>
                                         <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tài liệu này?">
@@ -385,18 +377,11 @@
             </div>
         }
     </section>
+    }
 
-    @if (canManageDocuments)
+    @if (canManageDocuments && isCatalogSection)
     {
-        <details class="ops-panel ops-catalog-panel">
-            <summary class="ops-catalog-summary">
-                <span>
-                    <span class="ops-eyebrow">Catalog</span>
-                    <strong>Danh mục môn học / Course catalog</strong>
-                </span>
-                <small>@courseCatalog.Count subjects</small>
-            </summary>
-
+        <section id="course-catalog" class="ops-panel ops-catalog-panel">
             <div class="ops-catalog-body">
                 <div class="ops-command-grid">
                     <form asp-page-handler="SaveChapter" method="post" class="ops-command-card">
@@ -587,8 +572,10 @@
                                                                         {
                                                                             <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem" disabled title="@StatusTitle(document)">Xem</button>
                                                                         }
-                                                                        <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa</a>
-                                                                        <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tài liệu này?">
+                                                                        @if (Model.CanEditDocumentMetadata(document, courseCatalog))
+                                                                        {
+                                                                            <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa</a>
+                                                                            <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tài liệu này?">
                                                                             @Html.AntiForgeryToken()
                                                                             <input type="hidden" name="id" value="@document.Id" />
                                                                             <button type="submit" class="ops-mini-button">Re-index</button>
@@ -598,6 +585,7 @@
                                                                             <input type="hidden" name="id" value="@document.Id" />
                                                                             <button type="submit" class="ops-mini-button ops-mini-button--danger">Xóa</button>
                                                                         </form>
+                                                                        }
                                                                     </div>
                                                                 </div>
                                                             }
@@ -613,7 +601,7 @@
                     </div>
                 }
             </div>
-        </details>
+        </section>
     }
 
     <div id="documentPreviewModal" class="rbl-document-preview-modal" aria-hidden="true">

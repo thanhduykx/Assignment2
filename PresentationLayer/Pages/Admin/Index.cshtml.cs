@@ -622,41 +622,9 @@ public sealed class IndexModel : PageModel
         return RedirectToPage("/Admin/Index");
     }
 
-    public async Task<IActionResult> OnPostUpdateRoleAsync([FromForm] UpdateUserRoleViewModel model, CancellationToken cancellationToken)
+    public IActionResult OnPostUpdateRole([FromForm] UpdateUserRoleViewModel model)
     {
-        try
-        {
-            var existingUser = (await _users.GetAllAsync(cancellationToken))
-                .FirstOrDefault(user => user.Id == model.UserId)
-                ?? throw new InvalidOperationException("User not found.");
-            var user = await _users.UpdateRoleAsync(model.UserId, model.Role, cancellationToken);
-            var unassignedSubjectCount = 0;
-            if (existingUser.Role == AppRoles.Lecturer && user.Role != AppRoles.Lecturer)
-            {
-                unassignedSubjectCount = await UnassignSubjectsOwnedByAsync(user.Id, cancellationToken);
-            }
-
-            var subjectSummary = unassignedSubjectCount > 0
-                ? $" Unassigned {unassignedSubjectCount} subject(s)."
-                : string.Empty;
-            TempData["Success"] = $"Updated {user.Email} to {user.Role}.{subjectSummary}";
-
-            if (IsCurrentUser(user.Id) && user.Role != AppRoles.Admin)
-            {
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                return RedirectToPage("/Account/Login");
-            }
-        }
-        catch (Exception ex) when (ex is InvalidOperationException)
-        {
-            TempData["Error"] = ToAdminUserError(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not update user role for {UserId}", model.UserId);
-            TempData["Error"] = "Could not update this user role.";
-        }
-
+        TempData["Error"] = "Role changes are disabled after account creation.";
         return RedirectToPage("/Admin/Index");
     }
 

@@ -235,27 +235,74 @@ public abstract class HomePageModelBase : PageModel
 
         protected async Task<bool> CanManageDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
         {
-            if (IsAdmin())
-            {
-                return true;
-            }
-
-            if (!IsLecturer())
-            {
-                return false;
-            }
-
             if (DocumentBelongsToCurrentUser(document))
             {
                 return true;
+            }
+
+            if (IsAdmin() || !IsLecturer())
+            {
+                return false;
             }
 
             var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
             return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
         }
 
+        
+        protected async Task<bool> CanEditDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            if (IsAdmin() || !IsLecturer())
+            {
+                return false;
+            }
+
+            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
+        }
+
+        public bool CanEditDocumentMetadata(IndexedDocument document, IEnumerable<CourseSubject> catalog)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            if (IsAdmin() || !IsLecturer())
+            {
+                return false;
+            }
+
+            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
+        }
+
+        public bool CanManageDocumentAction(IndexedDocument document, DocumentTreeSubjectViewModel subject)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            if (IsAdmin() || !IsLecturer() || CurrentUserId() is not { } userId)
+            {
+                return false;
+            }
+
+            return subject.OwnerUserId == userId;
+        }
+
         protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
         {
+            if (IsAdmin())
+            {
+                return true;
+            }
+
             return await CanManageDocumentAsync(document, cancellationToken);
         }
 

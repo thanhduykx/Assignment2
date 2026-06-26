@@ -267,8 +267,10 @@
                                                 {
                                                     <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem" disabled title="@StatusTitle(document)">Xem</button>
                                                 }
-                                                <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">S&#7917;a</a>
-                                                <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tai lieu nay?">
+                                                @if (Model.CanManageDocumentAction(document, Model.Subject))
+                                                {
+                                                    <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">S&#7917;a</a>
+                                                    <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tai lieu nay?">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="documentId" value="@document.Id" />
                                                     <button type="submit" class="ops-mini-button">Re-index</button>
@@ -278,6 +280,7 @@
                                                     <input type="hidden" name="documentId" value="@document.Id" />
                                                     <button type="submit" class="ops-mini-button ops-mini-button--danger">X&#243;a</button>
                                                 </form>
+                                                }
                                             </div>
                                         </div>
                                     }

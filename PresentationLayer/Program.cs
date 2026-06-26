@@ -41,6 +41,7 @@ namespace PresentationLayer
             });
             builder.Services
                 .AddDataProtection()
+                .SetApplicationName("Group07MVC.CourseAssistant")
                 .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(
                     builder.Environment.ContentRootPath,
                     "App_Data",
@@ -72,7 +73,20 @@ namespace PresentationLayer
                         }
 
                         var users = context.HttpContext.RequestServices.GetRequiredService<PresentationLayer.Services.IUserAccountStore>();
-                        var user = await users.FindByIdAsync(userId, context.HttpContext.RequestAborted);
+                        PresentationLayer.Models.UserAccount? user;
+                        try
+                        {
+                            using var validationTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                            user = await users.FindByIdAsync(userId, validationTimeout.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            context.RejectPrincipal();
+                            await context.HttpContext.SignOutAsync(
+                                Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                            return;
+                        }
+
                         if (user is null)
                         {
                             context.RejectPrincipal();
