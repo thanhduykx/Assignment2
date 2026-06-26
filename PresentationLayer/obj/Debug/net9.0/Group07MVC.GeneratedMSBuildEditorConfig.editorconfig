@@ -1,0 +1,153 @@
+is_global = true
+build_property.TargetFramework = net9.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = Group07MVC
+build_property.RootNamespace = Group07MVC
+build_property.ProjectDir = D:\Summer 2026\Assignment2\PresentationLayer\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = D:\Summer 2026\Assignment2\PresentationLayer
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 9.0
+build_property.EnableCodeStyleSeverity = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/AccessDenied.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxBY2Nlc3NEZW5pZWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/ChangePassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxDaGFuZ2VQYXNzd29yZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/ForgotPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxGb3Jnb3RQYXNzd29yZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/GoogleCallback.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxHb29nbGVDYWxsYmFjay5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxMb2dvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Account/ResetPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudFxSZXNldFBhc3N3b3JkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Admin/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/Ask.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxBc2suY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/Chat.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxDaGF0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/ChatSession.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxDaGF0U2Vzc2lvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/ChatSessions.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxDaGF0U2Vzc2lvbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/Courses.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxDb3Vyc2VzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/CourseWorkspace.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxDb3Vyc2VXb3Jrc3BhY2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/CreateChatSession.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxDcmVhdGVDaGF0U2Vzc2lvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/DeleteChatSession.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxEZWxldGVDaGF0U2Vzc2lvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/DocumentPreview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxEb2N1bWVudFByZXZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/EditDocument.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxFZGl0RG9jdW1lbnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxFcnJvci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/OnlineUsers.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxPbmxpbmVVc2Vycy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/RenameChatSession.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxSZW5hbWVDaGF0U2Vzc2lvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/StarChatSession.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxTdGFyQ2hhdFNlc3Npb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/SubjectDocuments.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxTdWJqZWN0RG9jdW1lbnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Home/ViewDocument.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxWaWV3RG9jdW1lbnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Shared/_AuthStars.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9BdXRoU3RhcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Summer 2026/Assignment2/PresentationLayer/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-fi517pa6ih
