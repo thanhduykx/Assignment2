@@ -33,7 +33,7 @@ EduVietRAG là web app ASP.NET Core Razor Pages hỗ trợ quản lý tài liệ
 
 ## Kiến Trúc Hệ Thống
 
-![Sơ đồ kiến trúc EduVietRAG](docs/architecture-overview.png)
+![Sơ đồ kiến trúc EduVietRAG](docs/architecture.jpg)
 
 Sơ đồ trên thể hiện đúng các lớp chính của hệ thống: Presentation Layer xử lý Razor Pages, tài khoản và realtime status; BAL/ServicesLayer xử lý nghiệp vụ RAG, chunking, embedding và index tài liệu; Data Access Layer làm việc với repository, mapper, DbContext và SQL Server; các dịch vụ ngoài gồm Gemini API, Google OAuth và SMTP.
 
