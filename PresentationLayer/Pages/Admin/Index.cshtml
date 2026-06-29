@@ -13,6 +13,7 @@
     var isBulkImport = section == IndexModel.AdminSection.BulkImport;
     var isCreateSubject = section == IndexModel.AdminSection.CreateSubject;
     var isLecturerTable = section == IndexModel.AdminSection.LecturerTable;
+    var isStudentTable = section == IndexModel.AdminSection.StudentTable;
 
     var users = Model.Users
         .OrderBy(user => user.Role)
@@ -422,6 +423,99 @@
         </section>
     }
 
+    @if (isStudentTable)
+    {
+        @* === STUDENT TABLE: Danh sách học sinh === *@
+        <section class="ops-panel">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow">Student management</span>
+                    <h2>Student Table / Bảng học sinh</h2>
+                </div>
+                <span class="ops-panel-note">@Model.StudentUserCount students</span>
+            </div>
+
+            @{
+                var students = users.Where(u => u.Role == PresentationLayer.Security.AppRoles.Student).ToList();
+            }
+            @if (students.Count == 0)
+            {
+                <div class="ops-empty">
+                    <strong>No students found.</strong>
+                    <p>Create a student account first.</p>
+                </div>
+            }
+            else
+            {
+                <div class="ops-table-wrap">
+                    <table class="ops-table" style="min-width: 600px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 260px;">NAME</th>
+                                <th>SUBJECTS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var student in students)
+                        {
+                            <tr>
+                                <td data-label="NAME" style="width: 260px;">
+                                    <div class="ops-user-cell" style="min-width: 0;">
+                                        <span class="ops-avatar">@Initials(student)</span>
+                                        <div class="ops-user-identity">
+                                            <strong>@DisplayName(student)</strong>
+                                            <small>@student.Email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Subjects">
+                                    <div class="ops-subject-cell">
+                                        <div class="ops-chip-list">
+                                        @if (student.AssignedSubjectDetails.Count == 0)
+                                        {
+                                            <span class="ops-chip ops-chip--muted">Chưa đăng ký môn</span>
+                                        }
+                                        else
+                                        {
+                                            foreach (var subject in student.AssignedSubjectDetails)
+                                            {
+                                                <div class="ops-chip" style="display: inline-flex; align-items: center; padding-right: 6px;" title="Đã assign - click X để gỡ">
+                                                    <span>@subject.DisplayName</span>
+                                                    <form asp-page-handler="UnregisterStudentSubject" method="post" class="ops-inline-form" style="margin: 0; padding: 0; display: flex; align-items: center;" data-confirm="Gỡ môn @subject.DisplayName khỏi @DisplayName(student)?">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="UserId" value="@student.Id" />
+                                                        <input type="hidden" name="SubjectId" value="@subject.Id" />
+                                                        <button type="submit" title="Gỡ môn" style="background: none; border: none; cursor: pointer; font-weight: bold; margin-left: 6px; color: inherit; opacity: 0.7; display: flex; align-items: center; padding: 0; font-size: 14px;">
+                                                            &times;
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                        }
+                                        </div>
+                                        <form asp-page-handler="RegisterStudentSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(student)?">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="UserId" value="@student.Id" />
+                                            <select name="SubjectId" required disabled="@(Model.SubjectOptions.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(student)">
+                                                <option value="">@(Model.SubjectOptions.Count == 0 ? "Không có môn nào" : "Chọn môn để đăng ký")</option>
+                                                @foreach (var subject in Model.SubjectOptions)
+                                                {
+                                                    <option value="@subject.Id">@subject.DisplayName</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="ops-mini-button" disabled="@(Model.SubjectOptions.Count == 0)">Đăng ký</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+
     @if (isCreateSubject)
     {
         @* === CREATE SUBJECT: Thêm môn === *@
@@ -447,6 +541,87 @@
                     Create subject
                 </button>
             </form>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--rbl-border);" />
+            
+            <div class="ops-panel-head">
+                <div>
+                    <h2>Subject List / Danh sách môn học</h2>
+                </div>
+                <span class="ops-panel-note">@Model.SubjectOptions.Count subjects</span>
+            </div>
+            
+            @if (Model.SubjectOptions.Count == 0)
+            {
+                <div class="ops-empty">
+                    <strong>No subjects found.</strong>
+                    <p>Create a subject above.</p>
+                </div>
+            }
+            else
+            {
+                <div class="ops-table-wrap">
+                    <table class="ops-table">
+                        <thead>
+                            <tr>
+                                <th>SUBJECT</th>
+                                <th>LEADER</th>
+                                <th>STUDENTS</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var subject in Model.SubjectOptions)
+                        {
+                            <tr class="@(subject.IsActive ? "" : "ops-muted-row")">
+                                <td data-label="SUBJECT">
+                                    <strong>@subject.DisplayName</strong>
+                                </td>
+                                <td data-label="LEADER">
+                                    @if (string.IsNullOrWhiteSpace(subject.OwnerName))
+                                    {
+                                        <span class="ops-muted">None</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@subject.OwnerName <br><small>@subject.OwnerEmail</small></span>
+                                    }
+                                </td>
+                                <td data-label="STUDENTS">
+                                    <span>@subject.StudentCount</span>
+                                </td>
+                                <td data-label="STATUS">
+                                    @if (subject.IsActive)
+                                    {
+                                        <span class="ops-chip" style="background-color: var(--rbl-green-light); color: var(--rbl-green-dark);">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ops-chip" style="background-color: var(--rbl-red-light); color: var(--rbl-red-dark);">Inactive</span>
+                                    }
+                                </td>
+                                <td data-label="ACTIONS">
+                                    <form asp-page-handler="ToggleSubjectActiveStatus" method="post" style="margin: 0; padding: 0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="SubjectId" value="@subject.Id" />
+                                        <input type="hidden" name="IsActive" value="@(subject.IsActive ? "false" : "true")" />
+                                        @if (subject.IsActive)
+                                        {
+                                            <button type="submit" class="ops-mini-button ops-mini-button--danger" data-confirm="Deactivate môn @subject.DisplayName?">Deactivate</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="ops-mini-button" data-confirm="Activate môn @subject.DisplayName?">Activate</button>
+                                        }
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </section>
     }
 </section>

@@ -20,6 +20,8 @@ public sealed class KnowledgeSqlCourseSubject
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+    public bool IsActive { get; set; } = true;
+
     // Subject Leader (tối đa 1)
     public Guid? OwnerUserId { get; set; }
 
@@ -35,4 +37,8 @@ public sealed class KnowledgeSqlCourseSubject
 
     [InverseProperty(nameof(KnowledgeSqlCourseChapter.Subject))]
     public List<KnowledgeSqlCourseChapter> Chapters { get; set; } = new();
+
+    // Enrolled Students (N-N)
+    [InverseProperty(nameof(KnowledgeSqlSubjectStudent.Subject))]
+    public List<KnowledgeSqlSubjectStudent> EnrolledStudents { get; set; } = new();
 }

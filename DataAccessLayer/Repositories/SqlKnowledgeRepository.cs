@@ -273,6 +273,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         var subjects = await context.CourseSubjects
             .AsNoTracking()
             .Include(item => item.Chapters)
+            .Include(item => item.EnrolledStudents)
             .OrderBy(item => item.Code)
             .ToListAsync(cancellationToken);
 
@@ -700,20 +701,20 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         DocumentAccessScope scope,
         IQueryable<KnowledgeSqlCourseSubject> subjects)
     {
+        IQueryable<KnowledgeSqlDocument> resultQuery;
+
         if (scope.IsAdmin)
         {
-            return query;
+            resultQuery = query;
         }
-
-        if (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent)
+        else if (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent)
         {
-            return query;
+            resultQuery = query;
         }
-
-        if (scope.IsLecturer && scope.UserId is { } userId)
+        else if (scope.IsLecturer && scope.UserId is { } userId)
         {
             var email = scope.NormalizedEmail;
-            return query.Where(document =>
+            resultQuery = query.Where(document =>
                 document.UploadedByUserId == userId
                 || (!document.UploadedByUserId.HasValue
                     && email != string.Empty
@@ -723,8 +724,20 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
                     && (document.Subject == subject.Code
                         || document.Subject.StartsWith(subject.Code + " - "))));
         }
+        else
+        {
+            resultQuery = query.Where(_ => false);
+        }
 
-        return query.Where(_ => false);
+        if (scope.Mode == DocumentAccessMode.Chat)
+        {
+            resultQuery = resultQuery.Where(document => 
+                !subjects.Any(subject => 
+                    !subject.IsActive && 
+                    (document.Subject == subject.Code || document.Subject.StartsWith(subject.Code + " - "))));
+        }
+
+        return resultQuery;
     }
 
     private static IQueryable<KnowledgeSqlChunk> ApplyChunkScope(
@@ -732,15 +745,16 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         DocumentAccessScope scope,
         IQueryable<KnowledgeSqlCourseSubject> subjects)
     {
+        IQueryable<KnowledgeSqlChunk> resultQuery;
+
         if (scope.IsAdmin || (scope.Mode == DocumentAccessMode.Chat && scope.IsStudent))
         {
-            return query;
+            resultQuery = query;
         }
-
-        if (scope.IsLecturer && scope.UserId is { } userId)
+        else if (scope.IsLecturer && scope.UserId is { } userId)
         {
             var email = scope.NormalizedEmail;
-            return query.Where(chunk =>
+            resultQuery = query.Where(chunk =>
                 chunk.Document.UploadedByUserId == userId
                 || (!chunk.Document.UploadedByUserId.HasValue
                     && email != string.Empty
@@ -750,8 +764,20 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
                     && (chunk.Document.Subject == subject.Code
                         || chunk.Document.Subject.StartsWith(subject.Code + " - "))));
         }
+        else
+        {
+            resultQuery = query.Where(_ => false);
+        }
 
-        return query.Where(_ => false);
+        if (scope.Mode == DocumentAccessMode.Chat)
+        {
+            resultQuery = resultQuery.Where(chunk => 
+                !subjects.Any(subject => 
+                    !subject.IsActive && 
+                    (chunk.Document.Subject == subject.Code || chunk.Document.Subject.StartsWith(subject.Code + " - "))));
+        }
+
+        return resultQuery;
     }
 
     private static IQueryable<KnowledgeSqlDocument> ApplyDocumentListQuery(
@@ -886,6 +912,7 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
             Name = subject.Name ?? string.Empty,
             Description = subject.Description ?? string.Empty,
             CreatedAt = subject.CreatedAt,
+            IsActive = subject.IsActive,
             OwnerUserId = subject.OwnerUserId,
             OwnerName = subject.OwnerName ?? string.Empty,
             OwnerEmail = subject.OwnerEmail ?? string.Empty,
@@ -893,7 +920,8 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
                 .OrderBy(item => item.SortOrder)
                 .ThenBy(item => item.Title)
                 .Select(item => ToCourseChapter(item, subject))
-                .ToList()
+                .ToList(),
+            StudentCount = subject.EnrolledStudents?.Count ?? 0
         };
     }
 
@@ -997,5 +1025,61 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
             .Where(tl => tl.SubjectId == subjectId)
             .Select(tl => tl.UserId)
             .ToListAsync(cancellationToken);
+    }
+
+    // ---------- Subject student management ----------
+
+    public async Task AddSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var existing = await context.SubjectStudents
+            .FirstOrDefaultAsync(ss => ss.SubjectId == subjectId && ss.UserId == userId, cancellationToken);
+        if (existing is not null)
+        {
+            return;
+        }
+
+        context.SubjectStudents.Add(new KnowledgeSqlSubjectStudent
+        {
+            Id = Guid.NewGuid(),
+            SubjectId = subjectId,
+            UserId = userId
+        });
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var existing = await context.SubjectStudents
+            .FirstOrDefaultAsync(ss => ss.SubjectId == subjectId && ss.UserId == userId, cancellationToken);
+        if (existing is not null)
+        {
+            context.SubjectStudents.Remove(existing);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetSubjectStudentIdsAsync(Guid subjectId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        return await context.SubjectStudents
+            .AsNoTracking()
+            .Where(ss => ss.SubjectId == subjectId)
+            .Select(ss => ss.UserId)
+            .ToListAsync(cancellationToken);
+    }
+
+    // ---------- Subject status ----------
+
+    public async Task SetSubjectActiveStatusAsync(Guid subjectId, bool isActive, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var subject = await context.CourseSubjects.FirstOrDefaultAsync(s => s.Id == subjectId, cancellationToken);
+        if (subject is not null && subject.IsActive != isActive)
+        {
+            subject.IsActive = isActive;
+            await context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

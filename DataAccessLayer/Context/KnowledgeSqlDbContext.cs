@@ -17,6 +17,7 @@ public sealed class KnowledgeSqlDbContext : DbContext
     public DbSet<KnowledgeSqlChatMessage> Messages => Set<KnowledgeSqlChatMessage>();
     public DbSet<KnowledgeSqlCitation> Citations => Set<KnowledgeSqlCitation>();
     public DbSet<KnowledgeSqlSubjectLecturer> SubjectLecturers => Set<KnowledgeSqlSubjectLecturer>();
+    public DbSet<KnowledgeSqlSubjectStudent> SubjectStudents => Set<KnowledgeSqlSubjectStudent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +59,11 @@ public sealed class KnowledgeSqlDbContext : DbContext
         modelBuilder.Entity<KnowledgeSqlSubjectLecturer>(entity =>
         {
             entity.HasIndex(tl => new { tl.SubjectId, tl.UserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<KnowledgeSqlSubjectStudent>(entity =>
+        {
+            entity.HasIndex(ss => new { ss.SubjectId, ss.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<KnowledgeSqlCourseChapter>(entity =>

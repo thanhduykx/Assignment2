@@ -52,7 +52,7 @@ public sealed class IndexModel : PageModel
     public int SubjectCount { get; private set; }
     public int AssignedSubjectCount { get; private set; }
 
-    public enum AdminSection { Directory, CreateAccount, BulkImport, CreateSubject, LecturerTable }
+    public enum AdminSection { Directory, CreateAccount, BulkImport, CreateSubject, LecturerTable, StudentTable }
 
     public AdminSection CurrentSection { get; private set; } = AdminSection.Directory;
 
@@ -70,6 +70,7 @@ public sealed class IndexModel : PageModel
             "bulk-import" or "bulkimport" => AdminSection.BulkImport,
             "create-subject" or "createsubject" => AdminSection.CreateSubject,
             "lecturer-table" or "lecturertable" => AdminSection.LecturerTable,
+            "student-table" or "studenttable" => AdminSection.StudentTable,
             _ => AdminSection.Directory
         };
     }
@@ -766,6 +767,117 @@ public sealed class IndexModel : PageModel
         return RedirectToPage("/Admin/Index", new { section = "lecturer-table" });
     }
 
+    public async Task<IActionResult> OnPostToggleSubjectActiveStatusAsync([FromForm] ToggleSubjectActiveStatusViewModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
+                .FirstOrDefault(item => item.Id == model.SubjectId)
+                ?? throw new InvalidOperationException("Subject not found.");
+
+            if (!model.IsActive)
+            {
+                // Verify no teachers and no students before deactivating
+                var teachingLecturerIds = await _repository.GetSubjectLecturerIdsAsync(subject.Id, cancellationToken);
+                if (subject.OwnerUserId.HasValue || teachingLecturerIds.Count > 0)
+                {
+                    TempData["Error"] = $"Không thể Deactivate môn {subject.DisplayName} vì đang có giáo viên phụ trách.";
+                    return RedirectToPage("/Admin/Index");
+                }
+                
+                var enrolledStudentIds = await _repository.GetSubjectStudentIdsAsync(subject.Id, cancellationToken);
+                if (enrolledStudentIds.Count > 0)
+                {
+                    TempData["Error"] = $"Không thể Deactivate môn {subject.DisplayName} vì đang có học sinh đăng ký.";
+                    return RedirectToPage("/Admin/Index");
+                }
+            }
+
+            await _repository.SetSubjectActiveStatusAsync(subject.Id, model.IsActive, cancellationToken);
+            TempData["Success"] = $"Đã {(model.IsActive ? "Activate" : "Deactivate")} môn {subject.DisplayName}.";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException)
+        {
+            TempData["Error"] = ToAdminUserError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not toggle subject status {SubjectId}", model.SubjectId);
+            TempData["Error"] = "Could not toggle this subject.";
+        }
+
+        return RedirectToPage("/Admin/Index");
+    }
+
+    public async Task<IActionResult> OnPostRegisterStudentSubjectAsync([FromForm] RegisterStudentSubjectViewModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var student = await FindUserAsync(model.UserId, cancellationToken)
+                ?? throw new InvalidOperationException("User not found.");
+            if (student.Role != AppRoles.Student)
+            {
+                throw new InvalidOperationException("Only students can be assigned to subjects here.");
+            }
+
+            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
+                .FirstOrDefault(item => item.Id == model.SubjectId)
+                ?? throw new InvalidOperationException("Subject not found.");
+
+            var teachingLecturerIds = await _repository.GetSubjectLecturerIdsAsync(subject.Id, cancellationToken);
+            if (!subject.OwnerUserId.HasValue && teachingLecturerIds.Count == 0)
+            {
+                TempData["Error"] = $"Không thể gán học sinh vào môn {subject.DisplayName} vì chưa có giáo viên phụ trách.";
+                return RedirectToPage("/Admin/Index", new { section = "student-table" });
+            }
+
+            await _repository.AddSubjectStudentAsync(subject.Id, student.Id, cancellationToken);
+            TempData["Success"] = $"Đã thêm {DisplayName(student)} vào lớp học môn {subject.DisplayName}.";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException)
+        {
+            TempData["Error"] = ToAdminUserError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not register subject {SubjectId} for student {UserId}", model.SubjectId, model.UserId);
+            TempData["Error"] = "Could not register this subject.";
+        }
+
+        return RedirectToPage("/Admin/Index", new { section = "student-table" });
+    }
+
+    public async Task<IActionResult> OnPostUnregisterStudentSubjectAsync([FromForm] UnregisterStudentSubjectViewModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var student = await FindUserAsync(model.UserId, cancellationToken)
+                ?? throw new InvalidOperationException("User not found.");
+            if (student.Role != AppRoles.Student)
+            {
+                throw new InvalidOperationException("Only students can learn subjects.");
+            }
+
+            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
+                .FirstOrDefault(item => item.Id == model.SubjectId)
+                ?? throw new InvalidOperationException("Subject not found.");
+
+            await _repository.RemoveSubjectStudentAsync(subject.Id, student.Id, cancellationToken);
+            TempData["Success"] = $"Đã gỡ {DisplayName(student)} khỏi danh sách học môn {subject.DisplayName}.";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException)
+        {
+            TempData["Error"] = ToAdminUserError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not unregister subject {SubjectId} for student {UserId}", model.SubjectId, model.UserId);
+            TempData["Error"] = "Could not unregister this subject.";
+        }
+
+        return RedirectToPage("/Admin/Index", new { section = "student-table" });
+    }
+
     private async Task<int> UnassignSubjectsOwnedByAsync(Guid userId, CancellationToken cancellationToken)
     {
         var subjectsToUnassign = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
@@ -829,6 +941,22 @@ public sealed class IndexModel : PageModel
                     };
                 }
             }
+
+            // Nguồn C: Học sinh (từ bảng subject_students)
+            var enrolledStudentIds = await _repository.GetSubjectStudentIdsAsync(subject.Id, cancellationToken);
+            foreach (var studentId in enrolledStudentIds)
+            {
+                if (!subjectMap.ContainsKey(studentId)) subjectMap[studentId] = new();
+                if (!subjectMap[studentId].ContainsKey(subject.Id))
+                {
+                    subjectMap[studentId][subject.Id] = new AdminAssignedSubjectViewModel
+                    {
+                        Id = subject.Id,
+                        DisplayName = subject.DisplayName,
+                        IsLeader = false
+                    };
+                }
+            }
         }
 
         // 3. Chuyển đổi sang định dạng IReadOnlyDictionary theo đúng kiểu dữ liệu cũ yêu cầu
@@ -849,7 +977,9 @@ public sealed class IndexModel : PageModel
                 DisplayName = subject.DisplayName,
                 OwnerUserId = subject.OwnerUserId,
                 OwnerName = subject.OwnerName,
-                OwnerEmail = subject.OwnerEmail
+                OwnerEmail = subject.OwnerEmail,
+                IsActive = subject.IsActive,
+                StudentCount = subject.StudentCount
             })
             .ToList();
 
@@ -887,7 +1017,7 @@ public sealed class IndexModel : PageModel
         UserAccount user,
         IReadOnlyDictionary<Guid, IReadOnlyList<AdminAssignedSubjectViewModel>> lecturerSubjectsByUser)
     {
-        if (user.Role == AppRoles.Lecturer)
+        if (user.Role == AppRoles.Lecturer || user.Role == AppRoles.Student)
         {
             return lecturerSubjectsByUser.TryGetValue(user.Id, out var assignedSubjects)
                 ? assignedSubjects.Select(subject => subject.DisplayName).ToList()
@@ -904,9 +1034,9 @@ public sealed class IndexModel : PageModel
 
     private static IReadOnlyList<AdminAssignedSubjectViewModel> ResolveAssignedSubjectDetails(
         UserAccount user,
-        IReadOnlyDictionary<Guid, IReadOnlyList<AdminAssignedSubjectViewModel>> lecturerSubjectsByUser)
+        IReadOnlyDictionary<Guid, IReadOnlyList<AdminAssignedSubjectViewModel>> subjectsByUser)
     {
-        return user.Role == AppRoles.Lecturer && lecturerSubjectsByUser.TryGetValue(user.Id, out var assignedSubjects)
+        return (user.Role == AppRoles.Lecturer || user.Role == AppRoles.Student) && subjectsByUser.TryGetValue(user.Id, out var assignedSubjects)
             ? assignedSubjects
             : Array.Empty<AdminAssignedSubjectViewModel>();
     }
