@@ -20,6 +20,7 @@ public sealed class KnowledgeSqlCourseSubject
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+    // Subject Leader (tối đa 1)
     public Guid? OwnerUserId { get; set; }
 
     [MaxLength(255)]
@@ -27,6 +28,10 @@ public sealed class KnowledgeSqlCourseSubject
 
     [MaxLength(255)]
     public string? OwnerEmail { get; set; }
+
+    // Teaching Lecturers (N-N)
+    [InverseProperty(nameof(KnowledgeSqlSubjectLecturer.Subject))]
+    public List<KnowledgeSqlSubjectLecturer> TeachingLecturers { get; set; } = new();
 
     [InverseProperty(nameof(KnowledgeSqlCourseChapter.Subject))]
     public List<KnowledgeSqlCourseChapter> Chapters { get; set; } = new();

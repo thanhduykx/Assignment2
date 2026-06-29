@@ -22,17 +22,20 @@ public sealed class IndexModel : PageModel
 {
     private readonly IUserAccountStore _users;
     private readonly IKnowledgeService _knowledge;
+    private readonly IKnowledgeRepository _repository;
     private readonly IAccountEmailSender _emailSender;
     private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(
         IUserAccountStore users,
         IKnowledgeService knowledge,
+        IKnowledgeRepository repository,
         IAccountEmailSender emailSender,
         ILogger<IndexModel> logger)
     {
         _users = users;
         _knowledge = knowledge;
+        _repository = repository;
         _emailSender = emailSender;
         _logger = logger;
     }
@@ -681,23 +684,31 @@ public sealed class IndexModel : PageModel
                 .FirstOrDefault(item => item.Id == model.SubjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
 
-            if (subject.OwnerUserId.HasValue && subject.OwnerUserId.Value != lecturer.Id)
+            if (model.RoleType == "Leader")
             {
-                TempData["Error"] = $"Môn {subject.DisplayName} đã được gán cho {FormatSubjectOwner(subject)}.";
-                return RedirectToPage("/Admin/Index");
+                // Gán làm Trưởng bộ môn (Subject Leader) — OwnerUserId
+                if (subject.OwnerUserId.HasValue && subject.OwnerUserId.Value != lecturer.Id)
+                {
+                    TempData["Error"] = $"Trưởng bộ môn {subject.DisplayName} đã được gán cho {FormatSubjectOwner(subject)}. Vui lòng gỡ trước khi chuyển.";
+                    return RedirectToPage("/Admin/Index");
+                }
+
+                await _knowledge.UpsertSubjectAsync(
+                    subject.Id,
+                    subject.Code,
+                    subject.Name,
+                    subject.Description,
+                    cancellationToken,
+                    new SubjectOwnerInfo(lecturer.Id, lecturer.FullName, lecturer.Email));
+
+                TempData["Success"] = $"Đã gán {DisplayName(lecturer)} làm trưởng bộ môn {subject.DisplayName}.";
             }
-
-            await _knowledge.UpsertSubjectAsync(
-                subject.Id,
-                subject.Code,
-                subject.Name,
-                subject.Description,
-                cancellationToken,
-                new SubjectOwnerInfo(lecturer.Id, lecturer.FullName, lecturer.Email));
-
-            TempData["Success"] = subject.OwnerUserId == lecturer.Id
-                ? $"Môn {subject.DisplayName} đã thuộc {DisplayName(lecturer)}."
-                : $"Đã đăng ký môn {subject.DisplayName} cho {DisplayName(lecturer)}.";
+            else
+            {
+                // Gán làm Giảng viên giảng dạy (Teaching Lecturer) — bảng trung gian
+                await _repository.AddSubjectLecturerAsync(subject.Id, lecturer.Id, cancellationToken);
+                TempData["Success"] = $"Đã thêm {DisplayName(lecturer)} vào danh sách giảng viên giảng dạy môn {subject.DisplayName}.";
+            }
         }
         catch (Exception ex) when (ex is InvalidOperationException)
         {
@@ -709,13 +720,50 @@ public sealed class IndexModel : PageModel
             TempData["Error"] = "Could not register this subject.";
         }
 
-        return RedirectToPage("/Admin/Index");
+        return RedirectToPage("/Admin/Index", new { section = "lecturer-table" });
     }
 
     public async Task<IActionResult> OnPostUnregisterLecturerSubjectAsync([FromForm] UnregisterLecturerSubjectViewModel model, CancellationToken cancellationToken)
     {
-        TempData["Error"] = "Không thể gỡ môn sau khi đã assign. Chỉ Admin mới có quyền gỡ môn (liên hệ Admin)";
-        return RedirectToPage("/Admin/Index");
+        try
+        {
+            var lecturer = await FindUserAsync(model.UserId, cancellationToken)
+                ?? throw new InvalidOperationException("User not found.");
+            if (lecturer.Role != AppRoles.Lecturer)
+            {
+                throw new InvalidOperationException("Only lecturers can teach subjects.");
+            }
+
+            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
+                .FirstOrDefault(item => item.Id == model.SubjectId)
+                ?? throw new InvalidOperationException("Subject not found.");
+
+            // Call a single repository method that handles both:
+            // 1. Remove teaching lecturer from rag_subject_lecturers (junction table)
+            // 2. If this lecturer is also the Subject Leader (OwnerUserId), revoke that role too
+            await _repository.RemoveSubjectLecturerAsync(subject.Id, lecturer.Id, cancellationToken);
+
+            var leaderRevoked = subject.OwnerUserId == lecturer.Id;
+            if (leaderRevoked)
+            {
+                TempData["Success"] = $"Đã gỡ {DisplayName(lecturer)} khỏi danh sách giảng dạy và thu hồi quyền trưởng bộ môn của môn {subject.DisplayName}.";
+            }
+            else
+            {
+                TempData["Success"] = $"Đã gỡ {DisplayName(lecturer)} khỏi danh sách giảng dạy môn {subject.DisplayName}.";
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException)
+        {
+            TempData["Error"] = ToAdminUserError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not unregister subject {SubjectId} for user {UserId}", model.SubjectId, model.UserId);
+            TempData["Error"] = "Could not unregister this subject.";
+        }
+
+        return RedirectToPage("/Admin/Index", new { section = "lecturer-table" });
     }
 
     private async Task<int> UnassignSubjectsOwnedByAsync(Guid userId, CancellationToken cancellationToken)
@@ -745,20 +793,51 @@ public sealed class IndexModel : PageModel
         var normalizedQuery = q?.Trim();
         var normalizedRoleFilter = roleFilter?.Trim();
         var adminCount = users.Count(user => user.Role == AppRoles.Admin);
-        var assignedSubjectsByUser = subjects
-            .Where(subject => subject.OwnerUserId.HasValue)
-            .GroupBy(subject => subject.OwnerUserId!.Value)
-            .ToDictionary(
-                group => group.Key,
-                group => (IReadOnlyList<AdminAssignedSubjectViewModel>)group
-                    .OrderBy(subject => subject.Code)
-                    .ThenBy(subject => subject.Name)
-                    .Select(subject => new AdminAssignedSubjectViewModel
+
+        // 1. Dùng Dictionary để ánh xạ Môn học cho Giảng viên và gán cờ IsLeader
+        var subjectMap = new Dictionary<Guid, Dictionary<Guid, AdminAssignedSubjectViewModel>>();
+
+        // 2. Lặp qua danh sách môn học để gom nhóm Giảng viên (tối ưu hơn lặp qua toàn bộ User)
+        foreach (var subject in subjects)
+        {
+            // Nguồn A: Trưởng bộ môn (OwnerUserId)
+            if (subject.OwnerUserId.HasValue)
+            {
+                var leaderId = subject.OwnerUserId.Value;
+                if (!subjectMap.ContainsKey(leaderId)) subjectMap[leaderId] = new();
+                subjectMap[leaderId][subject.Id] = new AdminAssignedSubjectViewModel
+                {
+                    Id = subject.Id,
+                    DisplayName = subject.DisplayName,
+                    IsLeader = true
+                };
+            }
+
+            // Nguồn B: Các giảng viên giảng dạy từ bảng trung gian
+            // Hàm này nhận vào SubjectId và nhả ra danh sách UserId
+            var teachingLecturerIds = await _repository.GetSubjectLecturerIdsAsync(subject.Id, cancellationToken);
+            foreach (var lecturerId in teachingLecturerIds)
+            {
+                if (!subjectMap.ContainsKey(lecturerId)) subjectMap[lecturerId] = new();
+                if (!subjectMap[lecturerId].ContainsKey(subject.Id))
+                {
+                    subjectMap[lecturerId][subject.Id] = new AdminAssignedSubjectViewModel
                     {
                         Id = subject.Id,
-                        DisplayName = subject.DisplayName
-                    })
-                    .ToList());
+                        DisplayName = subject.DisplayName,
+                        IsLeader = false
+                    };
+                }
+            }
+        }
+
+        // 3. Chuyển đổi sang định dạng IReadOnlyDictionary theo đúng kiểu dữ liệu cũ yêu cầu
+        var assignedSubjectsByUser = subjectMap.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IReadOnlyList<AdminAssignedSubjectViewModel>)kvp.Value.Values
+                .OrderBy(s => s.DisplayName)
+                .ToList()
+        );
 
         Roles = AppRoles.All;
         SubjectOptions = subjects
@@ -773,6 +852,7 @@ public sealed class IndexModel : PageModel
                 OwnerEmail = subject.OwnerEmail
             })
             .ToList();
+
         var userRows = users.Select(user => new AdminUserRowViewModel
             {
                 Id = user.Id,

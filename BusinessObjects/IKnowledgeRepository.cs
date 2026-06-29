@@ -50,4 +50,9 @@ public interface IKnowledgeRepository
     Task<bool> DeleteSessionAsync(Guid sessionId, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null);
     Task AddMessageAsync(Guid sessionId, ChatMessage message, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null);
     Task ImportFromJsonIfEmptyAsync(string jsonStorePath, CancellationToken cancellationToken = default);
+    
+    // Subject lecturer management (N-N relation)
+    Task AddSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Guid>> GetSubjectLecturerIdsAsync(Guid subjectId, CancellationToken cancellationToken = default);
 }

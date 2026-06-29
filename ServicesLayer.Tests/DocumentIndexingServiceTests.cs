@@ -335,6 +335,21 @@ public sealed class DocumentIndexingServiceTests
             throw new NotSupportedException();
         }
 
+        public Task AddSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<IReadOnlyList<Guid>> GetSubjectLecturerIdsAsync(Guid subjectId, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
         public Task AddMessageAsync(
             Guid sessionId,
             ChatMessage message,

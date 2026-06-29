@@ -936,4 +936,66 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
 
         return normalized;
     }
+
+    // ---------- Subject lecturer management ----------
+
+    public async Task AddSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var existing = await context.SubjectLecturers
+            .FirstOrDefaultAsync(tl => tl.SubjectId == subjectId && tl.UserId == userId, cancellationToken);
+        if (existing is not null)
+        {
+            return;
+        }
+
+        context.SubjectLecturers.Add(new KnowledgeSqlSubjectLecturer
+        {
+            Id = Guid.NewGuid(),
+            SubjectId = subjectId,
+            UserId = userId
+        });
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        bool changed = false;
+
+        // 1. Remove teaching lecturer from junction table
+        var existing = await context.SubjectLecturers
+            .FirstOrDefaultAsync(tl => tl.SubjectId == subjectId && tl.UserId == userId, cancellationToken);
+        if (existing is not null)
+        {
+            context.SubjectLecturers.Remove(existing);
+            changed = true;
+        }
+
+        // 2. If this lecturer is also the Subject Leader (OwnerUserId), revoke that role too
+        var subject = await context.CourseSubjects
+            .FirstOrDefaultAsync(s => s.Id == subjectId && s.OwnerUserId == userId, cancellationToken);
+        if (subject is not null)
+        {
+            subject.OwnerUserId = null;
+            subject.OwnerName = null;
+            subject.OwnerEmail = null;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetSubjectLecturerIdsAsync(Guid subjectId, CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        return await context.SubjectLecturers
+            .AsNoTracking()
+            .Where(tl => tl.SubjectId == subjectId)
+            .Select(tl => tl.UserId)
+            .ToListAsync(cancellationToken);
+    }
 }
