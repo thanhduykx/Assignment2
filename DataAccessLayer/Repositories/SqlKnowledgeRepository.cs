@@ -172,6 +172,14 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<int> GetMaxChunkIndexAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = CreateContext();
+        var hasChunks = await context.Chunks.AnyAsync(cancellationToken);
+        if (!hasChunks) return -1;
+        return await context.Chunks.MaxAsync(c => c.ChunkIndex, cancellationToken);
+    }
+
     public async Task CompleteDocumentIndexAsync(
         Guid documentId,
         IReadOnlyList<DocumentChunk> chunks,

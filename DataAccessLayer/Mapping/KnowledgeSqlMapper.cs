@@ -63,7 +63,7 @@ public static class KnowledgeSqlMapper
 
     public static DocumentChunk ToModel(KnowledgeSqlChunk entity)
     {
-        return new DocumentChunk
+        var chunk = new DocumentChunk
         {
             Id = entity.Id,
             DocumentId = entity.DocumentId,
@@ -76,6 +76,13 @@ public static class KnowledgeSqlMapper
             CharStart = entity.CharStart,
             CharEnd = entity.CharEnd
         };
+
+        if (!string.IsNullOrEmpty(entity.EmbeddingJson))
+        {
+            chunk.Embedding = System.Text.Json.JsonSerializer.Deserialize<Dictionary<int, double>>(entity.EmbeddingJson) ?? new();
+        }
+
+        return chunk;
     }
 
     public static KnowledgeSqlChunk ToEntity(DocumentChunk model)
@@ -91,7 +98,8 @@ public static class KnowledgeSqlMapper
             Text = model.Text,
             SectionTitle = model.SectionTitle,
             CharStart = model.CharStart,
-            CharEnd = model.CharEnd
+            CharEnd = model.CharEnd,
+            EmbeddingJson = model.Embedding != null ? System.Text.Json.JsonSerializer.Serialize(model.Embedding) : "{}"
         };
     }
 

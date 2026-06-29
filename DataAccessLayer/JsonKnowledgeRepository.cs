@@ -211,6 +211,20 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         }
     }
 
+    public async Task<int> GetMaxChunkIndexAsync(CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var store = await LoadAsync(cancellationToken);
+            return store.Chunks.Count > 0 ? store.Chunks.Max(c => c.ChunkIndex) : -1;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task MarkDocumentIndexProcessingAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);

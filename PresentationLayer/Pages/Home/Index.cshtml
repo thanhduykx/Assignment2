@@ -100,13 +100,13 @@
 <section class="ops-page ops-documents-page">
     <header class="ops-page-header">
         <div>
-            <span class="ops-eyebrow">Learning content operations</span>
-            <h1>Kho tài liệu / Documents</h1>
-            <p>Quản lý tài liệu, danh mục môn học và trạng thái index để chatbot trả lời đúng nguồn.</p>
+            <span class="ops-eyebrow" data-i18n="documents.eyebrow">Learning content operations</span>
+            <h1 data-i18n="documents.shellTitle">Kho tài liệu</h1>
+            <p data-i18n="documents.manageSubtitle">Quản lý tài liệu, danh mục môn học và trạng thái index để chatbot trả lời đúng nguồn.</p>
         </div>
         <a class="ops-button ops-button--secondary" asp-page="/Home/Chat">
             <span class="material-symbols-outlined" aria-hidden="true">chat</span>
-            Chatbot / Hỏi đáp
+            <span data-i18n="shell.chatbot">Chatbot</span>
         </a>
     </header>
 
@@ -127,27 +127,27 @@
     {
         <section class="ops-kpi-grid" aria-label="Document metrics">
             <article class="ops-kpi">
-                <span>Total / Tổng</span>
+                <span data-i18n="documents.kpiTotal">Total</span>
                 <strong data-document-kpi="total">@totalDocuments</strong>
-                <small><span data-document-visible-count>@visibleDocuments</span> shown</small>
+                <small><span data-document-visible-count>@visibleDocuments</span> <span data-i18n="documents.showing">shown</span></small>
             </article>
             <article class="ops-kpi">
-                <span>Indexed</span>
+                <span data-i18n="documents.statsIndexed">Indexed</span>
                 <strong data-document-kpi="indexed">@Model.IndexedDocumentCount</strong>
                 <small>Ready for chat</small>
             </article>
             <article class="ops-kpi">
-                <span>Processing</span>
+                <span data-i18n="documents.statsProcessing">Processing</span>
                 <strong data-document-kpi="processing">@Model.ProcessingDocumentCount</strong>
                 <small>Queued or indexing</small>
             </article>
             <article class="ops-kpi ops-kpi--danger">
-                <span>Failed</span>
+                <span data-i18n="documents.kpiFailed">Failed</span>
                 <strong data-document-kpi="failed">@Model.FailedDocumentCount</strong>
                 <small>Needs attention</small>
             </article>
             <article class="ops-kpi">
-                <span>Storage</span>
+                <span data-i18n="documents.storage">Storage</span>
                 <strong>@FormatBytes(Model.TotalUploadedBytes)</strong>
                 <small>@totalChunks chunks, avg @averageChunks.ToString("0.#")</small>
             </article>
@@ -161,11 +161,11 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Language" value="vi" data-language-field />
 
-                <div class="ops-form-row">
+                <div class="ops-form-row" style="margin-bottom: 1.5rem;">
                     <label class="ops-field">
-                        <span>Subject / Môn học</span>
+                        <span data-i18n="documents.subject">Môn học</span>
                         <select name="Subject" required disabled="@(!canUploadToSubject)">
-                            <option value="">Chọn môn học</option>
+                            <option value="" data-i18n="documents.selectSubject">Chọn môn học</option>
                             @foreach (var subject in subjectOptions)
                             {
                                 <option value="@subject">@subject</option>
@@ -173,12 +173,12 @@
                         </select>
                         @if (!canUploadToSubject)
                         {
-                            <small>Chưa có môn nào được gán cho tài khoản này.</small>
+                            <small data-i18n="documents.noSubjectAssigned">Chưa có môn nào được gán cho tài khoản này.</small>
                         }
                     </label>
                     <label class="ops-field">
-                        <span>Chapter / Chương</span>
-                        <input name="Chapter" list="chapterOptions" placeholder="Chapter 1 hoặc Week 1" />
+                        <span data-i18n="documents.chapter">Chương</span>
+                        <input name="Chapter" list="chapterOptions" placeholder="Chapter 1 hoặc Week 1" data-i18n-placeholder="documents.chapterPlaceholder" />
                     </label>
                 </div>
 
@@ -189,26 +189,28 @@
                     }
                 </datalist>
 
-                <div class="ops-ingest-grid">
+                <div class="ops-ingest-grid" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
                     <label id="documentDropzone" class="ops-dropzone dropzone" for="documentFileInput">
                         <input id="documentFileInput" name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
                         <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                        <strong>File upload</strong>
+                        <strong data-i18n="documents.uploadKicker">File upload</strong>
                         <small id="documentFileName" data-default-en="PDF, DOCX, PPTX, TXT"
                                data-default-vi="PDF, DOCX, PPTX, TXT">PDF, DOCX, PPTX, TXT</small>
                     </label>
 
-                    <label class="ops-field ops-url-field">
-                        <span>Lecture URL / Link bài giảng</span>
-                        <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-                        <small>SPA/React/Vue sẽ được render trước khi trích xuất nội dung.</small>
-                    </label>
+                    <div class="ops-ingest-actions">
+                        <label class="ops-field ops-url-field">
+                            <span data-i18n="documents.url">URL bài giảng</span>
+                            <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" data-i18n-placeholder="documents.urlPlaceholder" />
+                            <small data-i18n="documents.urlHint">SPA/React/Vue sẽ được render trước khi trích xuất nội dung.</small>
+                        </label>
 
-                    <button type="submit" class="ops-button ops-button--primary ops-upload-submit"
-                            disabled="@(!canUploadToSubject)">
-                        <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                        Index now
-                    </button>
+                        <button type="submit" class="ops-button ops-button--primary ops-upload-submit"
+                                disabled="@(!canUploadToSubject)">
+                            <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                            <span data-i18n="documents.submit">Index now</span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </section>
@@ -225,7 +227,7 @@
                         @Html.AntiForgeryToken()
                         <button type="submit" class="ops-button ops-button--secondary">
                             <span class="material-symbols-outlined" aria-hidden="true">sync</span>
-                            Re-index stale
+                            <span data-i18n="documents.reindexStale">Re-index stale</span>
                         </button>
                     </form>
                 </div>
@@ -234,19 +236,19 @@
             <form asp-page="/Home/Index" method="get" class="ops-filter-bar">
                 <input type="hidden" name="section" value="list" />
                 <label class="ops-field ops-field--search">
-                    <span>Search / Tìm kiếm</span>
-                    <input name="q" value="@Model.Query" placeholder="File, subject, chapter, uploader..." />
+                    <span data-i18n="documents.search">Tìm kiếm</span>
+                    <input name="q" value="@Model.Query" placeholder="File, subject, chapter, uploader..." data-i18n-placeholder="documents.searchPlaceholder" />
                 </label>
                 <label class="ops-field">
-                    <span>Subject</span>
+                    <span data-i18n="documents.subject">Subject</span>
                     <select name="subjectFilter">
                         @if (string.IsNullOrWhiteSpace(Model.SubjectFilter))
                         {
-                            <option value="" selected>All subjects</option>
+                            <option value="" selected data-i18n="documents.allSubjects">All subjects</option>
                         }
                         else
                         {
-                            <option value="">All subjects</option>
+                            <option value="" data-i18n="documents.allSubjects">All subjects</option>
                         }
                         @foreach (var subject in subjectOptions)
                         {
@@ -262,15 +264,15 @@
                     </select>
                 </label>
                 <label class="ops-field">
-                    <span>Status</span>
+                    <span data-i18n="documents.status">Status</span>
                     <select name="statusFilter">
                         @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
                         {
-                            <option value="" selected>All status</option>
+                            <option value="" selected data-i18n="documents.allStatus">All status</option>
                         }
                         else
                         {
-                            <option value="">All status</option>
+                            <option value="" data-i18n="documents.allStatus">All status</option>
                         }
                         @foreach (var status in statusOptions)
                         {
@@ -285,18 +287,18 @@
                         }
                     </select>
                 </label>
-                <button type="submit" class="ops-button ops-button--secondary">Filter</button>
+                <button type="submit" class="ops-button ops-button--secondary" data-i18n="documents.filter">Filter</button>
                 @if (hasActiveFilters)
                 {
-                    <a class="ops-button ops-button--ghost" asp-page="/Home/Index" asp-route-section="list">Clear</a>
+                    <a class="ops-button ops-button--ghost" asp-page="/Home/Index" asp-route-section="list" data-i18n="documents.clear">Clear</a>
                 }
             </form>
 
             @if (documents.Count == 0)
             {
                 <div class="ops-empty">
-                    <strong>Không có tài liệu phù hợp / No matching documents.</strong>
-                    <p>Điều chỉnh bộ lọc hoặc upload tài liệu mới để bắt đầu hỏi đáp theo nguồn.</p>
+                    <strong data-i18n="documents.emptyTitle">Không có tài liệu phù hợp / No matching documents.</strong>
+                    <p data-i18n="documents.emptyHint">Điều chỉnh bộ lọc hoặc upload tài liệu mới để bắt đầu hỏi đáp theo nguồn.</p>
                 </div>
             }
             else
@@ -305,12 +307,12 @@
                     <table class="ops-table ops-document-table">
                         <thead>
                             <tr>
-                                <th>File</th>
-                                <th>Subject / Chapter</th>
-                                <th>Status</th>
-                                <th>Chunks / Size</th>
-                                <th>Uploaded</th>
-                                <th class="ops-actions-col">Actions</th>
+                                <th data-i18n="documents.fileName">File</th>
+                                <th data-i18n="documents.subjectChapter">Subject / Chapter</th>
+                                <th data-i18n="documents.status">Status</th>
+                                <th data-i18n="documents.chunksSize">Chunks / Size</th>
+                                <th data-i18n="documents.uploadDate">Uploaded</th>
+                                <th class="ops-actions-col" data-i18n="documents.actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -336,18 +338,17 @@
                                         <div class="ops-stack">
                                             <span class="rbl-status @StatusClass(document)" title="@StatusTitle(document)"
                                                   data-document-status>@StatusLabel(document)</span>
-                                            <small class="ops-document-progress" data-document-progress hidden></small>
                                         </div>
                                     </td>
                                     <td data-label="Chunks / Size">
                                         <div class="ops-stack">
-                                            <strong data-document-chunks>@document.ChunkCount chunks</strong>
+                                            <strong data-document-chunks>@document.ChunkCount <span data-i18n="documents.chunksUnit">chunks</span></strong>
                                             <small>@FormatBytes(document.FileSizeBytes)</small>
                                         </div>
                                     </td>
                                     <td data-label="Uploaded">
                                         <div class="ops-stack">
-                                            <strong title="@document.UploadedByEmail">@PersonLabel(document.UploadedByName, "Không rõ")</strong>
+                                            <strong title="@document.UploadedByEmail">@(string.IsNullOrWhiteSpace(document.UploadedByName) ? Html.Raw("<span data-i18n=\"documents.unknown\">Unknown</span>") : document.UploadedByName.Trim())</strong>
                                             <small>@document.UploadedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
                                         </div>
                                     </td>
@@ -356,36 +357,40 @@
                                             @if (document.Status == DocumentIndexStatus.Indexed)
                                             {
                                                 <button type="button" class="ops-mini-button" data-document-preview-action
-                                                        data-document-preview-label="Xem / View"
-                                                        data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem / View</button>
+                                                        data-document-preview-label="Xem"
+                                                        data-document-preview-url="/Home/DocumentPreview/@document.Id"><span data-i18n="documents.view">Xem</span></button>
                                             }
                                             else
                                             {
                                                 <button type="button" class="ops-mini-button" data-document-preview-action
-                                                        data-document-preview-label="Xem / View" disabled
-                                                        title="@StatusTitle(document)">View</button>
+                                                        data-document-preview-label="Xem" disabled
+                                                        title="@StatusTitle(document)"><span data-i18n="documents.view">Xem</span></button>
                                             }
                                             @if (canManageDocuments && Model.CanEditDocumentMetadata(document, courseCatalog))
                                             {
-                                                <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">Sửa
-                                                    / Edit</a>
+                                                <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id"><span data-i18n="documents.edit">Sửa</span></a>
                                                     <form asp-page-handler="ReindexDocument" method="post"
                                                           data-confirm="Re-index tài liệu này?">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@document.Id" />
-                                                        <button type="submit" class="ops-mini-button">Re-index</button>
+                                                        <button type="submit" class="ops-mini-button"><span data-i18n="documents.reindex">Re-index</span></button>
                                                     </form>
                                                     <form asp-page-handler="DeleteDocument" method="post"
                                                           data-confirm="Xóa tài liệu này khỏi kho index? Thao tác này không thể hoàn tác.">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@document.Id" />
-                                                        <button type="submit" class="ops-mini-button ops-mini-button--danger">Xóa</button>
+                                                        <button type="submit" class="ops-mini-button ops-mini-button--danger"><span data-i18n="documents.delete">Xóa</span></button>
                                                     </form>
                                                 }
                                             </div>
                                         </td>
-                                    </tr>
-                                }
+                                </tr>
+                                <tr class="ops-document-progress-row" data-document-progress-row="@document.Id" hidden>
+                                    <td colspan="6">
+                                        <div class="ops-document-progress" data-document-progress></div>
+                                    </td>
+                                </tr>
+                            }
                             </tbody>
                         </table>
                     </div>
@@ -611,10 +616,9 @@
                                                                                     <small data-document-tree-meta>@StatusLabel(document) ·
                                                                                         @document.ChunkCount chunks ·
                                                                                         @FormatBytes(document.FileSizeBytes)</small>
-                                                                                        <small class="ops-document-progress" data-document-progress
-                                                                                               hidden></small>
-                                                                                    </div>
-                                                                                    <div class="ops-row-actions" data-document-actions>
+                                                                                </div>
+                                                                                <div class="ops-document-progress" data-document-progress hidden></div>
+                                                                                <div class="ops-row-actions" data-document-actions>
                                                                                         @if (document.Status == DocumentIndexStatus.Indexed)
                                                                                         {
                                                                                             <button type="button" class="ops-mini-button"

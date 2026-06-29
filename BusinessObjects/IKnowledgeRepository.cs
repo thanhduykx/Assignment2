@@ -15,6 +15,7 @@ public interface IKnowledgeRepository
         IReadOnlyCollection<string>? allowedSubjects = null,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task<int> GetMaxChunkIndexAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(DocumentAccessScope scope, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
         string embeddingModel,
