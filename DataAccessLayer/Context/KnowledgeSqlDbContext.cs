@@ -16,6 +16,7 @@ public sealed class KnowledgeSqlDbContext : DbContext
     public DbSet<KnowledgeSqlChatSession> Sessions => Set<KnowledgeSqlChatSession>();
     public DbSet<KnowledgeSqlChatMessage> Messages => Set<KnowledgeSqlChatMessage>();
     public DbSet<KnowledgeSqlCitation> Citations => Set<KnowledgeSqlCitation>();
+    public DbSet<KnowledgeSqlSubjectLecturer> SubjectLecturers => Set<KnowledgeSqlSubjectLecturer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,16 @@ public sealed class KnowledgeSqlDbContext : DbContext
                 .WithOne(c => c.Subject)
                 .HasForeignKey(c => c.SubjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(s => s.TeachingLecturers)
+                .WithOne(tl => tl.Subject)
+                .HasForeignKey(tl => tl.SubjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<KnowledgeSqlSubjectLecturer>(entity =>
+        {
+            entity.HasIndex(tl => new { tl.SubjectId, tl.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<KnowledgeSqlCourseChapter>(entity =>

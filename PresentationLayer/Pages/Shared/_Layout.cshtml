@@ -120,12 +120,15 @@
                                 <span class="material-symbols-outlined" aria-hidden="true">description</span>
                                 <span data-i18n="documents.navList">Document list</span>
                             </a>
-                            @if (canManageDocuments)
+                            @if (currentRole == AppRoles.Lecturer)
                             {
                             <a class="@(DocumentSublinkClass("upload"))" asp-page="/Home/Index" asp-route-section="upload">
                                 <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
                                 <span data-i18n="documents.navUpload">Upload & index</span>
                             </a>
+                            }
+                            @if (canManageDocuments)
+                            {
                             <a class="@(DocumentSublinkClass("catalog"))" asp-page="/Home/Index" asp-route-section="catalog">
                                 <span class="material-symbols-outlined" aria-hidden="true">topic</span>
                                 <span data-i18n="documents.navCatalog">Course catalog</span>

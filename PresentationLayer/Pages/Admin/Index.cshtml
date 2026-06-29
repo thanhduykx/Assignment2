@@ -378,23 +378,38 @@
                                         {
                                             foreach (var subject in lecturer.AssignedSubjectDetails)
                                             {
-                                                <span class="ops-chip" title="Đã assign - không thể gỡ">
-                                                    <span>@subject.DisplayName</span>
-                                                </span>
+                                                <div class="ops-chip" style="display: inline-flex; align-items: center; padding-right: 6px;" title="Đã assign - click X để gỡ">
+                                                    <span>@subject.DisplayName@(subject.IsLeader ? " (Trưởng bộ môn)" : "")</span>
+
+                                                    <form asp-page-handler="UnregisterLecturerSubject" method="post" class="ops-inline-form" style="margin: 0; padding: 0; display: flex; align-items: center;" data-confirm="Gỡ môn @subject.DisplayName khỏi @DisplayName(lecturer)?">
+                                                        @Html.AntiForgeryToken()
+
+                                                        <input type="hidden" name="UserId" value="@lecturer.Id" />
+                                                        <input type="hidden" name="SubjectId" value="@subject.Id" />
+
+                                                        <button type="submit" title="Gỡ môn" style="background: none; border: none; cursor: pointer; font-weight: bold; margin-left: 6px; color: inherit; opacity: 0.7; display: flex; align-items: center; padding: 0; font-size: 14px;">
+                                                            &times;
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             }
                                         }
                                         </div>
                                         <form asp-page-handler="RegisterLecturerSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(lecturer)?">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="UserId" value="@lecturer.Id" />
-                                            <select name="SubjectId" required disabled="@(unassignedSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
-                                                <option value="">@(unassignedSubjects.Count == 0 ? "Không còn môn trống" : "Chọn môn để đăng ký")</option>
-                                                @foreach (var subject in unassignedSubjects)
+                                            <select name="RoleType" required aria-label="Vai trò" style="margin-right: 4px;">
+                                                <option value="Teaching">Giảng viên giảng dạy</option>
+                                                <option value="Leader">Trưởng bộ môn</option>
+                                            </select>
+                                            <select name="SubjectId" required disabled="@(Model.SubjectOptions.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
+                                                <option value="">@(Model.SubjectOptions.Count == 0 ? "Không có môn nào" : "Chọn môn để đăng ký")</option>
+                                                @foreach (var subject in Model.SubjectOptions)
                                                 {
                                                     <option value="@subject.Id">@subject.DisplayName</option>
                                                 }
                                             </select>
-                                            <button type="submit" class="ops-mini-button" disabled="@(unassignedSubjects.Count == 0)">Đăng ký</button>
+                                            <button type="submit" class="ops-mini-button" disabled="@(Model.SubjectOptions.Count == 0)">Đăng ký</button>
                                         </form>
                                     </div>
                                 </td>

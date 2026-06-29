@@ -688,6 +688,22 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         return Task.CompletedTask;
     }
 
+    public Task AddSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        // JSON repository does not support subject lecturer management.
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Guid>> GetSubjectLecturerIdsAsync(Guid subjectId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<Guid>>(Array.Empty<Guid>());
+    }
+
     public async Task AddMessageAsync(
         Guid sessionId,
         ChatMessage message,
