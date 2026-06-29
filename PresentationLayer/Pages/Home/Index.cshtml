@@ -151,7 +151,7 @@
         </article>
     </section>
 
-    @if (canManageDocuments && isUploadSection)
+    @if (Model.IsLecturer && isUploadSection)
     {
         <section id="upload-index" class="ops-panel ops-upload-panel">
             <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-upload-form">
@@ -465,28 +465,31 @@
                                         </button>
                                     </form>
 
-                                    <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-subject-upload">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="Language" value="vi" data-language-field />
-                                        <input type="hidden" name="Subject" value="@subject.DisplayName" />
+                                    @if (Model.IsLecturer)
+                                    {
+                                        <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-subject-upload">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Language" value="vi" data-language-field />
+                                            <input type="hidden" name="Subject" value="@subject.DisplayName" />
 
-                                        <label class="ops-field">
-                                            <span>Chương/mục</span>
-                                            <input name="Chapter" placeholder="VD: Chapter 1 / Mục 1.1" required />
-                                        </label>
-                                        <label class="ops-field">
-                                            <span>File tài liệu</span>
-                                            <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-                                        </label>
-                                        <label class="ops-field">
-                                            <span>Hoặc URL bài giảng</span>
-                                            <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-                                        </label>
-                                        <button type="submit" class="ops-button ops-button--primary">
-                                            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                                            Thêm tài liệu vào môn
-                                        </button>
-                                    </form>
+                                            <label class="ops-field">
+                                                <span>Chương/mục</span>
+                                                <input name="Chapter" placeholder="VD: Chapter 1 / Mục 1.1" required />
+                                            </label>
+                                            <label class="ops-field">
+                                                <span>File tài liệu</span>
+                                                <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                                            </label>
+                                            <label class="ops-field">
+                                                <span>Hoặc URL bài giảng</span>
+                                                <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                                            </label>
+                                            <button type="submit" class="ops-button ops-button--primary">
+                                                <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                                Thêm tài liệu vào môn
+                                            </button>
+                                        </form>
+                                    }
 
                                     <div class="ops-folder-chapter-list">
                                         @if (subject.Chapters.Count == 0)
@@ -527,25 +530,28 @@
                                                         }
                                                     </div>
 
-                                                    <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
-                                                        @Html.AntiForgeryToken()
-                                                        <input type="hidden" name="Language" value="vi" data-language-field />
-                                                        <input type="hidden" name="Subject" value="@chapter.SubjectDisplayName" />
-                                                        <input type="hidden" name="Chapter" value="@chapter.Title" />
+                                                    @if (Model.IsLecturer)
+                                                    {
+                                                        <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="Language" value="vi" data-language-field />
+                                                            <input type="hidden" name="Subject" value="@chapter.SubjectDisplayName" />
+                                                            <input type="hidden" name="Chapter" value="@chapter.Title" />
 
-                                                        <label class="ops-field">
-                                                            <span>Thêm file vào @chapter.Title</span>
-                                                            <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-                                                        </label>
-                                                        <label class="ops-field">
-                                                            <span>Hoặc URL bài giảng</span>
-                                                            <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-                                                        </label>
-                                                        <button type="submit" class="ops-button ops-button--primary">
-                                                            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                                                            Thêm tài liệu
-                                                        </button>
-                                                    </form>
+                                                            <label class="ops-field">
+                                                                <span>Thêm file vào @chapter.Title</span>
+                                                                <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                                                            </label>
+                                                            <label class="ops-field">
+                                                                <span>Hoặc URL bài giảng</span>
+                                                                <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                                                            </label>
+                                                            <button type="submit" class="ops-button ops-button--primary">
+                                                                <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                                                Thêm tài liệu
+                                                            </button>
+                                                        </form>
+                                                    }
 
                                                     @if (chapter.Documents.Count == 0)
                                                     {

@@ -682,6 +682,12 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         }
     }
 
+    public Task ImportFromJsonIfEmptyAsync(string jsonStorePath, CancellationToken cancellationToken = default)
+    {
+        // JSON repository already uses JSON storage; nothing to import.
+        return Task.CompletedTask;
+    }
+
     public async Task AddMessageAsync(
         Guid sessionId,
         ChatMessage message,

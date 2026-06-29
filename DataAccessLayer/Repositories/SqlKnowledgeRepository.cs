@@ -882,14 +882,14 @@ public sealed class SqlKnowledgeRepository : IKnowledgeRepository
         return new CourseSubject
         {
             Id = subject.Id,
-            Code = subject.Code,
-            Name = subject.Name,
-            Description = subject.Description,
+            Code = subject.Code ?? string.Empty,
+            Name = subject.Name ?? string.Empty,
+            Description = subject.Description ?? string.Empty,
             CreatedAt = subject.CreatedAt,
             OwnerUserId = subject.OwnerUserId,
             OwnerName = subject.OwnerName ?? string.Empty,
             OwnerEmail = subject.OwnerEmail ?? string.Empty,
-            Chapters = subject.Chapters
+            Chapters = (subject.Chapters ?? new List<KnowledgeSqlCourseChapter>())
                 .OrderBy(item => item.SortOrder)
                 .ThenBy(item => item.Title)
                 .Select(item => ToCourseChapter(item, subject))

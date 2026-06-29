@@ -105,6 +105,12 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostUploadAsync(Guid id, [FromForm] DocumentUploadViewModel model, CancellationToken cancellationToken)
     {
+        if (base.IsAdmin())
+        {
+            TempData["Error"] = "Admin không được phép upload tài liệu. Chỉ giảng viên mới có quyền upload.";
+            return RedirectToPage("/Home/SubjectDocuments", new { id });
+        }
+
         if ((model.File is null || model.File.Length == 0) && string.IsNullOrWhiteSpace(model.SourceUrl))
         {
             TempData["Error"] = "Hay chon file PDF, DOCX, PPTX, TXT hoac nhap URL bai giang truoc khi index.";
