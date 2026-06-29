@@ -94,7 +94,29 @@ const translations = {
     "documents.view": "View",
     "documents.navList": "Document list",
     "documents.navUpload": "Upload & index",
+    "documents.navUpload": "Upload & index",
     "documents.navCatalog": "Course catalog",
+    "documents.eyebrow": "Learning content operations",
+    "documents.kpiTotal": "Total",
+    "documents.kpiFailed": "Failed",
+    "documents.selectSubject": "Select subject",
+    "documents.noSubjectAssigned": "No subjects assigned to this account yet.",
+    "documents.reindexStale": "Re-index stale",
+    "documents.search": "Search",
+    "documents.searchPlaceholder": "File, subject, chapter, uploader...",
+    "documents.allSubjects": "All subjects",
+    "documents.allStatus": "All status",
+    "documents.filter": "Filter",
+    "documents.clear": "Clear",
+    "documents.uploader": "Uploader",
+    "documents.subjectChapter": "Subject / Chapter",
+    "documents.chunksSize": "Chunks / Size",
+    "documents.chunksUnit": "chunks",
+    "documents.unknown": "Unknown",
+    "documents.actions": "Actions",
+    "documents.edit": "Edit",
+    "documents.reindex": "Re-index",
+    "documents.delete": "Delete",
     "chat.sessionsAria": "Chat session history",
     "chat.documents": "Documents",
     "chat.newSession": "New session",
@@ -232,7 +254,29 @@ const translations = {
     "documents.view": "Xem",
     "documents.navList": "Danh s\u00e1ch t\u00e0i li\u1ec7u",
     "documents.navUpload": "Upload & index",
+    "documents.navUpload": "Upload & index",
     "documents.navCatalog": "Danh m\u1ee5c m\u00f4n h\u1ecdc",
+    "documents.eyebrow": "Quản lý nội dung học tập",
+    "documents.kpiTotal": "Tổng cộng",
+    "documents.kpiFailed": "Thất bại",
+    "documents.selectSubject": "Chọn môn học",
+    "documents.noSubjectAssigned": "Chưa có môn nào được gán cho tài khoản này.",
+    "documents.reindexStale": "Re-index tài liệu cũ",
+    "documents.search": "Tìm kiếm",
+    "documents.searchPlaceholder": "Tên file, môn học, chương...",
+    "documents.allSubjects": "Tất cả môn học",
+    "documents.allStatus": "Tất cả trạng thái",
+    "documents.filter": "Lọc",
+    "documents.clear": "Xóa bộ lọc",
+    "documents.uploader": "Người tải lên",
+    "documents.subjectChapter": "Môn học / Chương",
+    "documents.chunksSize": "Số chunk / Kích thước",
+    "documents.chunksUnit": "chunk",
+    "documents.unknown": "Không rõ",
+    "documents.actions": "Thao tác",
+    "documents.edit": "Sửa",
+    "documents.reindex": "Re-index",
+    "documents.delete": "Xóa",
     "chat.sessionsAria": "Lịch sử phiên chat",
     "chat.documents": "Kho tài liệu",
     "chat.newSession": "Phiên mới",
@@ -1466,7 +1510,8 @@ function applyDocumentProgressToRow(row, progress) {
   }
 
   const statusBadge = row.querySelector("[data-document-status]");
-  const progressElement = row.querySelector("[data-document-progress]");
+  const progressRow = window.document.querySelector(`tr[data-document-progress-row="${CSS.escape(row.dataset.documentId)}"]`);
+  const progressElement = progressRow ? progressRow.querySelector("[data-document-progress]") : row.querySelector("[data-document-progress]");
   const progressState = formatDocumentIndexProgress(progress);
   if (!progressElement || !progressState) {
     return;
@@ -1476,6 +1521,9 @@ function applyDocumentProgressToRow(row, progress) {
     statusBadge.title = progressState.message || progressState.summary;
   }
 
+  if (progressRow) {
+    progressRow.hidden = false;
+  }
   progressElement.hidden = false;
   progressElement.dataset.progressTone = progressState.tone;
   progressElement.title = progressState.message || progressState.summary;
@@ -1499,12 +1547,17 @@ function clearDocumentProgress(row) {
     return;
   }
 
-  const progressElement = row.querySelector("[data-document-progress]");
+  const progressRow = window.document.querySelector(`tr[data-document-progress-row="${CSS.escape(row.dataset.documentId)}"]`);
+  const progressElement = progressRow ? progressRow.querySelector("[data-document-progress]") : row.querySelector("[data-document-progress]");
   if (progressElement) {
     progressElement.innerHTML = "";
     progressElement.hidden = true;
     delete progressElement.dataset.progressTone;
     progressElement.removeAttribute("title");
+  }
+
+  if (progressRow) {
+    progressRow.hidden = true;
   }
 
   delete row.dataset.documentProgressStage;
