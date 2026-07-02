@@ -240,7 +240,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            return IsAdmin();
+            return false;
         }
 
         
@@ -251,7 +251,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            return IsAdmin();
+            return false;
         }
 
         public bool CanEditDocumentMetadata(IndexedDocument document, IEnumerable<CourseSubject> catalog)
@@ -261,7 +261,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            return IsAdmin();
+            return false;
         }
 
         public bool CanManageDocumentAction(IndexedDocument document, DocumentTreeSubjectViewModel subject)
@@ -271,7 +271,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            return IsAdmin();
+            return false;
         }
 
         protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)

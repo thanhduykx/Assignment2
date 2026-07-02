@@ -156,7 +156,7 @@
                             </a>
                             <a class="@(AdminSublinkClass("student-table"))" asp-page="/Admin/Index" asp-route-section="student-table">
                                 <span class="material-symbols-outlined" aria-hidden="true">face</span>
-                                <span>Student table</span>
+                                <span data-i18n="admin.navStudentTable">Student table</span>
                             </a>
                             <a class="@(AdminSublinkClass("create-account"))" asp-page="/Admin/Index" asp-route-section="create-account">
                                 <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
@@ -168,7 +168,7 @@
                             </a>
                             <a class="@(AdminSublinkClass("create-subject"))" asp-page="/Admin/Index" asp-route-section="create-subject">
                                 <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
-                                <span>Subject management</span>
+                                <span data-i18n="admin.navSubjectManagement">Subject management</span>
                             </a>
                         </div>
                     </details>
@@ -235,7 +235,7 @@
                         {
                             <a class="rbl-account-button" asp-page="/Account/ChangePassword">
                                 <span class="material-symbols-outlined" aria-hidden="true">lock_reset</span>
-                                <span>Đổi mật khẩu</span>
+                                <span data-i18n="shell.changePassword">Đổi mật khẩu</span>
                             </a>
                             <form asp-page="/Account/Logout" method="post" class="rbl-account-form">
                                 @Html.AntiForgeryToken()
