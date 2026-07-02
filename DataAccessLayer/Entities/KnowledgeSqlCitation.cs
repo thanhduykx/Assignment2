@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DataAccessLayer.Entities;
 
-[Table("Citations")]
+[Table("rag_citations")]
 public sealed class KnowledgeSqlCitation
 {
     [Key]
