@@ -6485,22 +6485,32 @@ body.rbl-body .rbl-main {
 
 .ops-subject-detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .ops-subject-manage-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ops-subject-edit-container {
   display: grid;
   gap: 12px;
 }
 
-.ops-subject-edit-form {
+.ops-subject-fields {
   display: grid;
-  flex: 1 1 320px;
-  grid-template-columns: minmax(100px, 0.65fr) minmax(160px, 1fr) auto;
   gap: 8px;
-  align-items: end;
+}
+
+.ops-subject-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .ops-folder-subject,
@@ -7688,10 +7698,11 @@ body.rbl-body .rbl-main {
   margin-top: auto;
 }
 
-.course-card-meta span,
+.course-card-meta > span,
 .course-chapter-row > span {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   min-height: 26px;
   padding: 4px 8px;
   border-radius: 999px;

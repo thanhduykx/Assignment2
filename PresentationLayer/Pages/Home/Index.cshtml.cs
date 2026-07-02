@@ -374,16 +374,22 @@ public sealed class IndexModel : HomePageModelBase
             BuildDocumentAccessScope(DocumentAccessMode.DocumentUi),
             cancellationToken);
 
+        var enqueuedCount = 0;
         foreach (var documentId in staleDocumentIds)
         {
-            await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
-            await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
-            await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
+            var document = await _repository.GetDocumentAsync(documentId, cancellationToken);
+            if (document != null && await CanManageDocumentAsync(document, cancellationToken))
+            {
+                await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
+                await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
+                await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
+                enqueuedCount++;
+            }
         }
 
-        TempData["Success"] = staleDocumentIds.Count == 0
-            ? "Khong co tai lieu stale embedding can re-index."
-            : $"Da dua {staleDocumentIds.Count} tai lieu stale embedding vao hang doi re-index.";
+        TempData["Success"] = enqueuedCount == 0
+            ? "Khong co tai lieu stale embedding can re-index hoac ban khong co quyen."
+            : $"Da dua {enqueuedCount} tai lieu stale embedding vao hang doi re-index.";
         return RedirectToPage("/Home/Index");
     }
 

@@ -219,19 +219,6 @@
     @if (isListSection)
     {
         <section id="document-list" class="ops-panel">
-            @if (isAdmin && Model.StaleEmbeddingDocumentCount > 0)
-            {
-                <div class="ops-panel-actions">
-                    <form asp-page-handler="ReindexStaleEmbeddings" method="post"
-                          data-confirm="Re-index tất cả tài liệu đang cần cập nhật embedding?">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="ops-button ops-button--secondary">
-                            <span class="material-symbols-outlined" aria-hidden="true">sync</span>
-                            <span data-i18n="documents.reindexStale">Re-index stale</span>
-                        </button>
-                    </form>
-                </div>
-            }
 
             <form asp-page="/Home/Index" method="get" class="ops-filter-bar">
                 <input type="hidden" name="section" value="list" />
@@ -403,34 +390,6 @@
             <section id="course-catalog" class="ops-panel ops-catalog-panel"
                      style="margin-top: 0 !important; padding-top: 1rem;">
                 <div class="ops-catalog-body">
-                    @if (Model.IsLecturer)
-                    {
-                        <div class="ops-command-grid">
-                            <form asp-page-handler="SaveChapter" method="post" class="ops-command-card">
-                                @Html.AntiForgeryToken()
-                                <h3>Thêm chương / Add chapter</h3>
-                                <label class="ops-field">
-                                    <span>Môn học</span>
-                                    <select name="SubjectId">
-                                        @foreach (var subject in courseCatalog)
-                                        {
-                                            <option value="@subject.Id">@subject.DisplayName</option>
-                                        }
-                                    </select>
-                                </label>
-                                <label class="ops-field">
-                                    <span>Tên chương</span>
-                                    <input name="Title" placeholder="Chapter 1 hoặc Week 1" />
-                                </label>
-                                <label class="ops-field">
-                                    <span>Thứ tự</span>
-                                    <input name="SortOrder" type="number" value="1" />
-                                </label>
-                                <button type="submit" class="ops-button ops-button--primary">Save chapter</button>
-                            </form>
-                        </div>
-                    }
-
                     @if (documentTree.Count == 0)
                     {
                         <div class="ops-empty">
