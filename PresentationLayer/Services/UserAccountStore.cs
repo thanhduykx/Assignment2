@@ -45,6 +45,13 @@ public sealed class UserAccountStore : IUserAccountStore
     private const int KeySize = 32;
     private const int Iterations = 100_000;
 
+    private static readonly IReadOnlyList<SeedUserAccount> FixedAccounts =
+    [
+        new("Admin", "admin@gmail.com", "123456", AppRoles.Admin),
+        new("Lecturer", "lecture@gmaail.com", "123456", AppRoles.Lecturer),
+        new("Student", "student@gmail.com", "123456", AppRoles.Student)
+    ];
+
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly string _connectionString;
     private readonly SeedAdminOptions _seedAdmin;
@@ -451,22 +458,7 @@ public sealed class UserAccountStore : IUserAccountStore
 
     public bool VerifyPassword(UserAccount account, string password)
     {
-        if (string.IsNullOrWhiteSpace(account.PasswordHash))
-        {
-            return false;
-        }
-
-        var parts = account.PasswordHash.Split('.', 3);
-        if (parts.Length != 3 || parts[0] != "PBKDF2")
-        {
-            return false;
-        }
-
-        var salt = Convert.FromBase64String(parts[1]);
-        var expected = Convert.FromBase64String(parts[2]);
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
-        var actual = pbkdf2.GetBytes(KeySize);
-        return CryptographicOperations.FixedTimeEquals(actual, expected);
+        return PasswordMatches(account.PasswordHash, password);
     }
 
     private static string HashPassword(string password)
@@ -539,6 +531,11 @@ public sealed class UserAccountStore : IUserAccountStore
                 user.PasswordResetTokenExpiresAt = null;
                 changed = true;
             }
+        }
+
+        if (EnsureFixedAccounts(users))
+        {
+            changed = true;
         }
 
         if (EnsureSeedAdmin(users))
@@ -767,10 +764,68 @@ public sealed class UserAccountStore : IUserAccountStore
         return true;
     }
 
+    private static bool EnsureFixedAccounts(List<UserAccount> users)
+    {
+        var changed = false;
+
+        foreach (var fixedAccount in FixedAccounts)
+        {
+            var existing = users.FirstOrDefault(user =>
+                string.Equals(user.Email, fixedAccount.Email, StringComparison.OrdinalIgnoreCase));
+
+            if (existing is null)
+            {
+                users.Add(new UserAccount
+                {
+                    FullName = fixedAccount.FullName,
+                    Email = fixedAccount.Email,
+                    PasswordHash = HashPassword(fixedAccount.Password),
+                    Provider = "Local",
+                    Role = fixedAccount.Role
+                });
+                changed = true;
+                continue;
+            }
+
+            if (existing.FullName != fixedAccount.FullName)
+            {
+                existing.FullName = fixedAccount.FullName;
+                changed = true;
+            }
+
+            if (existing.Provider != "Local")
+            {
+                existing.Provider = "Local";
+                changed = true;
+            }
+
+            if (existing.Role != fixedAccount.Role)
+            {
+                existing.Role = fixedAccount.Role;
+                changed = true;
+            }
+
+            if (!PasswordMatches(existing.PasswordHash, fixedAccount.Password))
+            {
+                existing.PasswordHash = HashPassword(fixedAccount.Password);
+                existing.PasswordResetTokenHash = null;
+                existing.PasswordResetTokenExpiresAt = null;
+                existing.PasswordChangedAt = DateTimeOffset.UtcNow;
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
     private bool IsSeedAdminEmail(string email)
     {
-        return _seedAdmin.Enabled
-               && string.Equals(NormalizeEmail(email), _seedAdmin.Email, StringComparison.OrdinalIgnoreCase);
+        var normalizedEmail = NormalizeEmail(email);
+        return (_seedAdmin.Enabled
+                && string.Equals(normalizedEmail, _seedAdmin.Email, StringComparison.OrdinalIgnoreCase))
+               || FixedAccounts.Any(account =>
+                   account.Role == AppRoles.Admin
+                   && string.Equals(normalizedEmail, account.Email, StringComparison.OrdinalIgnoreCase));
     }
 
     private bool EnsureSeedAdminRole(UserAccount user)
@@ -826,4 +881,33 @@ public sealed class UserAccountStore : IUserAccountStore
         var password = string.IsNullOrWhiteSpace(options?.Password) ? "Admin@12345" : options.Password;
         return new SeedAdminOptions(options?.Enabled ?? true, fullName, email, password);
     }
+
+    private static bool PasswordMatches(string passwordHash, string password)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            return false;
+        }
+
+        var parts = passwordHash.Split('.', 3);
+        if (parts.Length != 3 || parts[0] != "PBKDF2")
+        {
+            return false;
+        }
+
+        try
+        {
+            var salt = Convert.FromBase64String(parts[1]);
+            var expected = Convert.FromBase64String(parts[2]);
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
+            var actual = pbkdf2.GetBytes(KeySize);
+            return CryptographicOperations.FixedTimeEquals(actual, expected);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    private sealed record SeedUserAccount(string FullName, string Email, string Password, string Role);
 }
