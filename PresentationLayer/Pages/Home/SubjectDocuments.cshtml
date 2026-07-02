@@ -142,33 +142,36 @@
             <button type="submit" class="ops-button ops-button--primary">Th&#234;m ch&#432;&#417;ng</button>
         </form>
 
-        <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-panel ops-subject-manage-panel ops-subject-upload-panel">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="Language" value="vi" data-language-field />
-            <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Upload</span>
-                    <h2>Th&#234;m t&#224;i li&#7879;u</h2>
+        @if (Model.IsLecturer)
+        {
+            <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-panel ops-subject-manage-panel ops-subject-upload-panel">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Language" value="vi" data-language-field />
+                <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
+                <div class="ops-panel-head">
+                    <div>
+                        <span class="ops-eyebrow">Upload</span>
+                        <h2>Th&#234;m t&#224;i li&#7879;u</h2>
+                    </div>
                 </div>
-            </div>
-            <label class="ops-field">
-                <span>Ch&#432;&#417;ng/m&#7909;c</span>
-                <input name="Chapter" placeholder="VD: Chapter 1 / Muc 1.1" required />
-            </label>
-            <label class="ops-field">
-                <span>File t&#224;i li&#7879;u</span>
-                <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-            </label>
-            <label class="ops-field">
-                <span>Ho&#7863;c URL b&#224;i gi&#7843;ng</span>
-                <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-            </label>
-            <button type="submit" class="ops-button ops-button--primary">
-                <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                Index t&#224;i li&#7879;u
-            </button>
-        </form>
+                <label class="ops-field">
+                    <span>Ch&#432;&#417;ng/m&#7909;c</span>
+                    <input name="Chapter" placeholder="VD: Chapter 1 / Muc 1.1" required />
+                </label>
+                <label class="ops-field">
+                    <span>File t&#224;i li&#7879;u</span>
+                    <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                </label>
+                <label class="ops-field">
+                    <span>Ho&#7863;c URL b&#224;i gi&#7843;ng</span>
+                    <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                </label>
+                <button type="submit" class="ops-button ops-button--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                    Index t&#224;i li&#7879;u
+                </button>
+            </form>
+        }
     </section>
 
     <section class="ops-panel">
@@ -223,25 +226,28 @@
                                 }
                             </div>
 
-                            <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="Language" value="vi" data-language-field />
-                                <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
-                                <input type="hidden" name="Chapter" value="@chapter.Title" />
+                            @if (Model.IsLecturer)
+                            {
+                                <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Language" value="vi" data-language-field />
+                                    <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
+                                    <input type="hidden" name="Chapter" value="@chapter.Title" />
 
-                                <label class="ops-field">
-                                    <span>Th&#234;m file v&#224;o @chapter.Title</span>
-                                    <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-                                </label>
-                                <label class="ops-field">
-                                    <span>Ho&#7863;c URL b&#224;i gi&#7843;ng</span>
-                                    <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-                                </label>
-                                <button type="submit" class="ops-button ops-button--primary">
-                                    <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                                    Th&#234;m t&#224;i li&#7879;u
-                                </button>
-                            </form>
+                                    <label class="ops-field">
+                                        <span>Th&#234;m file v&#224;o @chapter.Title</span>
+                                        <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                                    </label>
+                                    <label class="ops-field">
+                                        <span>Ho&#7863;c URL b&#224;i gi&#7843;ng</span>
+                                        <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                                    </label>
+                                    <button type="submit" class="ops-button ops-button--primary">
+                                        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                        Th&#234;m t&#224;i li&#7879;u
+                                    </button>
+                                </form>
+                            }
 
                             @if (chapter.Documents.Count == 0)
                             {

@@ -21,8 +21,11 @@ public sealed class DocumentIndexJobQueue : IDocumentIndexJobQueue
         return _channel.Writer.WriteAsync(documentId, cancellationToken);
     }
 
-    public IAsyncEnumerable<Guid> DequeueAllAsync(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<Guid> DequeueAllAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        return _channel.Reader.ReadAllAsync(cancellationToken);
+        await foreach (var documentId in _channel.Reader.ReadAllAsync(cancellationToken))
+        {
+            yield return documentId;
+        }
     }
 }
