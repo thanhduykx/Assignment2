@@ -120,12 +120,15 @@
                                 <span class="material-symbols-outlined" aria-hidden="true">description</span>
                                 <span data-i18n="documents.navList">Document list</span>
                             </a>
-                            @if (canManageDocuments)
+                            @if (currentRole == AppRoles.Lecturer)
                             {
                             <a class="@(DocumentSublinkClass("upload"))" asp-page="/Home/Index" asp-route-section="upload">
                                 <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
                                 <span data-i18n="documents.navUpload">Upload & index</span>
                             </a>
+                            }
+                            @if (canManageDocuments)
+                            {
                             <a class="@(DocumentSublinkClass("catalog"))" asp-page="/Home/Index" asp-route-section="catalog">
                                 <span class="material-symbols-outlined" aria-hidden="true">topic</span>
                                 <span data-i18n="documents.navCatalog">Course catalog</span>
@@ -151,6 +154,10 @@
                                 <span class="material-symbols-outlined" aria-hidden="true">school</span>
                                 <span data-i18n="admin.navLecturerTable">Lecturer table</span>
                             </a>
+                            <a class="@(AdminSublinkClass("student-table"))" asp-page="/Admin/Index" asp-route-section="student-table">
+                                <span class="material-symbols-outlined" aria-hidden="true">face</span>
+                                <span>Student table</span>
+                            </a>
                             <a class="@(AdminSublinkClass("create-account"))" asp-page="/Admin/Index" asp-route-section="create-account">
                                 <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
                                 <span data-i18n="admin.navCreateAccount">Create account</span>
@@ -161,7 +168,7 @@
                             </a>
                             <a class="@(AdminSublinkClass("create-subject"))" asp-page="/Admin/Index" asp-route-section="create-subject">
                                 <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
-                                <span data-i18n="admin.navCreateSubject">Create subject</span>
+                                <span>Subject management</span>
                             </a>
                         </div>
                     </details>

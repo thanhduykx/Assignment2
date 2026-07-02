@@ -236,6 +236,14 @@ public sealed class IndexModel : HomePageModelBase
     public async Task<IActionResult> OnPostUploadAsync([FromForm] DocumentUploadViewModel model, CancellationToken cancellationToken)
     {
         var isVietnamese = model.Language?.Equals("vi", StringComparison.OrdinalIgnoreCase) == true;
+        if (base.IsAdmin())
+        {
+            TempData["Error"] = isVietnamese 
+                ? "Admin không được phép upload tài liệu. Chỉ giảng viên mới có quyền upload." 
+                : "Admin is not allowed to upload documents. Only teachers can upload.";
+            return RedirectToPage("/Home/Index");
+        }
+
         if ((model.File is null || model.File.Length == 0) && string.IsNullOrWhiteSpace(model.SourceUrl))
         {
             TempData["Error"] = isVietnamese

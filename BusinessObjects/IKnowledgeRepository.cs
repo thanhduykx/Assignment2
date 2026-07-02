@@ -1,4 +1,4 @@
-namespace DataAccessLayer;
+namespace BusinessObjects;
 
 public interface IKnowledgeRepository
 {
@@ -15,6 +15,7 @@ public interface IKnowledgeRepository
         IReadOnlyCollection<string>? allowedSubjects = null,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DocumentChunk>> GetDocumentChunksAsync(Guid documentId, CancellationToken cancellationToken = default);
+    Task<int> GetMaxChunkIndexAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<string>> GetIndexedSubjectsAsync(DocumentAccessScope scope, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Guid>> GetStaleIndexedDocumentIdsAsync(
         string embeddingModel,
@@ -49,4 +50,18 @@ public interface IKnowledgeRepository
     Task<ChatSession?> SetSessionStarredAsync(Guid sessionId, bool isStarred, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null);
     Task<bool> DeleteSessionAsync(Guid sessionId, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null);
     Task AddMessageAsync(Guid sessionId, ChatMessage message, CancellationToken cancellationToken = default, ChatSessionOwnerInfo? ownerInfo = null);
+    Task ImportFromJsonIfEmptyAsync(string jsonStorePath, CancellationToken cancellationToken = default);
+    
+    // Subject lecturer management (N-N relation)
+    Task AddSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Guid>> GetSubjectLecturerIdsAsync(Guid subjectId, CancellationToken cancellationToken = default);
+
+    // Subject student management (N-N relation)
+    Task AddSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task RemoveSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Guid>> GetSubjectStudentIdsAsync(Guid subjectId, CancellationToken cancellationToken = default);
+
+    // Subject status
+    Task SetSubjectActiveStatusAsync(Guid subjectId, bool isActive, CancellationToken cancellationToken = default);
 }

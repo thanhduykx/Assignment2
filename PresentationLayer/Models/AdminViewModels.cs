@@ -31,6 +31,7 @@ public sealed class AdminAssignedSubjectViewModel
 {
     public Guid Id { get; set; }
     public string DisplayName { get; set; } = string.Empty;
+    public bool IsLeader { get; set; }
 }
 
 public sealed class AdminSubjectOptionViewModel
@@ -40,6 +41,8 @@ public sealed class AdminSubjectOptionViewModel
     public Guid? OwnerUserId { get; set; }
     public string OwnerName { get; set; } = string.Empty;
     public string OwnerEmail { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public int StudentCount { get; set; }
 }
 
 public sealed class UpdateUserRoleViewModel
@@ -57,12 +60,14 @@ public sealed class RegisterLecturerSubjectViewModel
 {
     public Guid UserId { get; set; }
     public Guid SubjectId { get; set; }
+    public string RoleType { get; set; } = "Teaching"; // "Leader" or "Teaching"
 }
 
 public sealed class UnregisterLecturerSubjectViewModel
 {
     public Guid UserId { get; set; }
     public Guid SubjectId { get; set; }
+    public string RoleType { get; set; } = "Teaching"; // "Leader" or "Teaching"
 }
 
 public sealed class CreateAdminSubjectViewModel
@@ -105,4 +110,22 @@ public sealed class ImportAdminUsersViewModel
     public string Role { get; set; } = PresentationLayer.Security.AppRoles.Student;
 
     public List<Guid> SubjectIds { get; set; } = new();
+}
+
+public sealed class ToggleSubjectActiveStatusViewModel
+{
+    public Guid SubjectId { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public sealed class RegisterStudentSubjectViewModel
+{
+    public Guid UserId { get; set; }
+    public Guid SubjectId { get; set; }
+}
+
+public sealed class UnregisterStudentSubjectViewModel
+{
+    public Guid UserId { get; set; }
+    public Guid SubjectId { get; set; }
 }

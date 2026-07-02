@@ -240,13 +240,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            if (IsAdmin() || !IsLecturer())
-            {
-                return false;
-            }
-
-            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
-            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
+            return IsAdmin();
         }
 
         
@@ -257,13 +251,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            if (IsAdmin() || !IsLecturer())
-            {
-                return false;
-            }
-
-            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
-            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
+            return IsAdmin();
         }
 
         public bool CanEditDocumentMetadata(IndexedDocument document, IEnumerable<CourseSubject> catalog)
@@ -273,12 +261,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            if (IsAdmin() || !IsLecturer())
-            {
-                return false;
-            }
-
-            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
+            return IsAdmin();
         }
 
         public bool CanManageDocumentAction(IndexedDocument document, DocumentTreeSubjectViewModel subject)
@@ -288,12 +271,7 @@ public abstract class HomePageModelBase : PageModel
                 return true;
             }
 
-            if (IsAdmin() || !IsLecturer() || CurrentUserId() is not { } userId)
-            {
-                return false;
-            }
-
-            return subject.OwnerUserId == userId;
+            return IsAdmin();
         }
 
         protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)

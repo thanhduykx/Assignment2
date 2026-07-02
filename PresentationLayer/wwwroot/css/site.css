@@ -5943,19 +5943,24 @@ body.rbl-body .rbl-main {
   outline: 3px solid rgba(11, 45, 92, 0.12);
 }
 
-.ops-form-row {
+.ops-form-row,
+.ops-ingest-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+.ops-form-row > *,
+.ops-ingest-grid > * {
+  min-width: 0;
+}
+
 .ops-upload-form {
-  display: grid;
-  gap: 14px;
 }
 
 .ops-upload-panel {
   border-top-color: var(--ops-orange);
+  padding-bottom: 28px;
 }
 
 .ops-upload-panel > summary {
@@ -5992,10 +5997,14 @@ body.rbl-body .rbl-main {
 }
 
 .ops-ingest-grid {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr) auto;
-  gap: 12px;
   align-items: stretch;
+}
+
+.ops-ingest-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .ops-dropzone {
@@ -6124,7 +6133,8 @@ body.rbl-body .rbl-main {
 }
 
 .ops-actions-col {
-  width: 220px;
+  width: max-content;
+  white-space: nowrap;
 }
 
 .ops-file-cell,
@@ -6163,7 +6173,7 @@ body.rbl-body .rbl-main {
 }
 
 .ops-row-actions {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .ops-row-actions form,
@@ -7218,6 +7228,21 @@ body.rbl-body .rbl-main {
   color: #36506a;
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+.ops-document-progress-row td {
+  padding: 8px 16px;
+  border-top: none;
+  background-color: #f8fafc;
+}
+
+.ops-document-progress-row .ops-document-progress {
+  font-size: 0.75rem;
+  margin-top: 0;
+}
+
+.ops-document-progress-row .ops-document-progress__bar {
+  height: 8px;
 }
 
 .ops-document-progress__meta {
