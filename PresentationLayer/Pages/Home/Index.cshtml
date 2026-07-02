@@ -127,29 +127,44 @@
     {
         <section class="ops-kpi-grid" aria-label="Document metrics">
             <article class="ops-kpi">
+                <span class="ops-kpi-icon is-blue material-symbols-outlined" aria-hidden="true">description</span>
+                <div class="ops-kpi-content">
                 <span data-i18n="documents.kpiTotal">Total</span>
                 <strong data-document-kpi="total">@totalDocuments</strong>
                 <small><span data-document-visible-count>@visibleDocuments</span> <span data-i18n="documents.showing">shown</span></small>
+                </div>
             </article>
             <article class="ops-kpi">
+                <span class="ops-kpi-icon is-green material-symbols-outlined" aria-hidden="true">check_circle</span>
+                <div class="ops-kpi-content">
                 <span data-i18n="documents.statsIndexed">Indexed</span>
                 <strong data-document-kpi="indexed">@Model.IndexedDocumentCount</strong>
                 <small>Ready for chat</small>
+                </div>
             </article>
             <article class="ops-kpi">
+                <span class="ops-kpi-icon is-indigo material-symbols-outlined" aria-hidden="true">schedule</span>
+                <div class="ops-kpi-content">
                 <span data-i18n="documents.statsProcessing">Processing</span>
                 <strong data-document-kpi="processing">@Model.ProcessingDocumentCount</strong>
                 <small>Queued or indexing</small>
+                </div>
             </article>
             <article class="ops-kpi ops-kpi--danger">
+                <span class="ops-kpi-icon is-orange material-symbols-outlined" aria-hidden="true">warning</span>
+                <div class="ops-kpi-content">
                 <span data-i18n="documents.kpiFailed">Failed</span>
                 <strong data-document-kpi="failed">@Model.FailedDocumentCount</strong>
                 <small>Needs attention</small>
+                </div>
             </article>
             <article class="ops-kpi">
+                <span class="ops-kpi-icon is-purple material-symbols-outlined" aria-hidden="true">inventory_2</span>
+                <div class="ops-kpi-content">
                 <span data-i18n="documents.storage">Storage</span>
                 <strong>@FormatBytes(Model.TotalUploadedBytes)</strong>
                 <small>@totalChunks chunks, avg @averageChunks.ToString("0.#")</small>
+                </div>
             </article>
         </section>
     }
@@ -161,7 +176,9 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Language" value="vi" data-language-field />
 
-                <div class="ops-form-row" style="margin-bottom: 1.5rem;">
+                <div class="ops-upload-file-card">
+                    <h2><span class="material-symbols-outlined" aria-hidden="true">description</span> <span data-i18n="documents.docInfo">Thông tin tài liệu</span></h2>
+                <div class="ops-form-row">
                     <label class="ops-field">
                         <span data-i18n="documents.subject">Môn học</span>
                         <select name="Subject" required disabled="@(!canUploadToSubject)">
@@ -189,18 +206,28 @@
                     }
                 </datalist>
 
-                <div class="ops-ingest-grid" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="ops-ingest-grid">
                     <label id="documentDropzone" class="ops-dropzone dropzone" for="documentFileInput">
                         <input id="documentFileInput" name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-                        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                        <strong data-i18n="documents.uploadKicker">File upload</strong>
+                        <span class="ops-upload-illustration" aria-hidden="true">
+                            <span class="material-symbols-outlined ops-upload-document">description</span>
+                            <span class="material-symbols-outlined ops-upload-cloud">cloud_upload</span>
+                            <i class="ops-upload-spark is-one"></i>
+                            <i class="ops-upload-spark is-two"></i>
+                            <i class="ops-upload-spark is-three"></i>
+                        </span>
+                        <strong data-i18n="documents.dropzoneTitle">Kéo &amp; thả file vào đây hoặc bấm để chọn</strong>
                         <small id="documentFileName" data-default-en="PDF, DOCX, PPTX, TXT"
                                data-default-vi="PDF, DOCX, PPTX, TXT">PDF, DOCX, PPTX, TXT</small>
+                        <span class="ops-button ops-button--secondary"><span class="material-symbols-outlined" aria-hidden="true">upload</span> <span data-i18n="documents.chooseFileBtn">Chọn file</span></span>
                     </label>
+                </div>
+                </div>
 
-                    <div class="ops-ingest-actions">
+                    <div class="ops-ingest-actions ops-upload-url-card">
+                        <h2><span class="material-symbols-outlined" aria-hidden="true">link</span> <span data-i18n="documents.url">URL trang bài giảng</span></h2>
                         <label class="ops-field ops-url-field">
-                            <span data-i18n="documents.url">URL bài giảng</span>
+                            <span data-i18n="documents.enterUrl">Nhập URL trang bài giảng</span>
                             <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" data-i18n-placeholder="documents.urlPlaceholder" />
                             <small data-i18n="documents.urlHint">SPA/React/Vue sẽ được render trước khi trích xuất nội dung.</small>
                         </label>
@@ -211,7 +238,6 @@
                             <span data-i18n="documents.submit">Index now</span>
                         </button>
                     </div>
-                </div>
             </form>
         </section>
     }
@@ -274,7 +300,7 @@
                         }
                     </select>
                 </label>
-                <button type="submit" class="ops-button ops-button--secondary" data-i18n="documents.filter">Filter</button>
+                <button type="submit" class="ops-button ops-button--secondary"><span class="material-symbols-outlined" aria-hidden="true">filter_alt</span><span data-i18n="documents.filter">Filter</span></button>
                 @if (hasActiveFilters)
                 {
                     <a class="ops-button ops-button--ghost" asp-page="/Home/Index" asp-route-section="list" data-i18n="documents.clear">Clear</a>
@@ -283,9 +309,16 @@
 
             @if (documents.Count == 0)
             {
-                <div class="ops-empty">
-                    <strong data-i18n="documents.emptyTitle">Không có tài liệu phù hợp / No matching documents.</strong>
+                <div class="ops-empty ops-documents-empty">
+                    <span class="ops-empty-icon material-symbols-outlined" aria-hidden="true">note_add</span>
+                    <strong data-i18n="documents.emptyTitle">Chưa có tài liệu</strong>
                     <p data-i18n="documents.emptyHint">Điều chỉnh bộ lọc hoặc upload tài liệu mới để bắt đầu hỏi đáp theo nguồn.</p>
+                    @if (Model.IsLecturer)
+                    {
+                        <a class="ops-button ops-button--primary" asp-page="/Home/Index" asp-route-section="upload">
+                            <span class="material-symbols-outlined" aria-hidden="true">upload</span> <span data-i18n="documents.uploadTitle">Tải tài liệu</span>
+                        </a>
+                    }
                 </div>
             }
             else
@@ -390,11 +423,18 @@
             <section id="course-catalog" class="ops-panel ops-catalog-panel"
                      style="margin-top: 0 !important; padding-top: 1rem;">
                 <div class="ops-catalog-body">
+
                     @if (documentTree.Count == 0)
                     {
-                        <div class="ops-empty">
-                            <strong>Chưa có danh mục môn học.</strong>
-                            <p>Tạo môn học trước, sau đó thêm chương để upload tài liệu theo danh mục chuẩn.</p>
+                        <div class="ops-empty ops-catalog-empty">
+                            <div class="ops-catalog-empty-heading">
+                                <span class="material-symbols-outlined" aria-hidden="true">list_alt</span>
+                                <div><h2 data-i18n="documents.navCatalog">Danh mục môn học</h2><p data-i18n="documents.catalogEmptyDesc">Danh sách các chương đã tạo</p></div>
+                            </div>
+                            <span class="ops-empty-icon material-symbols-outlined" aria-hidden="true">playlist_add</span>
+                            <strong data-i18n="documents.emptyCatalogTitle">Chưa có danh mục môn học.</strong>
+                            <p data-i18n="documents.emptyCatalogHint">Tạo môn học trước, sau đó thêm chương để upload tài liệu theo danh mục chuẩn.</p>
+                            <a href="#course-catalog" class="ops-button ops-button--secondary"><span class="material-symbols-outlined" aria-hidden="true">add_circle</span> <span data-i18n="documents.createFirstChapterBtn">Tạo chương đầu tiên</span></a>
                         </div>
                     }
                     else
