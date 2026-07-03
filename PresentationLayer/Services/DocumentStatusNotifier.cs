@@ -1,4 +1,4 @@
-using BusinessObjects;
+using DataAccessLayer.Models;
 using Microsoft.AspNetCore.SignalR;
 using PresentationLayer.Hubs;
 using ServicesLayer;

@@ -1,4 +1,4 @@
-using BusinessObjects;
+using DataAccessLayer.Models;
 
 namespace DataAccessLayer.Repositories;
 

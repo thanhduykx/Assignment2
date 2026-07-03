@@ -1,4 +1,4 @@
-using BusinessObjects;
+using DataAccessLayer.Models;
 using DataAccessLayer.Entities;
 
 namespace DataAccessLayer.Mapping;
