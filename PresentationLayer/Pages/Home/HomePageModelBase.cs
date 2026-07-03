@@ -12,7 +12,7 @@ namespace PresentationLayer.Pages.Home;
 public abstract class HomePageModelBase : PageModel
 {
     protected readonly ILogger<HomePageModelBase> _logger;
-    protected readonly IKnowledgeService _repository;
+    protected readonly IKnowledgeService _knowledge;
     protected readonly IDocumentIndexingService _indexingService;
     protected readonly IWebPageTextExtractor _webPageTextExtractor;
     protected readonly IRagChatService _chatService;
@@ -22,7 +22,7 @@ public abstract class HomePageModelBase : PageModel
 
     protected HomePageModelBase(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
@@ -31,7 +31,7 @@ public abstract class HomePageModelBase : PageModel
         IDocumentIndexJobQueue indexJobQueue)
     {
         _logger = logger;
-        _repository = repository;
+        _knowledge = knowledge;
         _indexingService = indexingService;
         _webPageTextExtractor = webPageTextExtractor;
         _chatService = chatService;
@@ -212,7 +212,7 @@ public abstract class HomePageModelBase : PageModel
                 return false;
             }
 
-            var subject = (await _repository.GetCourseCatalogAsync(cancellationToken))
+            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
                 .FirstOrDefault(item => item.Id == subjectId);
             return subject?.OwnerUserId == userId;
         }
@@ -229,33 +229,58 @@ public abstract class HomePageModelBase : PageModel
                 return false;
             }
 
-            var subject = FindSubjectForDocumentSubject(await _repository.GetCourseCatalogAsync(cancellationToken), subjectText);
+            var subject = FindSubjectForDocumentSubject(await _knowledge.GetCourseCatalogAsync(cancellationToken), subjectText);
             return subject?.OwnerUserId == userId;
         }
 
         protected async Task<bool> CanManageDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        
+        protected async Task<bool> CanEditDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool CanEditDocumentMetadata(IndexedDocument document, IEnumerable<CourseSubject> catalog)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool CanManageDocumentAction(IndexedDocument document, DocumentTreeSubjectViewModel subject)
+        {
+            if (DocumentBelongsToCurrentUser(document))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
         {
             if (IsAdmin())
             {
                 return true;
             }
 
-            if (!IsLecturer())
-            {
-                return false;
-            }
-
-            if (DocumentBelongsToCurrentUser(document))
-            {
-                return true;
-            }
-
-            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
-            return DocumentBelongsToOwnedSubject(document, catalog, CurrentUserId());
-        }
-
-        protected async Task<bool> CanViewDocumentAsync(IndexedDocument document, CancellationToken cancellationToken)
-        {
             return await CanManageDocumentAsync(document, cancellationToken);
         }
 
@@ -307,14 +332,14 @@ public abstract class HomePageModelBase : PageModel
                 return false;
             }
 
-            var subject = (await _repository.GetCourseCatalogAsync(cancellationToken))
+            var subject = (await _knowledge.GetCourseCatalogAsync(cancellationToken))
                 .FirstOrDefault(item => item.Chapters.Any(chapter => chapter.Id == chapterId));
             return subject?.OwnerUserId == userId;
         }
 
         protected async Task<(string Name, string Email)> ResolveSubjectOwnerAsync(string subjectText, CancellationToken cancellationToken)
         {
-            var subject = FindSubjectForDocumentSubject(await _repository.GetCourseCatalogAsync(cancellationToken), subjectText);
+            var subject = FindSubjectForDocumentSubject(await _knowledge.GetCourseCatalogAsync(cancellationToken), subjectText);
             return subject is null
                 ? (string.Empty, string.Empty)
                 : (subject.OwnerName, subject.OwnerEmail);
@@ -479,14 +504,14 @@ public abstract class HomePageModelBase : PageModel
                 return;
             }
 
-            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            var catalog = await _knowledge.GetCourseCatalogAsync(cancellationToken);
             var subject = catalog.FirstOrDefault(item =>
                 item.Code.Equals(parsed.Code, StringComparison.OrdinalIgnoreCase)
                 || item.DisplayName.Equals(document.Subject.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (subject is null)
             {
-                subject = await _repository.UpsertSubjectAsync(
+                subject = await _knowledge.UpsertSubjectAsync(
                     subjectId: null,
                     code: parsed.Code,
                     name: parsed.Code,
@@ -496,7 +521,7 @@ public abstract class HomePageModelBase : PageModel
             else if (string.IsNullOrWhiteSpace(subject.Name)
                      || subject.Name.Equals(subject.Code, StringComparison.OrdinalIgnoreCase))
             {
-                subject = await _repository.UpsertSubjectAsync(
+                subject = await _knowledge.UpsertSubjectAsync(
                     subject.Id,
                     subject.Code,
                     parsed.Code,
@@ -514,7 +539,7 @@ public abstract class HomePageModelBase : PageModel
             var nextSortOrder = subject.Chapters.Count == 0
                 ? 1
                 : subject.Chapters.Max(item => item.SortOrder) + 1;
-            await _repository.UpsertChapterAsync(
+            await _knowledge.UpsertChapterAsync(
                 chapterId: null,
                 subject.Id,
                 chapterTitle,

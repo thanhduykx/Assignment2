@@ -15,14 +15,14 @@ public sealed class RenameChatSessionModel : HomePageModelBase
 {
     public RenameChatSessionModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -35,7 +35,7 @@ public sealed class RenameChatSessionModel : HomePageModelBase
 
         try
         {
-            var session = await _repository.RenameSessionAsync(
+            var session = await _knowledge.RenameSessionAsync(
                 sessionId,
                 request.Title ?? string.Empty,
                 cancellationToken,

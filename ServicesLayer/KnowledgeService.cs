@@ -1,5 +1,6 @@
 using DataAccessLayer;
 using BusinessObjects;
+using DataAccessLayer.Repositories;
 
 namespace ServicesLayer;
 
@@ -42,6 +43,11 @@ public interface IKnowledgeService
     Task DeleteSubjectAsync(Guid subjectId, CancellationToken cancellationToken = default);
     Task<CourseChapter> UpsertChapterAsync(Guid? chapterId, Guid subjectId, string title, int sortOrder, CancellationToken cancellationToken = default);
     Task DeleteChapterAsync(Guid chapterId, CancellationToken cancellationToken = default);
+    Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Guid>> GetSubjectStudentIdsAsync(Guid subjectId, CancellationToken cancellationToken = default);
+    Task AddSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task RemoveSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default);
+    Task SetSubjectActiveStatusAsync(Guid subjectId, bool isActive, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ChatSession>> GetSessionsAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ChatSession>> GetSessionsForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
@@ -83,6 +89,11 @@ public sealed class KnowledgeService : IKnowledgeService
     public Task DeleteSubjectAsync(Guid subjectId, CancellationToken cancellationToken = default) => _repository.DeleteSubjectAsync(subjectId, cancellationToken);
     public Task<CourseChapter> UpsertChapterAsync(Guid? chapterId, Guid subjectId, string title, int sortOrder, CancellationToken cancellationToken = default) => _repository.UpsertChapterAsync(chapterId, subjectId, title, sortOrder, cancellationToken);
     public Task DeleteChapterAsync(Guid chapterId, CancellationToken cancellationToken = default) => _repository.DeleteChapterAsync(chapterId, cancellationToken);
+    public Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default) => _repository.RemoveSubjectLecturerAsync(subjectId, userId, cancellationToken);
+    public Task<IReadOnlyList<Guid>> GetSubjectStudentIdsAsync(Guid subjectId, CancellationToken cancellationToken = default) => _repository.GetSubjectStudentIdsAsync(subjectId, cancellationToken);
+    public Task AddSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default) => _repository.AddSubjectStudentAsync(subjectId, userId, cancellationToken);
+    public Task RemoveSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default) => _repository.RemoveSubjectStudentAsync(subjectId, userId, cancellationToken);
+    public Task SetSubjectActiveStatusAsync(Guid subjectId, bool isActive, CancellationToken cancellationToken = default) => _repository.SetSubjectActiveStatusAsync(subjectId, isActive, cancellationToken);
     public Task<IReadOnlyList<ChatSession>> GetSessionsAsync(CancellationToken cancellationToken = default) => _repository.GetSessionsAsync(cancellationToken);
     public Task<IReadOnlyList<ChatSession>> GetSessionsForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default) => _repository.GetSessionsForOwnerAsync(ownerUserId, cancellationToken);
     public Task<IReadOnlyList<ChatSessionSummary>> GetSessionSummariesForOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default) => _repository.GetSessionSummariesForOwnerAsync(ownerUserId, cancellationToken);

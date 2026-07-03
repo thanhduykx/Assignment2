@@ -5,6 +5,7 @@
     ViewData["UseRblShell"] = true;
     ViewData["ActiveNav"] = "courses";
     ViewData["ShellTitle"] = "Courses";
+    ViewData["ShellTitleI18n"] = "shell.courses";
 }
 
 <section class="ops-page course-list-page">
@@ -15,17 +16,17 @@
 
     <header class="ops-page-header">
         <div>
-            <span class="ops-eyebrow">Course workspace</span>
-            <h1>Courses</h1>
-            <p>Open a course workspace to view documents, chapters, and subject chat.</p>
+            <span class="ops-eyebrow" data-i18n="courses.eyebrow">Course workspace</span>
+            <h1 data-i18n="shell.courses">Courses</h1>
+            <p data-i18n="courses.description">Open a course workspace to view documents, chapters, and subject chat.</p>
         </div>
     </header>
 
     @if (Model.Courses.Count == 0)
     {
         <section class="ops-panel ops-empty">
-            <strong>No course workspace is available.</strong>
-            <p>Upload and index course documents first, then come back here.</p>
+            <strong data-i18n="courses.emptyTitle">No course workspace is available.</strong>
+            <p data-i18n="courses.emptyHint">Upload and index course documents first, then come back here.</p>
         </section>
     }
     else
@@ -36,11 +37,25 @@
                 <a class="course-workspace-card" asp-page="/Home/CourseWorkspace" asp-route-id="@course.Id">
                     <span class="material-symbols-outlined" aria-hidden="true">school</span>
                     <strong>@course.DisplayName</strong>
-                    <small>@(string.IsNullOrWhiteSpace(course.Description) ? "No description yet." : course.Description)</small>
+                    @if (string.IsNullOrWhiteSpace(course.Description))
+                    {
+                        <small data-i18n="courses.noDescription">No description yet.</small>
+                    }
+                    else
+                    {
+                        <small>@course.Description</small>
+                    }
                     <span class="course-card-meta">
-                        <span>@course.OwnerName</span>
-                        <span>@course.ChapterCount chapters</span>
-                        <span>@course.IndexedDocumentCount/@course.DocumentCount indexed</span>
+                        @if (course.OwnerName == "Unassigned")
+                        {
+                            <span class="ops-muted" data-i18n="courses.unassigned">Unassigned</span>
+                        }
+                        else
+                        {
+                            <span>@course.OwnerName</span>
+                        }
+                        <span>@course.ChapterCount <span data-i18n="courses.chaptersUnit">Chapters</span></span>
+                        <span>@course.IndexedDocumentCount/@course.DocumentCount <span data-i18n="documents.indexedStatus">Indexed</span></span>
                     </span>
                 </a>
             }

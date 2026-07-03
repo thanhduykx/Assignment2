@@ -55,8 +55,8 @@ public sealed class DocumentIndexWorker : BackgroundService
     private async Task EnqueueProcessingDocumentsAsync(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IKnowledgeService>();
-        var pendingDocuments = await repository.GetDocumentsByStatusAsync(DocumentIndexStatus.Processing, cancellationToken);
+        var knowledge = scope.ServiceProvider.GetRequiredService<IKnowledgeService>();
+        var pendingDocuments = await knowledge.GetDocumentsByStatusAsync(DocumentIndexStatus.Processing, cancellationToken);
         foreach (var document in pendingDocuments)
         {
             await _queue.EnqueueAsync(document.Id, cancellationToken);
@@ -95,8 +95,8 @@ public sealed class DocumentIndexWorker : BackgroundService
 
         using (var scope = _scopeFactory.CreateScope())
         {
-            var repository = scope.ServiceProvider.GetRequiredService<IKnowledgeService>();
-            await repository.MarkDocumentIndexFailedAsync(
+            var knowledge = scope.ServiceProvider.GetRequiredService<IKnowledgeService>();
+            await knowledge.MarkDocumentIndexFailedAsync(
                 documentId,
                 lastError?.Message ?? "Document indexing failed.",
                 cancellationToken);
