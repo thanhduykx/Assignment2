@@ -1,667 +1,323 @@
-Nguồn: FLM Syllabus 12400
-URL: https://flm.fpt.edu.vn/gui/role/student/SyllabusDetails?sylID=12400
+Nguồn: FLM Syllabus 11835
+URL: https://flm.fpt.edu.vn/gui/role/student/SyllabusDetails?sylID=11835
 Tiêu đề trang: FPT University Learning Materials - Syllabus Details
-Ngày lấy: 2026-06-04T06:15:30.3353948+00:00
+Ngày lấy: 2026-05-28T09:08:03.858Z
 
 ===== TỔNG QUAN MÔN HỌC =====
-Mã môn: IOT102
-Tên môn: Internet of Things - Internet vạn vật
-Tên tiếng Anh: Internet of Things
+Mã môn: DBA103
+Tên môn: Nhạc cụ truyền thống - Đàn Bầu
+Tên tiếng Anh: Traditional musical instrument
 Số tín chỉ: 3
-Trình độ: Bachelor
-Tổng thời lượng học tập: 150 giờ.
-Phân bổ thời gian: 22.5 giờ contact hours, 22.5 giờ online hours, 4.5 giờ final project presentation, 1 giờ final exam, 99.5 giờ self-study.
-Hình thức học: Kết hợp online và offline.
-Môn tiên quyết: Không ghi nhận trong syllabus.
+Trình độ: Sơ cấp / Beginner
+Thời lượng: 30 slots trên lớp, mỗi slot 90 phút
+Hình thức học: Offline, học lý thuyết kết hợp thực hành nhạc cụ.
+Môn tiên quyết: Không có.
 Điểm đạt môn tối thiểu: 5/10.
 Thang điểm: 10.
 Tình trạng: Approved, active.
-Ngày phê duyệt: 06/12/2024.
-Quyết định: 1363/QĐ-ĐHFPT dated 12/06/2024.
+Ngày phê duyệt: 16/08/2024.
+Quyết định: 862/QĐ-ĐHFPT dated 08/16/2024.
 
-IOT102 là môn học 3 tín chỉ về Internet of Things. Môn học gồm lý thuyết online, hướng dẫn trên lớp, hỏi đáp, thực hành lab với learning KIT, đánh giá qua bài tập, project, thuyết trình, progress test và final exam.
+DBA103 là môn học 3 tín chỉ về nhạc cụ truyền thống Việt Nam, tập trung vào Đàn Bầu. Môn học giúp sinh viên hiểu lịch sử phát triển, cấu trúc, đặc điểm của Đàn Bầu và thực hành các kỹ thuật cơ bản để chơi một số bài nhạc Việt Nam và nước ngoài.
 
 ===== MÔ TẢ MÔN HỌC =====
-IOT102 có hai phần: online và offline.
-Nội dung học bao gồm:
-- Khái niệm cơ bản về IoT.
-- Ứng dụng của IoT.
-- Khái niệm "things" trong IoT.
-- Networking trong IoT.
-- Bảo mật trong IoT.
-- Lập trình IoT.
-- Điện tử cơ bản và linh kiện.
-- Arduino UNO và kiến trúc vi điều khiển ATmega328.
-- Lập trình digital input/output, analog input/output.
-- Lập trình cảm biến, cơ cấu chấp hành và giao tiếp.
-- Mô phỏng mạch IoT.
-- Lập kế hoạch và xây dựng final project.
+Kiến thức:
+- Nắm được những nét đặc trưng về lịch sử phát triển và cấu trúc Đàn Bầu.
+- Hiểu các đặc điểm cơ bản của Đàn Bầu trong âm nhạc truyền thống Việt Nam.
+- Làm quen với nhạc lý và các kỹ thuật cơ bản của Đàn Bầu.
 
-Sinh viên sẽ học video lý thuyết online, làm lab theo tutorial, thực hành một phần tại nhà và thảo luận/hỏi đáp trên lớp với giảng viên. Các phiên offline được dùng để hướng dẫn vấn đề quan trọng, đánh giá tiến độ, trình bày project và thực hành với learning KIT.
+Kỹ năng:
+- Sinh viên có thể chơi tối thiểu 3 bài nhạc, trong đó có 1 bài nhạc nước ngoài.
+- Sinh viên vận dụng đúng các kỹ thuật cơ bản của Đàn Bầu khi thực hành.
+- Sinh viên được rèn luyện biểu diễn cá nhân, biểu diễn hòa tấu và tự tin trước đám đông.
 
-===== SINH VIÊN CẦN LÀM GÌ TRONG IOT102 =====
+Quy mô lớp:
+- Môn học được tổ chức theo lớp khoảng 15 sinh viên/lớp.
+
+Nội dung học chính:
+- Lịch sử phát triển của Đàn Bầu ở Việt Nam.
+- Cấu trúc và đặc điểm của Đàn Bầu.
+- Tư thế ngồi và tư thế tay khi chơi Đàn Bầu.
+- Cách gảy dây buông.
+- Kỹ thuật nhấn lên, nhấn xuống quãng 2.
+- Luyện tập các bài Việt Nam như Cò lả, Lý cây đa, Đội kèn tí hon.
+- Luyện tập bài quốc tế Auld Lang Syne.
+- Hòa tấu Đàn Bầu với các nhạc cụ khác.
+
+===== ÁP DỤNG CNTT VÀ NGUỒN HỌC ONLINE =====
+Giảng viên có thể cung cấp thông tin, địa chỉ website và clip nhạc truyền thống trên Internet.
+Giảng viên chọn lọc tài nguyên online phù hợp với mục tiêu học phần rồi cung cấp cho sinh viên.
+Sinh viên được hướng dẫn tìm kiếm thông tin theo các chủ đề nhất định trên Internet.
+
+===== KỸ NĂNG MỀM VÀ PHÁT TRIỂN CÁ NHÂN =====
+Môn DBA103 giúp sinh viên:
+- Rèn luyện tính kiên trì.
+- Tự tin hơn khi biểu diễn trước đám đông.
+- Phát triển kỹ năng làm việc nhóm.
+- Phát triển khả năng hoạt động độc lập thông qua các nhiệm vụ giảng viên giao.
+
+===== SINH VIÊN CẦN LÀM GÌ TRONG DBA103 =====
 Sinh viên cần:
-- Tham dự ít nhất 80% các buổi contact sessions để đủ điều kiện thi cuối kỳ.
-- Học tất cả video lý thuyết online do giảng viên cung cấp trên syllabus.
-- Làm tất cả bài lab do giảng viên giao trên syllabus.
-- Thường xuyên theo dõi https://flm.fpt.edu.vn/ để cập nhật thông tin môn học.
-- Mượn learning KIT tại thư viện khi được yêu cầu.
-- Đăng ký và học các khóa edX liên quan đến IoT.
-- Thảo luận với giảng viên về bài online, bài mới và bài lab.
-- Làm project theo nhóm, chuẩn bị block diagram, flowchart, wiring/circuit schematic, report và final presentation.
+- Tham dự tối thiểu 80% thời lượng môn học để đủ điều kiện thi cuối môn.
+- Có thái độ học tập nghiêm túc.
+- Ôn tập bài cũ trước khi đến lớp.
+- Đọc và tìm hiểu tài liệu bài mới trước khi đến lớp.
+- Luyện tập và thực hành trên lớp.
+- Luyện tập và thực hành tại nhà.
+- Tích cực tham gia các hoạt động trên lớp do giảng viên yêu cầu: phát biểu, hỏi đáp, trao đổi, làm việc nhóm, thực hành.
+- Làm portfolio cho môn học nếu giảng viên yêu cầu.
 
-===== DỤNG CỤ VÀ PHẦN MỀM HỌC TẬP =====
-- Learning KIT.
-- Advanced components cho các advanced labs.
-- Arduino UNO / ATmega328p.
-- Tinkercad Arduino simulator.
-- Fritzing để xây dựng mạch.
-- Latex/Overleaf hoặc template report do giảng viên cung cấp.
-- Arduino documents.
-- edX learning platform.
+===== DỤNG CỤ HỌC TẬP =====
+Dụng cụ chính: Nhạc cụ Đàn Bầu cho từng sinh viên.
 
 ===== TÀI LIỆU VÀ NGUỒN HỌC =====
-IOT102 có 7 nguồn/tài liệu học chính:
+Tài liệu 1:
+- Tên: Sách học Đàn Bầu.
+- Tác giả: Nguyễn Thanh Tâm, Trần Quốc Lộc.
+- Đơn vị xuất bản/nguồn: Học viện Âm nhạc Quốc gia Việt Nam.
+- Ghi chú: Tài liệu chính để học tư thế, kỹ thuật và bài tập Đàn Bầu.
 
-1. Course from edX - CurtinX IOT1x:
-- URL: https://learning.edx.org/course/course-v1:CurtinX+IOT1x+2T2018/home
-- Dùng cho các chủ đề nhập môn IoT, things, networking, securing IoT và programming IoT.
+Tài liệu 2:
+- Tên: Bài tập luyện kỹ thuật Đàn Bầu.
+- Mục đích: Luyện tập các kỹ thuật cơ bản của Đàn Bầu.
 
-2. Course from edX - CurtinX IOT2x:
-- URL: https://learning.edx.org/course/course-v1:CurtinX+IOT2x+2T2018/home
-- Dùng cho các chủ đề electronics, project concept planning và các nội dung nâng cao.
-
-3. Free Hardware and IoT Ebooks - OReilly Media:
-- Định dạng: soft copy.
-
-4. Introduction to Arduino: A piece of cake!
-- Tác giả: Alan G. Smith.
-- Ngày xuất bản: 30/09/2011.
-- URL: http://www.introtoarduino.com
-
-5. Arduino Documents:
-- URL: https://www.arduino.cc/
-
-6. Instructables.com - 20 Unbelievable Arduino Projects:
-- Định dạng: soft copy.
-
-7. IOT102 guide documents:
-- Bao gồm project guide, project topics, rubrics, KITs basic and advanced.
-- Định dạng: soft copy.
+Tài liệu 3:
+- Tên: Danh mục các bài nhạc có thể sử dụng trong học phần.
+- Các bài nhạc gồm:
+  1. Bắc Kim Thang - dân ca Nam Bộ.
+  2. Inh lả ơi - dân ca Thái.
+  3. Xòe hoa - dân ca Thái.
+  4. Lý cây đa - dân ca Bắc Bộ.
+  5. Trống cơm - dân ca Bắc Bộ.
+  6. Đội kèn tí hon - sáng tác Phan Huỳnh Điểu.
+  7. Auld Lang Syne - dân ca Scotland.
+  8. Chờ người nơi ấy - sáng tác Huy Tuấn.
+  9. Độ ta không độ nàng - nhạc Hoa.
+  10. Futari No Kimochi - nhạc Nhật.
+  11. Thằng Cuội - sáng tác Lê Thương.
+  12. Từ đó - sáng tác Phan Mạnh Quỳnh.
 
 ===== CHUẨN ĐẦU RA CLO =====
 CLO1:
-- Understand the concept of IoT and applications.
-- Sinh viên hiểu khái niệm IoT và các ứng dụng của IoT.
+- Sinh viên hiểu biết cơ bản về lịch sử và sự phát triển hình thành của nền âm nhạc truyền thống Việt Nam.
+- English: Understand the history and development of Vietnamese traditional music.
 
 CLO2:
-- Understand the concept of things in IoT.
-- Sinh viên hiểu khái niệm "things" trong IoT.
+- Sinh viên chơi được một số bài cơ bản của nhạc truyền thống Việt Nam và nước ngoài.
+- English: Be able to play some simple Vietnamese and foreign traditional songs.
 
-CLO3:
-- Understand the Networking in IoT.
-- Sinh viên hiểu networking trong IoT.
+===== ĐÁNH GIÁ VÀ TỶ LỆ ĐIỂM DBA103 =====
+DBA103 có 3 thành phần đánh giá, tổng 100%.
 
-CLO4:
-- Understand the Securing in IoT.
-- Sinh viên hiểu bảo mật trong IoT.
-
-CLO5:
-- Select and calculate the electronics components, IoT Programming.
-- Sinh viên biết chọn và tính toán linh kiện điện tử, lập trình IoT.
-
-CLO6:
-- Program IN/OUT Digital with Arduino UNO.
-- Sinh viên lập trình digital input/output với Arduino UNO.
-
-CLO7:
-- Program Analog Input/Output with Arduino UNO.
-- Sinh viên lập trình analog input/output với Arduino UNO.
-
-CLO8:
-- Program Sensors/Actuators with Arduino UNO.
-- Sinh viên lập trình cảm biến và cơ cấu chấp hành với Arduino UNO.
-
-CLO9:
-- Program Communication with Arduino UNO.
-- Sinh viên lập trình giao tiếp với Arduino UNO.
-
-CLO10:
-- Concept planning, draw and install simple IoT circuits.
-- Sinh viên lập kế hoạch ý tưởng, vẽ và lắp mạch IoT đơn giản.
-
-CLO11:
-- Understand the Arduino UNO and Atmega328 microcontroller architecture.
-- Sinh viên hiểu Arduino UNO và kiến trúc vi điều khiển ATmega328.
-
-CLO12:
-- Know how to use the simulation software.
-- Sinh viên biết sử dụng phần mềm mô phỏng.
-
-CLO13:
-- Understand the interrupts on Arduino UNO.
-- Sinh viên hiểu interrupt trên Arduino UNO.
-
-===== ĐÁNH GIÁ VÀ TỶ LỆ ĐIỂM IOT102 =====
-IOT102 có 6 thành phần đánh giá, tổng 100%.
-
-1. Active learning:
+1. Bài tập / Assignment:
 - Loại: On-going.
-- Tỷ trọng: 10%.
-- Thời gian: Từ đầu đến cuối lịch học.
-- CLO liên quan: CLO11, CLO12, CLO13.
-- Hình thức: Private / N/A.
-- Tiêu chí: Sinh viên đặt câu hỏi tốt, chăm chỉ, tự học online.
-- Chấm điểm: Giảng viên chấm.
+- Tỷ trọng: 15%.
+- Tiêu chí hoàn thành: >0.
+- Nội dung có thể gồm thuyết trình, workshop, viết luận, slides, bài luận hoặc sản phẩm do giảng viên giao.
+- Kiến thức kỹ năng đánh giá: Kiến thức về loại nhạc cụ sinh viên học.
+- Thang điểm: 10.
 
-2. Final Project Presentation:
+2. Tham gia trên lớp / Participation:
 - Loại: On-going.
-- Tỷ trọng: 20%.
-- Tiêu chí hoàn thành: 4.
-- Thời lượng: 30 phút/nhóm.
-- CLO liên quan: CLO05, CLO06, CLO07, CLO08, CLO09, CLO10, CLO12.
-- Hình thức: Oral.
-- Nội dung: Tất cả chương, kiến thức và kỹ năng.
-- Hội đồng đánh giá: Tối thiểu 2 giảng viên.
-- Căn cứ chấm: Final report, project demonstration và Q&A interaction.
-- Cách tính điểm: Trung bình điểm do 2 giảng viên chấm.
-- Ghi chú: Chấm dựa trên rubrics.
+- Tỷ trọng: 15%.
+- Tiêu chí hoàn thành: >0.
+- Ghi nhận mức độ sinh viên tích cực tham gia hoạt động trên lớp, đi học đầy đủ và nộp bài luận.
+- Thang điểm: 10.
 
-3. On-Going Project Assessment:
-- Loại: On-going.
-- Số phần: 2.
-- Tỷ trọng: 30%.
-- Thời gian: Từ đầu đến cuối lịch học.
-- CLO liên quan: CLO05, CLO06, CLO07, CLO08, CLO09, CLO10, CLO12.
-- Nội dung: Theo đề xuất của giảng viên, tập trung vào knowledge and skills.
-- Chấm điểm: Giảng viên chấm.
-
-4. Presentation:
-- Loại: On-going.
-- Tỷ trọng: 10%.
-- CLO liên quan: CLO01, CLO05.
-- Hình thức: Option 1 là làm nhóm; Option 2 theo đề xuất của giảng viên nếu áp dụng constructivism approach.
-- Nội dung: IoT idea/theory.
-- Chấm điểm: Giảng viên chấm.
-
-5. Progress test / Check Practice at home, Exercises, Quiz:
-- Loại: On-going.
-- Số phần: 2.
-- Tỷ trọng: 10%.
-- Thời lượng Option 1: 30 phút.
-- CLO liên quan: CLO01, CLO13.
-- Nội dung: Các chương đã học, knowledge and skills.
-- Chấm điểm: Giảng viên chấm.
-
-6. Final exam:
+3. Thi cuối kỳ / Final exam:
 - Loại: Final exam.
-- Tỷ trọng: 20%.
+- Tỷ trọng: 70%.
 - Tiêu chí hoàn thành: 4.
-- Thời lượng: 60 phút.
-- CLO liên quan: CLO01, CLO13.
-- Hình thức: Computer gradable.
-- Số câu hỏi: 50.
-- Nội dung: Tất cả chương, knowledge and skills.
-- Chấm điểm: Exam board.
+- Thời lượng: 5 phút mỗi sinh viên.
+- Hình thức: Thực hành chơi nhạc cụ.
+- Nội dung: Sinh viên chơi 3 bài, gồm 2 bài hòa tấu và 1 bài độc tấu.
+- Yêu cầu bài thi: Sinh viên chọn 3 bài, trong đó có 2 bài dân ca Việt Nam và 1 bài quốc tế.
+- Ghi chú: Bài dân ca có thể được hòa tấu với các nhạc cụ khác.
+- Tổng điểm FE cần đạt: >=5.
+- Điểm trung bình tối thiểu để qua môn: 5.
 
 ===== TRẢ LỜI NHANH CÁC CÂU HỎI THƯỜNG GẶP =====
-IOT102 có bao nhiêu tín chỉ?
-- IOT102 có 3 tín chỉ.
+DBA103 có bao nhiêu tín chỉ?
+- DBA103 có 3 tín chỉ.
 
-IOT102 là môn gì?
-- IOT102 là môn Internet of Things - Internet vạn vật, học về khái niệm IoT, ứng dụng IoT, networking, security, Arduino, cảm biến, mạch điện, mô phỏng và final project.
+DBA103 là môn gì?
+- DBA103 là môn Nhạc cụ truyền thống - Đàn Bầu, dạy về lịch sử, cấu trúc và kỹ thuật cơ bản của Đàn Bầu.
 
-IOT102 học trong bao lâu?
-- Tổng thời lượng học tập là 150 giờ, gồm 22.5 giờ contact, 22.5 giờ online, 4.5 giờ final project presentation, 1 giờ final exam và 99.5 giờ self-study.
+DBA103 học trong bao lâu?
+- DBA103 có 30 slots trên lớp, mỗi slot 90 phút.
 
-IOT102 có môn tiên quyết không?
-- Syllabus không ghi môn tiên quyết cho IOT102.
+DBA103 có môn tiên quyết không?
+- DBA103 không có môn tiên quyết.
 
-IOT102 cần điểm bao nhiêu để qua môn?
-- Điểm trung bình tối thiểu để qua môn là 5/10.
+DBA103 cần điểm bao nhiêu để qua môn?
+- Điểm tối thiểu để qua môn là 5/10.
 
-IOT102 đánh giá như thế nào?
-- Active learning 10%, Final Project Presentation 20%, On-Going Project Assessment 30%, Presentation 10%, Progress test 10%, Final exam 20%.
+DBA103 đánh giá như thế nào?
+- Assignment 15%, Participation 15%, Final exam 70%.
 
-Final exam IOT102 như thế nào?
-- Final exam chiếm 20%, thời lượng 60 phút, computer gradable, gồm 50 câu hỏi, bao phủ tất cả chương và liên quan CLO01, CLO13.
+Thi cuối kỳ DBA103 làm gì?
+- Sinh viên thực hành chơi 3 bài nhạc: 2 bài dân ca Việt Nam và 1 bài quốc tế; thời lượng 5 phút/sinh viên.
 
-Sinh viên IOT102 cần làm gì?
-- Tham dự ít nhất 80% contact sessions, học tất cả video online, làm tất cả lab, theo dõi FLM, mượn learning KIT, học trên edX, thảo luận với giảng viên và làm final project.
+Sinh viên DBA103 cần làm gì?
+- Tham dự ít nhất 80%, học nghiêm túc, ôn bài, chuẩn bị bài mới, luyện tập trên lớp và ở nhà, tham gia hoạt động lớp và làm portfolio nếu được yêu cầu.
 
-IOT102 dùng tài liệu hoặc nguồn học nào?
-- IOT102 dùng course edX CurtinX IOT1x/IOT2x, OReilly hardware and IoT ebooks, Introduction to Arduino, Arduino Documents, Instructables Arduino projects và IOT102 guide documents.
+DBA103 dùng tài liệu hoặc nguồn học nào?
+- Sách học Đàn Bầu của Nguyễn Thanh Tâm và Trần Quốc Lộc, bài tập luyện kỹ thuật Đàn Bầu, danh mục bài nhạc luyện tập và các nguồn online/clip nhạc truyền thống do giảng viên chọn lọc.
 
-IOT102 có chuẩn đầu ra nào?
-- IOT102 có 13 CLO: hiểu IoT, things, networking, security, electronics/programming, digital I/O, analog I/O, sensors/actuators, communication, circuit planning, Arduino/ATmega328, simulation software và interrupts.
+DBA103 có chuẩn đầu ra nào?
+- CLO1: Hiểu lịch sử và phát triển của âm nhạc truyền thống Việt Nam.
+- CLO2: Chơi được một số bài cơ bản của nhạc truyền thống Việt Nam và nước ngoài.
 
 ===== LỊCH HỌC TÓM TẮT THEO GIAI ĐOẠN =====
-Giai đoạn 1 - Nhập môn IoT và Arduino, sessions 1-9:
-- Giới thiệu môn IoT.
-- Học Internet of Things là gì.
-- Học Arduino ATmega328p architecture.
-- Bắt đầu learning KIT, Fritzing, Tinkercad, Blink LED, Analog Read, Analog Write.
-- Giới thiệu project topic.
+Giai đoạn 1 - Nền tảng lý thuyết và kỹ thuật cơ bản, sessions 1-6:
+- Học lịch sử, tên gọi, cấu tạo Đàn Bầu.
+- Học tư thế ngồi, tư thế tay phải, tay trái và cách gảy đàn.
+- Tập gảy dây buông, tìm điểm đàn, đọc nốt nhạc.
+- Học kỹ thuật nhấn lên quãng 2 và nhận biết nốt nhạc.
 
-Giai đoạn 2 - Lý thuyết IoT online và lab cơ bản, sessions 10-21:
-- Học programming IoT, securing IoT.
-- Làm lab digital read, input pullup, photoresistor, ultrasonic, servo motor.
-- Thảo luận với giảng viên về bài online và bài lab.
+Giai đoạn 2 - Bài Việt Nam đầu tiên và kiểm tra giữa kỳ, sessions 7-15:
+- Luyện nốt nhạc trên Đàn Bầu.
+- Học bài Đội kèn tí hon.
+- Học bài Lý cây đa.
+- Luyện 2 bài Lý cây đa và Đội kèn tí hon.
+- Kiểm tra giữa kỳ 2 bài Lý cây đa và Đội kèn tí hon.
 
-Giai đoạn 3 - Electronics và lập kế hoạch project, sessions 22-33:
-- Học electrical circuits and electronics.
-- Học project concept planning.
-- Trình bày final project planning.
-- Làm IR Remote, Digital Read Out Serial, RGB LED, advanced labs, 7-segment display, LM35 temperature sensor.
+Giai đoạn 3 - Nâng cao kỹ thuật và bài quốc tế, sessions 16-23:
+- Luyện kỹ thuật nhấn lên, nhấn xuống.
+- Học và luyện bài Cò lả.
+- Học bài quốc tế Auld Lang Syne.
+- Luyện nối câu và biểu diễn bài quốc tế trước lớp.
 
-Giai đoạn 4 - Kiểm tra, interrupt và project assessment, sessions 34-47:
-- Progress test 1.
-- Lab ASCII string, smoothing graph, LCD display, SerialEvent, External Interrupts, Blink Without Delay, ASCII Table, Timer Interrupts.
-- Vẽ block diagram, flowchart, schematic/wiring diagram.
-- On-going project assessment 1.
+Giai đoạn 4 - Hòa tấu, nộp bài và thi cuối khóa, sessions 24-30:
+- Hòa tấu Lý cây đa và Cò lả với nhạc cụ khác.
+- Luyện tập cùng các lớp khác.
+- Thu bài luận.
+- Thi kết thúc khóa học trong sessions 29-30.
 
-Giai đoạn 5 - Hoàn thiện project và ôn tập, sessions 48-60:
-- Lab Serial Input, Debounce, Keypad 4x4, EEPROM read/write.
-- Progress test 2.
-- Advanced labs liên quan final project.
-- Chuẩn bị final project report bằng Latex/Overleaf hoặc template.
-- Làm 8x8 LED Matrix.
-- On-going project assessment 2.
-- Self review tất cả labs và chuẩn bị final project theo nhóm.
-
-===== LỊCH HỌC CHI TIẾT 60 SESSIONS =====
+===== LỊCH HỌC CHI TIẾT 30 SESSIONS =====
 Session 1:
-- Chủ đề: Introduction of IoT course; What in the world is the Internet of Things?
-- Hình thức: Offline.
-- CLO: CLO01.
-- Tài liệu: Slide, video, GUIDE Of Create an Account/Explore Courses/Quiz on edX.pdf.
-- Nhiệm vụ: Mượn Learning KIT tại thư viện; enroll edX CurtinX IOT1x.
+- Lý thuyết: Tìm hiểu lịch sử, tên gọi của nhạc cụ; cấu tạo Đàn Bầu; tư thế ngồi; cách gảy đàn.
+- Thực hành: Giảng viên làm mẫu kỹ thuật đầu tiên; hướng dẫn cầm que đàn và tạo âm thanh; thực hành gảy tay phải; sửa tư thế tay.
+- Nhiệm vụ sinh viên: Đọc sách học Đàn Bầu về tư thế chơi đàn và tư thế tay.
 
 Session 2:
-- Chủ đề: Arduino ATmega328p Architecture.
-- Hình thức: Offline.
-- CLO: CLO01.
-- Tài liệu: Slide, video, edX guide.
-- Nhiệm vụ: Mượn Learning KIT tại thư viện; enroll edX CurtinX IOT1x.
+- Luyện tập tư thế gảy tay phải.
+- Học nốt nhạc ứng với điểm đàn.
+- Giảng viên chỉnh sửa lỗi kỹ thuật.
 
 Session 3:
-- Lab: Getting Started with Arduino and Genuino UNO; Fritzing building circuit.
-- Hình thức: Offline.
-- CLO: CLO10, CLO12.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Thảo luận với giảng viên về bài online và bài mới.
+- Luyện gảy dây buông.
+- Học cách tìm điểm đàn.
+- Nhiệm vụ sinh viên: Đọc sách về tư thế và cách gảy.
 
 Session 4:
-- Chủ đề: The things of the Internet of Things.
-- Hình thức: Online.
-- CLO: CLO02.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Ôn kỹ thuật gảy dây buông.
+- Kết hợp tiết tấu với bài luyện dây buông.
+- Học kỹ thuật nhấn lên quãng 2.
+- Nhiệm vụ sinh viên: Đọc sách về tư thế và cách gảy ngón.
 
 Session 5:
-- Chủ đề: Networking IoT.
-- Hình thức: Online.
-- CLO: CLO03.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Học hệ thống nốt nhạc mới.
+- Học các âm hình tiết tấu thường gặp.
+- Luyện kỹ thuật nhấn lên quãng 2.
+- Nhiệm vụ sinh viên: Học cách nhận biết nốt nhạc.
 
 Session 6:
-- Chủ đề: Networking IoT continued.
-- Hình thức: Online.
-- CLO: CLO03.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Luyện đọc nốt nhạc và liên hệ nốt trên Đàn Bầu.
+- Ôn tập và thực hành các kỹ thuật đã học.
 
 Session 7:
-- Lab: Tinkercad Arduino simulator tutorial.
-- Hình thức: Offline.
-- CLO: CLO10, CLO12.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Thảo luận với giảng viên về bài online và bài mới.
+- Luyện nhớ nốt nhạc trên Đàn Bầu bằng cách vừa đọc vừa gảy dây.
+- Luyện ngón nhấn lên quãng 2.
+- Bắt đầu học bài Đội kèn tí hon.
+- Nhiệm vụ sinh viên: Đọc thuộc giai điệu và nốt nhạc bài Đội kèn tí hon.
 
 Session 8:
-- Lab: Blink an LED - Digital Write; Analog Input - Analog Read.
-- Hình thức: Offline.
-- CLO: CLO06, CLO07.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Thảo luận với giảng viên.
+- Học thuộc từng câu bài Đội kèn tí hon.
+- Tìm nốt nhạc tương ứng trên Đàn Bầu và thực hành từng câu.
 
 Session 9:
-- Lab: Fading - Analog Write.
-- Nội dung thêm: Project Topic Introduction.
-- Hình thức: Offline.
-- CLO: CLO06, CLO07.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Luyện kỹ thuật nhấn xuống.
+- Học bài Lý cây đa.
 
 Session 10:
-- Chủ đề: Programming IoT.
-- Hình thức: Online.
-- CLO: CLO01.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Đọc thuộc bài Lý cây đa.
+- Thực hành bài Lý cây đa trên Đàn Bầu.
 
 Session 11:
-- Chủ đề: Programming IoT continued.
-- Hình thức: Online.
-- CLO: CLO01.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Thực hành bài Lý cây đa trên Đàn Bầu.
 
 Session 12:
-- Lab online: Practice at home by tutorial - LED array effect.
-- Hình thức: Online.
-- CLO: CLO06.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Làm theo practice guide.
+- Tập luyện bài Lý cây đa.
+- Nhiệm vụ sinh viên: Đọc thuộc giai điệu và nốt nhạc bài Lý cây đa.
 
 Session 13:
-- Practice at home evaluation.
-- Lab: Button - Digital Read.
-- Hình thức: Offline.
-- CLO: CLO06, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Luyện tập 2 bài Lý cây đa và Đội kèn tí hon.
 
 Session 14:
-- Practice at home evaluation.
-- Lab: Input Pullup - Serial; State Change Detection for push buttons.
-- Hình thức: Offline.
-- CLO: CLO06, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Thực hành 2 bài đã học để chuẩn bị kiểm tra giữa kỳ.
 
 Session 15:
-- Lab: Analog In/Out Serial; Photoresistor - Analog Input.
-- Nội dung thêm: Project Topic Registration.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Kiểm tra giữa kỳ: chơi 2 bài Lý cây đa và Đội kèn tí hon.
 
 Session 16:
-- Chủ đề: Securing IoT.
-- Hình thức: Online.
-- CLO: CLO04.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Tiếp tục luyện kỹ thuật nhấn trong bài Lý cây đa.
 
 Session 17:
-- Chủ đề: Securing IoT continued.
-- Hình thức: Online.
-- CLO: CLO04.
-- Tài liệu: Slide, video, edX IOT1x.
-- Nhiệm vụ: Học online.
+- Áp dụng kỹ thuật nhấn xuống và nhấn lên vào bài Cò lả.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên YouTube.
 
 Session 18:
-- Lab online: Photoresistor - States of lights.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Làm theo practice guide.
+- Luyện kỹ thuật nhấn xuống và thực hành vào bài Cò lả.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên YouTube.
 
 Session 19:
-- Lab: Photoresistor - while loop iteration.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Học hết bài Cò lả.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên YouTube.
 
 Session 20:
-- Lab: Ping Ultrasonic Range Finder.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Học bài nước ngoài Auld Lang Syne, dân ca Scotland.
+- Giảng viên chơi mẫu, chép bài lên bảng, chia bài thành 4 câu.
+- Sinh viên học ca miệng từng câu, chú ý đúng tiết tấu.
+- Thực hành 2 câu đầu trên Đàn Bầu.
+- Nhiệm vụ sinh viên: Nghe giai điệu trên Internet.
 
 Session 21:
-- Lab: Servo Motor - Sweep; Servo Motor - Knob.
-- Hình thức: Offline.
-- CLO: CLO06, CLO07, CLO08.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Ôn 2 câu đã học của Auld Lang Syne.
+- Thực hành 2 câu còn lại.
+- Luyện nối các câu thành bài hoàn chỉnh.
+- Nhiệm vụ sinh viên: Học thuộc nốt nhạc và giai điệu tác phẩm.
 
 Session 22:
-- Chủ đề: Electrical circuits and electronics.
-- Hình thức: Online.
-- CLO: CLO05.
-- Tài liệu: Slide, video, edX IOT2x.
-- Nhiệm vụ: Học online.
+- Luyện bài nước ngoài cho liền mạch.
+- Giảng viên sửa cao độ tay nhấn.
 
 Session 23:
-- Chủ đề: Electrical circuits and electronics continued.
-- Hình thức: Online.
-- CLO: CLO05.
-- Tài liệu: Slide, video, edX IOT2x.
-- Nhiệm vụ: Học online.
+- Sinh viên luyện chơi một mình trước lớp bài nước ngoài.
 
 Session 24:
-- Chủ đề: Project concept planning.
-- Hình thức: Online.
-- CLO: CLO05, CLO10.
-- Tài liệu: Slide, video, edX IOT2x.
-- Nhiệm vụ: Học online.
+- Luyện bài Lý cây đa theo hình thức hòa tấu với các nhạc cụ khác.
+- Nhiệm vụ sinh viên: Nghe và học thuộc giai điệu.
 
 Session 25:
-- Chủ đề: Project concept planning continued.
-- Hình thức: Online.
-- CLO: CLO05, CLO10.
-- Tài liệu: Slide, video, edX IOT2x.
+- Hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
 
 Session 26:
-- Presentation about Final Project Planning.
-- Hình thức: Offline.
-- CLO: CLO01, CLO02, CLO03, CLO04, CLO05, CLO10.
+- Tiếp tục hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
 
 Session 27:
-- Presentation about Final Project Planning continued.
-- Hình thức: Offline.
-- CLO: CLO01, CLO02, CLO03, CLO04, CLO05, CLO10.
+- Tiếp tục hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
 
 Session 28:
-- Practice at home evaluation.
-- Lab: IR Remote.
-- Hình thức: Offline.
-- CLO: CLO06, CLO07, CLO08.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Hòa tấu Lý cây đa và Cò lả cùng các lớp khác.
+- Thu bài luận.
 
 Session 29:
-- Lab online: Digital Read - Out Serial.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
+- Tổ chức thi kết thúc khóa học.
 
 Session 30:
-- Lab online: RGB LED Color Mixing using Tinkercad simulator.
-- Hình thức: Online.
-- CLO: CLO06, CLO07, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 31:
-- Lab online: Advanced labs related to Final Project.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT, advanced components.
-
-Session 32:
-- Practice at home evaluation.
-- Lab: LED 7-segment display.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 33:
-- Practice at home evaluation.
-- Lab: Temperature sensor LM35.
-- Hình thức: Offline.
-- CLO: CLO05, CLO07, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 34:
-- Progress test 1.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09.
-
-Session 35:
-- Lab online: Read ASCII String using RGB LED to indicator.
-- Hình thức: Online.
-- CLO: CLO06, CLO07, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 36:
-- Lab online: Smoothing Graph - send data to computer and graph it in Processing.
-- Hình thức: Online.
-- CLO: CLO07, CLO09, CLO12.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 37:
-- Lab online: Advanced labs related to Final Project.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT, advanced components.
-
-Session 38:
-- Practice at home evaluation.
-- Lab: LCD Display 1602.
-- Hình thức: Offline.
-- CLO: CLO05, CLO07, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 39:
-- Practice at home evaluation.
-- Lab: SerialEvent.
-- Hình thức: Offline.
-- CLO: CLO13.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 40:
-- Practice at home evaluation.
-- Lab: External Interrupts.
-- Hình thức: Offline.
-- CLO: CLO13.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 41:
-- Lab online: Blink Without Delay.
-- Hình thức: Online.
-- CLO: CLO06.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 42:
-- Lab online: ASCII Table.
-- Hình thức: Online.
-- CLO: CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 43:
-- Lab online: Advanced labs related to Final Project.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT, advanced components.
-
-Session 44:
-- Chủ đề: Block diagram and Flowchart of Final Project.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09, CLO10, CLO12.
-- Sản phẩm: Block diagram, circuit schematic, hardware interface/wiring diagram, flowchart.
-
-Session 45:
-- Practice at home evaluation.
-- Lab: Timer Interrupts.
-- Hình thức: Offline.
-- CLO: CLO13.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 46:
-- On-going project assessment 1.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09, CLO10, CLO12.
-- Nội dung: Present block diagram and flowchart.
-
-Session 47:
-- On-going project assessment 1 continued.
-- Hình thức: Offline.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09, CLO10, CLO12.
-- Nội dung: Present block diagram and flowchart.
-
-Session 48:
-- Lab online: Serial Input.
-- Hình thức: Online.
-- CLO: CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 49:
-- Lab online: Debounce.
-- Hình thức: Online.
-- CLO: CLO06.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 50:
-- Practice at home evaluation.
-- Lab: Keypad 4x4.
-- Hình thức: Offline.
-- CLO: CLO06, CLO09, CLO11.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 51:
-- Practice at home evaluation.
-- Lab: EEPROM read/write.
-- Hình thức: Offline.
-- CLO: CLO06, CLO09, CLO11.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 52:
-- Progress test 2.
-- Hình thức: Offline.
-- CLO: CLO01-CLO13.
-
-Session 53:
-- Lab online: Advanced labs related to Final Project.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT, advanced components.
-
-Session 54:
-- Final project report preparation.
-- Hình thức: Online.
-- CLO: CLO05, CLO06, CLO07, CLO08, CLO09, CLO12.
-- Tài liệu: Latex/Overleaf tutorial online hoặc report template/guideline do giảng viên cung cấp.
-- Nhiệm vụ: Chuẩn bị final report bằng Latex/Overleaf hoặc thảo luận với giảng viên để được hướng dẫn.
-
-Session 55:
-- Practice at home evaluation.
-- Lab: 8x8 LED Matrix.
-- Hình thức: Offline.
-- CLO: CLO06, CLO07.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-
-Session 56:
-- On-going project assessment 2.
-- Hình thức: Offline.
-- CLO: CLO1, CLO10.
-- Nhiệm vụ: Chuẩn bị final project presentation.
-
-Session 57:
-- On-going project assessment 2 continued.
-- Hình thức: Offline.
-- CLO: CLO1, CLO10.
-- Nhiệm vụ: Chuẩn bị final project presentation.
-
-Session 58:
-- All labs self review.
-- Hình thức: Online.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Team work prepares for the final project.
-
-Session 59:
-- All labs self review continued.
-- Hình thức: Online.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Team work prepares for the final project.
-
-Session 60:
-- All labs self review.
-- Hình thức: Online.
-- Tài liệu/dụng cụ: Tutorial, Learning KIT.
-- Nhiệm vụ: Team work prepares for the final project.
+- Tổ chức thi kết thúc khóa học.
 
 ===== LIÊN KẾT LIÊN QUAN =====
 - Trang FLM Home: https://flm.fpt.edu.vn/Home
-- edX CurtinX IOT1x: https://learning.edx.org/course/course-v1:CurtinX+IOT1x+2T2018/home
-- edX CurtinX IOT2x: https://learning.edx.org/course/course-v1:CurtinX+IOT2x+2T2018/home
-- Arduino Documents: https://www.arduino.cc/
-- Introduction to Arduino: http://www.introtoarduino.com
-- Mapping CLO/PLO: https://flm.fpt.edu.vn/CLOMapping/View?syllabusID=12400
+- Mapping CLO/PLO: https://flm.fpt.edu.vn/CLOMapping/View?syllabusID=11835
