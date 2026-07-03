@@ -18,7 +18,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public IndexModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
@@ -29,7 +29,7 @@ public sealed class IndexModel : HomePageModelBase
         ITextChunker chunker,
         IChunkRetrievalEnrichmentService chunkEnrichment,
         IDocumentStatusNotifier documentStatusNotifier)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
         _embeddingService = embeddingService;
         _chunker = chunker;
@@ -47,6 +47,7 @@ public sealed class IndexModel : HomePageModelBase
     public string? Query { get; private set; }
     public string? SubjectFilter { get; private set; }
     public string? StatusFilter { get; private set; }
+    public string CurrentSection { get; private set; } = DocumentSections.List;
     public new bool IsAdmin { get; private set; }
     public new bool IsLecturer { get; private set; }
     public int TotalDocumentCount { get; private set; }
@@ -60,7 +61,7 @@ public sealed class IndexModel : HomePageModelBase
     public int StaleEmbeddingDocumentCount { get; private set; }
     public string? LoadErrorMessage { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(string? q, string? subjectFilter, string? statusFilter, CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(string? section, string? q, string? subjectFilter, string? statusFilter, CancellationToken cancellationToken)
     {
         var normalizedQuery = q?.Trim();
         var normalizedSubjectFilter = subjectFilter?.Trim();
@@ -68,21 +69,29 @@ public sealed class IndexModel : HomePageModelBase
         var scope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
         var userIsAdmin = base.IsAdmin();
         var userIsLecturer = base.IsLecturer();
+        var normalizedSection = NormalizeSection(section);
+        if (normalizedSection is DocumentSections.Upload or DocumentSections.Catalog
+            && !userIsAdmin
+            && !userIsLecturer)
+        {
+            normalizedSection = DocumentSections.List;
+        }
+
         IReadOnlyList<IndexedDocument> accessibleDocuments;
         IReadOnlyList<IndexedDocument> documents;
         IReadOnlyList<CourseSubject> allCourseCatalog;
         IReadOnlyList<Guid> staleDocumentIds = Array.Empty<Guid>();
         try
         {
-            accessibleDocuments = await _repository.GetDocumentsAsync(scope, null, cancellationToken);
-            documents = await _repository.GetDocumentsAsync(
+            accessibleDocuments = await _knowledge.GetDocumentsAsync(scope, null, cancellationToken);
+            documents = await _knowledge.GetDocumentsAsync(
                 scope,
                 new DocumentListQuery(normalizedQuery, normalizedSubjectFilter, normalizedStatusFilter),
                 cancellationToken);
-            allCourseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            allCourseCatalog = await _knowledge.GetCourseCatalogAsync(cancellationToken);
             if (userIsAdmin)
             {
-                staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
+                staleDocumentIds = await _knowledge.GetStaleIndexedDocumentIdsAsync(
                     _embeddingService.ModelName,
                     _embeddingService.Dimensions,
                     EffectiveChunkingStrategy,
@@ -124,6 +133,8 @@ public sealed class IndexModel : HomePageModelBase
         Query = normalizedQuery;
         SubjectFilter = normalizedSubjectFilter;
         StatusFilter = normalizedStatusFilter;
+        CurrentSection = normalizedSection;
+        ViewData["DocumentSection"] = CurrentSection;
         IsAdmin = userIsAdmin;
         IsLecturer = userIsLecturer;
         TotalDocumentCount = accessibleDocuments.Count;
@@ -141,6 +152,23 @@ public sealed class IndexModel : HomePageModelBase
         return Page();
     }
 
+    private static string NormalizeSection(string? section)
+    {
+        return section?.Trim().ToLowerInvariant() switch
+        {
+            DocumentSections.Upload => DocumentSections.Upload,
+            DocumentSections.Catalog => DocumentSections.Catalog,
+            _ => DocumentSections.List
+        };
+    }
+
+    private static class DocumentSections
+    {
+        public const string List = "list";
+        public const string Upload = "upload";
+        public const string Catalog = "catalog";
+    }
+
     public async Task<IActionResult> OnPostSaveSubjectAsync([FromForm] SubjectCatalogViewModel model, CancellationToken cancellationToken)
     {
         if (!base.IsAdmin())
@@ -150,7 +178,7 @@ public sealed class IndexModel : HomePageModelBase
 
         try
         {
-            await _repository.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
+            await _knowledge.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
             TempData["Success"] = "Đã lưu môn học.";
         }
         catch (Exception ex)
@@ -168,7 +196,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteSubjectAsync(id, cancellationToken);
+        await _knowledge.DeleteSubjectAsync(id, cancellationToken);
         TempData["Success"] = "Đã xóa môn học.";
         return RedirectToPage("/Home/Index");
     }
@@ -182,7 +210,7 @@ public sealed class IndexModel : HomePageModelBase
                 return Forbid();
             }
 
-            await _repository.UpsertChapterAsync(model.Id, model.SubjectId, model.Title, model.SortOrder, cancellationToken);
+            await _knowledge.UpsertChapterAsync(model.Id, model.SubjectId, model.Title, model.SortOrder, cancellationToken);
             TempData["Success"] = "Đã lưu chương.";
         }
         catch (Exception ex)
@@ -200,7 +228,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteChapterAsync(id, cancellationToken);
+        await _knowledge.DeleteChapterAsync(id, cancellationToken);
         TempData["Success"] = "Đã xóa chương.";
         return RedirectToPage("/Home/Index");
     }
@@ -208,6 +236,14 @@ public sealed class IndexModel : HomePageModelBase
     public async Task<IActionResult> OnPostUploadAsync([FromForm] DocumentUploadViewModel model, CancellationToken cancellationToken)
     {
         var isVietnamese = model.Language?.Equals("vi", StringComparison.OrdinalIgnoreCase) == true;
+        if (base.IsAdmin())
+        {
+            TempData["Error"] = isVietnamese 
+                ? "Admin không được phép upload tài liệu. Chỉ giảng viên mới có quyền upload." 
+                : "Admin is not allowed to upload documents. Only teachers can upload.";
+            return RedirectToPage("/Home/Index");
+        }
+
         if ((model.File is null || model.File.Length == 0) && string.IsNullOrWhiteSpace(model.SourceUrl))
         {
             TempData["Error"] = isVietnamese
@@ -265,7 +301,7 @@ public sealed class IndexModel : HomePageModelBase
                 ? "Đã nhận tài liệu và đang index."
                 : "The document has been queued for indexing.";
 
-            var indexedDocument = await _repository.GetDocumentAsync(result.DocumentId, cancellationToken);
+            var indexedDocument = await _knowledge.GetDocumentAsync(result.DocumentId, cancellationToken);
             if (indexedDocument is not null)
             {
                 await SyncCourseCatalogFromDocumentsAsync(new[] { indexedDocument }, cancellationToken);
@@ -285,7 +321,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostDeleteDocumentAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             TempData["Error"] = "Không tìm thấy tài liệu để xóa.";
@@ -297,7 +333,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteDocumentAsync(id, cancellationToken);
+        await _knowledge.DeleteDocumentAsync(id, cancellationToken);
         TryDeleteStoredFile(document);
         TempData["Success"] = $"Đã xóa tài liệu {document.FileName}.";
         return RedirectToPage("/Home/Index");
@@ -305,7 +341,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostReindexDocumentAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             TempData["Error"] = "Khong tim thay tai lieu de re-index.";
@@ -317,7 +353,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.MarkDocumentIndexProcessingAsync(id, cancellationToken);
+        await _knowledge.MarkDocumentIndexProcessingAsync(id, cancellationToken);
         await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(id, CancellationToken.None);
         await _indexJobQueue.EnqueueAsync(id, cancellationToken);
         TempData["Success"] = $"Da dua {document.FileName} vao hang doi re-index.";
@@ -331,23 +367,29 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        var staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
+        var staleDocumentIds = await _knowledge.GetStaleIndexedDocumentIdsAsync(
             _embeddingService.ModelName,
             _embeddingService.Dimensions,
             EffectiveChunkingStrategy,
             BuildDocumentAccessScope(DocumentAccessMode.DocumentUi),
             cancellationToken);
 
+        var enqueuedCount = 0;
         foreach (var documentId in staleDocumentIds)
         {
-            await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
-            await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
-            await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
+            var document = await _knowledge.GetDocumentAsync(documentId, cancellationToken);
+            if (document != null && await CanManageDocumentAsync(document, cancellationToken))
+            {
+                await _knowledge.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
+                await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
+                await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
+                enqueuedCount++;
+            }
         }
 
-        TempData["Success"] = staleDocumentIds.Count == 0
-            ? "Khong co tai lieu stale embedding can re-index."
-            : $"Da dua {staleDocumentIds.Count} tai lieu stale embedding vao hang doi re-index.";
+        TempData["Success"] = enqueuedCount == 0
+            ? "Khong co tai lieu stale embedding can re-index hoac ban khong co quyen."
+            : $"Da dua {enqueuedCount} tai lieu stale embedding vao hang doi re-index.";
         return RedirectToPage("/Home/Index");
     }
 

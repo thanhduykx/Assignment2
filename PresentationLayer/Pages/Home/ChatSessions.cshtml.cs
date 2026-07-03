@@ -12,14 +12,14 @@ public sealed class ChatSessionsModel : HomePageModelBase
 {
     public ChatSessionsModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -28,7 +28,7 @@ public sealed class ChatSessionsModel : HomePageModelBase
         var currentUser = await GetCurrentUserAccountAsync(cancellationToken);
         var sessions = currentUser is null
             ? Array.Empty<ChatSessionSummary>()
-            : await _repository.GetSessionSummariesForOwnerAsync(currentUser.Id, cancellationToken);
+            : await _knowledge.GetSessionSummariesForOwnerAsync(currentUser.Id, cancellationToken);
         return new JsonResult(sessions.Select(ToSessionSummary));
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DataAccessLayer.Repositories;
 
 namespace DataAccessLayer;
 
@@ -204,6 +205,20 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
             store.Documents.Add(document);
             store.Chunks.AddRange(chunks);
             await SaveAsync(store, cancellationToken);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<int> GetMaxChunkIndexAsync(CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var store = await LoadAsync(cancellationToken);
+            return store.Chunks.Count > 0 ? store.Chunks.Max(c => c.ChunkIndex) : -1;
         }
         finally
         {
@@ -680,6 +695,48 @@ public sealed class JsonKnowledgeRepository : IKnowledgeRepository
         {
             _gate.Release();
         }
+    }
+
+    public Task ImportFromJsonIfEmptyAsync(string jsonStorePath, CancellationToken cancellationToken = default)
+    {
+        // JSON repository already uses JSON storage; nothing to import.
+        return Task.CompletedTask;
+    }
+
+    public Task AddSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        // JSON repository does not support subject lecturer management.
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveSubjectLecturerAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Guid>> GetSubjectLecturerIdsAsync(Guid subjectId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<Guid>>(Array.Empty<Guid>());
+    }
+
+    public Task AddSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveSubjectStudentAsync(Guid subjectId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Guid>> GetSubjectStudentIdsAsync(Guid subjectId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<Guid>>(Array.Empty<Guid>());
+    }
+
+    public Task SetSubjectActiveStatusAsync(Guid subjectId, bool isActive, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
     }
 
     public async Task AddMessageAsync(

@@ -1,3 +1,4 @@
+
 # EduVietRAG - Course Document Assistant
 
 EduVietRAG là web app ASP.NET Core Razor Pages hỗ trợ quản lý tài liệu môn học và hỏi đáp theo mô hình RAG (Retrieval-Augmented Generation). Hệ thống cho phép giảng viên tải lên tài liệu, tự động trích xuất nội dung, chia đoạn, tạo embedding, sau đó sinh viên có thể đặt câu hỏi và nhận câu trả lời có trích dẫn nguồn.
@@ -33,7 +34,7 @@ EduVietRAG là web app ASP.NET Core Razor Pages hỗ trợ quản lý tài liệ
 
 ## Kiến Trúc Hệ Thống
 
-![Sơ đồ kiến trúc EduVietRAG](docs/architecture-overview.png)
+![Sơ đồ kiến trúc EduVietRAG](docs/architecture.jpg)
 
 Sơ đồ trên thể hiện đúng các lớp chính của hệ thống: Presentation Layer xử lý Razor Pages, tài khoản và realtime status; BAL/ServicesLayer xử lý nghiệp vụ RAG, chunking, embedding và index tài liệu; Data Access Layer làm việc với repository, mapper, DbContext và SQL Server; các dịch vụ ngoài gồm Gemini API, Google OAuth và SMTP.
 
@@ -53,12 +54,24 @@ sequenceDiagram
     Lecturer->>UI: Upload tài liệu hoặc URL
     UI->>Worker: Đưa job vào hàng đợi index
     Worker->>Indexing: Trích xuất text và chia chunk
+    
     Indexing->>AI: Tạo embedding cho chunk
+    %% Bổ sung trả về từ Gemini lúc tạo embedding
+    AI-->>Indexing: Trả về vector embedding 
+    
     Indexing->>Repo: Lưu document, chunk, embedding
+    
     Student->>UI: Đặt câu hỏi trong chat
     UI->>Chat: Gửi câu hỏi + lịch sử phiên
+    
     Chat->>Repo: Retrieve chunk liên quan
+    %% Bổ sung trả về từ Database lúc tìm ngữ cảnh
+    Repo-->>Chat: Trả về các chunk phù hợp (Context)
+    
     Chat->>AI: Sinh câu trả lời từ context
+    %% Bổ sung trả về từ Gemini lúc sinh câu trả lời
+    AI-->>Chat: Trả về câu trả lời (Text)
+    
     Chat->>Repo: Lưu message và citation
     UI-->>Student: Hiển thị answer + nguồn trích dẫn
 ```
@@ -316,3 +329,11 @@ TestData/qa-test-50-vi-q-a.txt
 | AI | Gemini chat + embedding, hashing embedding fallback |
 | Document parsing | OpenXML, PdfPig, text extractor nội bộ |
 | Test | xUnit, Microsoft.NET.Test.Sdk, coverlet |
+### Student
+
+1. Đăng nhập bằng tài khoản được cấp.
+2. Vào trang Chat.
+3. Tạo phiên chat mới hoặc tiếp tục phiên cũ.
+4. Đặt câu hỏi liên quan đến tài liệu môn học.
+5. Kiểm tra citation để biết câu trả lời lấy từ tài liệu nào.
+6. Nếu hệ thống báo không đủ dữ liệu, cần hỏi lại rõ hơn hoặc liên hệ lecturer/admin để bổ sung tài liệu.

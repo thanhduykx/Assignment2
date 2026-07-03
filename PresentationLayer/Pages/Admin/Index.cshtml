@@ -13,6 +13,8 @@
     var isBulkImport = section == IndexModel.AdminSection.BulkImport;
     var isCreateSubject = section == IndexModel.AdminSection.CreateSubject;
     var isLecturerTable = section == IndexModel.AdminSection.LecturerTable;
+    var showStudentTable = false;
+    var isStudentTable = showStudentTable && section == IndexModel.AdminSection.StudentTable;
 
     var users = Model.Users
         .OrderBy(user => user.Role)
@@ -56,56 +58,56 @@
         @* === DIRECTORY: Bảng người dùng / User table === *@
         <section class="ops-kpi-grid ops-admin-kpis" aria-label="User metrics">
             <article class="ops-kpi">
-                <span>Total users</span>
+                <span data-i18n="admin.totalUsers">Total users</span>
                 <strong>@Model.TotalUserCount</strong>
-                <small>@users.Count shown</small>
+                <small>@users.Count <span data-i18n="admin.usersShown">shown</span></small>
             </article>
             <article class="ops-kpi">
-                <span>Admins</span>
+                <span data-i18n="admin.admins">Admins</span>
                 <strong>@Model.AdminUserCount</strong>
-                <small>Full system access</small>
+                <small data-i18n="admin.fullSystemAccess">Full system access</small>
             </article>
             <article class="ops-kpi">
-                <span>Lecturers</span>
+                <span data-i18n="admin.lecturers">Lecturers</span>
                 <strong>@Model.LecturerUserCount</strong>
-                <small>Manage assigned subjects</small>
+                <small data-i18n="admin.manageSubjects">Manage assigned subjects</small>
             </article>
             <article class="ops-kpi">
-                <span>Students</span>
+                <span data-i18n="admin.students">Students</span>
                 <strong>@Model.StudentUserCount</strong>
-                <small>Read and chat access</small>
+                <small data-i18n="admin.readChatAccess">Read and chat access</small>
             </article>
             <article class="ops-kpi">
-                <span>Subjects</span>
+                <span data-i18n="admin.subjects">Subjects</span>
                 <strong>@Model.SubjectCount</strong>
-                <small>@Model.AssignedSubjectCount assigned</small>
+                <small>@Model.AssignedSubjectCount <span data-i18n="admin.subjectsAssigned">assigned</span></small>
             </article>
         </section>
 
             <section class="ops-panel">
                 <div class="ops-panel-head">
                     <div>
-                        <span class="ops-eyebrow">Directory</span>
+                        <span class="ops-eyebrow" data-i18n="admin.directory">Directory</span>
                         <h2>Bảng người dùng / User table</h2>
                     </div>
-                    <span class="ops-panel-note">@users.Count/@Model.TotalUserCount users</span>
+                    <span class="ops-panel-note">@users.Count/@Model.TotalUserCount <span data-i18n="admin.usersUnit">users</span></span>
                 </div>
 
                 <form asp-page="/Admin/Index" method="get" class="ops-filter-bar ops-admin-filter" asp-route-section="directory">
                     <label class="ops-field ops-field--search">
-                        <span>Search / Tìm kiếm</span>
-                        <input name="q" value="@Model.Query" placeholder="Name, email, provider, subject..." />
+                        <span data-i18n="admin.searchDirectory">Search / Tìm kiếm</span>
+                        <input name="q" value="@Model.Query" placeholder="Name, email, provider, subject..." data-i18n-placeholder="admin.searchDirectoryPlaceholder" />
                     </label>
                     <label class="ops-field">
-                        <span>Role / Vai trò</span>
+                        <span data-i18n="admin.roleFilter">Role / Vai trò</span>
                         <select name="roleFilter">
                             @if (string.IsNullOrWhiteSpace(Model.RoleFilter))
                             {
-                                <option value="" selected>All roles</option>
+                                <option value="" selected data-i18n="admin.allRoles">All roles</option>
                             }
                             else
                             {
-                                <option value="">All roles</option>
+                                <option value="" data-i18n="admin.allRoles">All roles</option>
                             }
                             @foreach (var role in Model.Roles)
                             {
@@ -120,18 +122,18 @@
                             }
                         </select>
                     </label>
-                    <button type="submit" class="ops-button ops-button--secondary">Filter</button>
+                    <button type="submit" class="ops-button ops-button--secondary" data-i18n="admin.filter">Filter</button>
                     @if (hasActiveFilters)
                     {
-                        <a class="ops-button ops-button--ghost" asp-page="/Admin/Index" asp-route-section="directory">Clear</a>
+                        <a class="ops-button ops-button--ghost" asp-page="/Admin/Index" asp-route-section="directory" data-i18n="admin.clear">Clear</a>
                     }
                 </form>
 
                 @if (users.Count == 0)
                 {
                     <div class="ops-empty">
-                        <strong>No matching users.</strong>
-                        <p>Clear filters or create a new account from the command panel.</p>
+                        <strong data-i18n="admin.noMatchingUsers">No matching users.</strong>
+                        <p data-i18n="admin.noMatchingUsersHint">Clear filters or create a new account from the command panel.</p>
                     </div>
                 }
                 else
@@ -140,11 +142,11 @@
                         <table class="ops-table ops-user-table">
                             <thead>
                                 <tr>
-                                    <th>User</th>
-                                    <th>Created</th>
-                                    <th>Role / Vai trò</th>
-                                    <th>Subjects</th>
-                                    <th>Actions</th>
+                                    <th data-i18n="admin.thUser">User</th>
+                                    <th data-i18n="admin.thCreated">Created</th>
+                                    <th data-i18n="admin.thRole">Role / Vai trò</th>
+                                    <th data-i18n="admin.thSubjects">Subjects</th>
+                                    <th data-i18n="admin.thActions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -164,29 +166,7 @@
                                         <span>@user.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
                                     </td>
                                     <td data-label="Role / Vai trò">
-                                        <form asp-page-handler="UpdateRole" method="post" class="ops-role-form" data-admin-role-update-form>
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="UserId" value="@user.Id" />
-                                            <select
-                                                name="Role"
-                                                disabled="@user.IsLastAdmin"
-                                                data-admin-role-update-select
-                                                data-admin-role-user="@user.Email"
-                                                title="Changing a role asks for confirmation and saves automatically."
-                                                data-i18n-title="admin.roleChangeTitle">
-                                                @foreach (var role in Model.Roles)
-                                                {
-                                                    if (role.Equals(user.Role, StringComparison.OrdinalIgnoreCase))
-                                                    {
-                                                        <option value="@role" selected>@role</option>
-                                                    }
-                                                    else
-                                                    {
-                                                        <option value="@role">@role</option>
-                                                    }
-                                                }
-                                            </select>
-                                        </form>
+                                        <span class="ops-role-badge">@user.Role</span>
                                     </td>
                                     <td data-label="Subjects">
                                         @if (user.Role == PresentationLayer.Security.AppRoles.Lecturer)
@@ -195,7 +175,7 @@
                                                 <div class="ops-chip-list">
                                                 @if (user.AssignedSubjectDetails.Count == 0)
                                                 {
-                                                    <span class="ops-chip ops-chip--muted">Chưa đăng ký môn</span>
+                                                    <span class="ops-chip ops-chip--muted" data-i18n="admin.unassignedSubject">Chưa đăng ký môn</span>
                                                 }
                                                 else
                                                 {
@@ -211,11 +191,11 @@
                                         }
                                         else if (user.Role == PresentationLayer.Security.AppRoles.Student)
                                         {
-                                            <span class="ops-chip">All indexed documents</span>
+                                            <span class="ops-chip" data-i18n="admin.allIndexedDocs">All indexed documents</span>
                                         }
                                         else
                                         {
-                                            <span class="ops-chip ops-chip--muted">Not applicable</span>
+                                            <span class="ops-chip ops-chip--muted" data-i18n="admin.notApplicable">Not applicable</span>
                                         }
                                     </td>
                                     <td data-label="Actions">
@@ -237,7 +217,7 @@
                                                 class="ops-mini-button ops-mini-button--danger"
                                                 disabled="@deleteDisabled"
                                                 title="@deleteTitle">
-                                                Delete
+                                                <span data-i18n="admin.delete">Delete</span>
                                             </button>
                                         </form>
                                     </td>
@@ -256,45 +236,45 @@
         <section class="ops-panel">
             <div class="ops-panel-head">
                 <div>
-                    <span class="ops-eyebrow">Create account</span>
-                    <h2>Thêm user</h2>
+                    <span class="ops-eyebrow" data-i18n="admin.navCreateAccount">Create account</span>
+                    <h2 data-i18n="admin.createAccountHeading">Thêm user</h2>
                 </div>
             </div>
             <form asp-page-handler="CreateUser" method="post" class="ops-stacked-form" data-admin-create-user-form data-admin-user-role-subject-form>
                 @Html.AntiForgeryToken()
                 <label class="ops-field">
-                    <span>Full name</span>
+                    <span data-i18n="admin.fullName">Full name</span>
                     <input name="FullName" maxlength="120" autocomplete="name" />
                 </label>
                 <label class="ops-field">
-                    <span>Email</span>
+                    <span data-i18n="admin.email">Email</span>
                     <input name="Email" type="email" autocomplete="email" />
                 </label>
                 <label class="ops-field">
-                    <span>Password</span>
+                    <span data-i18n="admin.password">Password</span>
                     <input name="Password" type="password" minlength="8" autocomplete="new-password" />
                 </label>
                 <label class="ops-field">
-                    <span>Role</span>
+                    <span data-i18n="admin.role">Role</span>
                     <select name="Role" data-admin-role-select>
                         @foreach (var role in Model.Roles)
                         {
                             if (role.Equals(PresentationLayer.Security.AppRoles.Student, StringComparison.OrdinalIgnoreCase))
                             {
-                                <option value="@role" selected>@role</option>
+                                <option value="@role" data-i18n="admin.role@(role)" selected>@role</option>
                             }
                             else
                             {
-                                <option value="@role">@role</option>
+                                <option value="@role" data-i18n="admin.role@(role)">@role</option>
                             }
                         }
                     </select>
                 </label>
                 <fieldset class="ops-field ops-subject-picker" data-lecturer-subject-picker>
-                    <legend>Subjects for lecturer</legend>
+                    <legend data-i18n="admin.subjectsForLecturer">Subjects for lecturer</legend>
                     @if (unassignedSubjects.Count == 0)
                     {
-                        <span class="ops-muted">No unassigned subjects</span>
+                        <span class="ops-muted" data-i18n="admin.noUnassignedSubjects">No unassigned subjects</span>
                     }
                     else
                     {
@@ -311,7 +291,7 @@
                 </fieldset>
                 <button type="submit" class="ops-button ops-button--primary">
                     <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
-                    Create user
+                    <span data-i18n="admin.createUserBtn">Create user</span>
                 </button>
             </form>
         </section>
@@ -350,10 +330,10 @@
         <section class="ops-panel">
             <div class="ops-panel-head">
                 <div>
-                    <span class="ops-eyebrow">Lecturer management</span>
-                    <h2>Lecturer Table / Bảng giảng viên</h2>
+                    <span class="ops-eyebrow" data-i18n="admin.lecturerManagement">Lecturer management</span>
+                    <h2 data-i18n="admin.lecturerTableHeading">Lecturer Table / Bảng giảng viên</h2>
                 </div>
-                <span class="ops-panel-note">@Model.LecturerUserCount lecturers</span>
+                <span class="ops-panel-note">@Model.LecturerUserCount <span data-i18n="admin.lecturersUnit">lecturers</span></span>
             </div>
 
             @{
@@ -362,8 +342,8 @@
             @if (lecturers.Count == 0)
             {
                 <div class="ops-empty">
-                    <strong>No lecturers found.</strong>
-                    <p>Create a lecturer account first.</p>
+                    <strong data-i18n="admin.noLecturersFound">No lecturers found.</strong>
+                    <p data-i18n="admin.createLecturerHint">Create a lecturer account first.</p>
                 </div>
             }
             else
@@ -372,13 +352,20 @@
                     <table class="ops-table" style="min-width: 600px;">
                         <thead>
                             <tr>
-                                <th style="width: 260px;">NAME</th>
-                                <th>SUBJECTS</th>
+                                <th style="width: 260px;" data-i18n="admin.thName">NAME</th>
+                                <th data-i18n="admin.thSubjects">SUBJECTS</th>
                             </tr>
                         </thead>
                         <tbody>
                         @foreach (var lecturer in lecturers)
                         {
+                            var assignedSubjectIds = lecturer.AssignedSubjectDetails
+                                .Select(subject => subject.Id)
+                                .ToHashSet();
+                            var availableSubjects = Model.SubjectOptions
+                                .Where(subject => !subject.OwnerUserId.HasValue && !assignedSubjectIds.Contains(subject.Id))
+                                .ToList();
+
                             <tr>
                                 <td data-label="NAME" style="width: 260px;">
                                     <div class="ops-user-cell" style="min-width: 0;">
@@ -394,29 +381,154 @@
                                         <div class="ops-chip-list">
                                         @if (lecturer.AssignedSubjectDetails.Count == 0)
                                         {
-                                            <span class="ops-chip ops-chip--muted">Chưa đăng ký môn</span>
+                                            <span class="ops-chip ops-chip--muted" data-i18n="admin.unassignedSubject">Chưa đăng ký môn</span>
                                         }
                                         else
                                         {
                                             foreach (var subject in lecturer.AssignedSubjectDetails)
                                             {
-                                                <span class="ops-chip" title="Đã assign - không thể gỡ">
-                                                    <span>@subject.DisplayName</span>
-                                                </span>
+                                                <div class="ops-chip" style="display: inline-flex; align-items: center; padding-right: 6px;" title="Đã assign - click X để gỡ">
+                                                    <span>@subject.DisplayName@(subject.IsLeader ? Html.Raw("<span data-i18n=\"admin.subjectLeaderSuffix\"> (Trưởng bộ môn)</span>") : Html.Raw(""))</span>
+
+                                                    <form asp-page-handler="UnregisterLecturerSubject" method="post" class="ops-inline-form" style="margin: 0; padding: 0; display: flex; align-items: center;" data-confirm="Gỡ môn @subject.DisplayName khỏi @DisplayName(lecturer)?">
+                                                        @Html.AntiForgeryToken()
+
+                                                        <input type="hidden" name="UserId" value="@lecturer.Id" />
+                                                        <input type="hidden" name="SubjectId" value="@subject.Id" />
+
+                                                        <button type="submit" title="Gỡ môn" style="background: none; border: none; cursor: pointer; font-weight: bold; margin-left: 6px; color: inherit; opacity: 0.7; display: flex; align-items: center; padding: 0; font-size: 14px;">
+                                                            &times;
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             }
                                         }
                                         </div>
                                         <form asp-page-handler="RegisterLecturerSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(lecturer)?">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="UserId" value="@lecturer.Id" />
-                                            <select name="SubjectId" required disabled="@(unassignedSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
-                                                <option value="">@(unassignedSubjects.Count == 0 ? "Không còn môn trống" : "Chọn môn để đăng ký")</option>
-                                                @foreach (var subject in unassignedSubjects)
+                                            <select name="SubjectId" required disabled="@(availableSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
+                                                @if (availableSubjects.Count == 0)
+                                                {
+                                                    <option value="" data-i18n="admin.noSubjectsAvailable">Không có môn nào</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="" data-i18n="admin.selectSubjectAssign">Chọn môn để đăng ký</option>
+                                                }
+                                                @foreach (var subject in availableSubjects)
                                                 {
                                                     <option value="@subject.Id">@subject.DisplayName</option>
                                                 }
                                             </select>
-                                            <button type="submit" class="ops-mini-button" disabled="@(unassignedSubjects.Count == 0)">Đăng ký</button>
+                                            <button type="submit" class="ops-mini-button" disabled="@(availableSubjects.Count == 0)" style="white-space: nowrap; min-width: 80px;" data-i18n="admin.assignButton">Đăng ký</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+
+    @if (isStudentTable)
+    {
+        @* === STUDENT TABLE: Danh sách học sinh === *@
+        <section class="ops-panel">
+            <div class="ops-panel-head">
+                <div>
+                    <span class="ops-eyebrow" data-i18n="admin.studentManagement">Student management</span>
+                    <h2 data-i18n="admin.studentTableHeading">Student Table / Bảng học sinh</h2>
+                </div>
+                <span class="ops-panel-note">@Model.StudentUserCount <span data-i18n="admin.studentsUnit">students</span></span>
+            </div>
+
+            @{
+                var students = users.Where(u => u.Role == PresentationLayer.Security.AppRoles.Student).ToList();
+            }
+            @if (students.Count == 0)
+            {
+                <div class="ops-empty">
+                    <strong data-i18n="admin.noStudentsFound">No students found.</strong>
+                    <p data-i18n="admin.createStudentHint">Create a student account first.</p>
+                </div>
+            }
+            else
+            {
+                <div class="ops-table-wrap">
+                    <table class="ops-table" style="min-width: 600px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 260px;" data-i18n="admin.thName">NAME</th>
+                                <th data-i18n="admin.thSubjects">SUBJECTS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var student in students)
+                        {
+                            var assignedSubjectIds = student.AssignedSubjectDetails
+                                .Select(subject => subject.Id)
+                                .ToHashSet();
+                            var availableSubjects = Model.SubjectOptions
+                                .Where(subject => subject.OwnerUserId.HasValue && !assignedSubjectIds.Contains(subject.Id))
+                                .ToList();
+
+                            <tr>
+                                <td data-label="NAME" style="width: 260px;">
+                                    <div class="ops-user-cell" style="min-width: 0;">
+                                        <span class="ops-avatar">@Initials(student)</span>
+                                        <div class="ops-user-identity">
+                                            <strong>@DisplayName(student)</strong>
+                                            <small>@student.Email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Subjects">
+                                    <div class="ops-subject-cell">
+                                        <div class="ops-chip-list">
+                                        @if (student.AssignedSubjectDetails.Count == 0)
+                                        {
+                                            <span class="ops-chip ops-chip--muted" data-i18n="admin.unassignedSubject">Chưa đăng ký môn</span>
+                                        }
+                                        else
+                                        {
+                                            foreach (var subject in student.AssignedSubjectDetails)
+                                            {
+                                                <div class="ops-chip" style="display: inline-flex; align-items: center; padding-right: 6px;" title="Đã assign - click X để gỡ">
+                                                    <span>@subject.DisplayName</span>
+                                                    <form asp-page-handler="UnregisterStudentSubject" method="post" class="ops-inline-form" style="margin: 0; padding: 0; display: flex; align-items: center;" data-confirm="Gỡ môn @subject.DisplayName khỏi @DisplayName(student)?">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="UserId" value="@student.Id" />
+                                                        <input type="hidden" name="SubjectId" value="@subject.Id" />
+                                                        <button type="submit" title="Gỡ môn" style="background: none; border: none; cursor: pointer; font-weight: bold; margin-left: 6px; color: inherit; opacity: 0.7; display: flex; align-items: center; padding: 0; font-size: 14px;">
+                                                            &times;
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                        }
+                                        </div>
+                                        <form asp-page-handler="RegisterStudentSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(student)?">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="UserId" value="@student.Id" />
+                                            <select name="SubjectId" required disabled="@(availableSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(student)">
+                                                @if (availableSubjects.Count == 0)
+                                                {
+                                                    <option value="" data-i18n="admin.noSubjectsAvailable">Không có môn nào</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="" data-i18n="admin.selectSubjectAssign">Chọn môn để đăng ký</option>
+                                                }
+                                                @foreach (var subject in availableSubjects)
+                                                {
+                                                    <option value="@subject.Id">@subject.DisplayName</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="ops-mini-button" disabled="@(availableSubjects.Count == 0)" style="white-space: nowrap; min-width: 80px;" data-i18n="admin.assignButton">Đăng ký</button>
                                         </form>
                                     </div>
                                 </td>
@@ -435,25 +547,86 @@
         <section class="ops-panel">
             <div class="ops-panel-head">
                 <div>
-                    <span class="ops-eyebrow">Create subject</span>
-                    <h2>Thêm môn</h2>
+                    <span class="ops-eyebrow" data-i18n="admin.navCreateSubject">Create subject</span>
+                    <h2 data-i18n="admin.navCreateSubject">Thêm môn</h2>
                 </div>
             </div>
             <form asp-page-handler="CreateSubject" method="post" class="ops-stacked-form">
                 @Html.AntiForgeryToken()
                 <label class="ops-field">
-                    <span>Subject code</span>
+                    <span data-i18n="admin.subjectCode">Subject code</span>
                     <input name="Code" maxlength="32" placeholder="IOT102" autocomplete="off" />
                 </label>
                 <label class="ops-field">
-                    <span>Description</span>
-                    <input name="Description" maxlength="1000" placeholder="Optional" autocomplete="off" />
+                    <span data-i18n="admin.description">Description</span>
+                    <input name="Description" maxlength="1000" placeholder="Optional" data-i18n-placeholder="admin.optional" autocomplete="off" />
                 </label>
                 <button type="submit" class="ops-button ops-button--primary">
                     <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
-                    Create subject
+                    <span data-i18n="admin.navCreateSubject">Create subject</span>
                 </button>
             </form>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--rbl-border);" />
+            
+            <div class="ops-panel-head">
+                <div>
+                    <h2 data-i18n="admin.subjectList">Subject List / Danh sách môn học</h2>
+                </div>
+                <span class="ops-panel-note">@Model.SubjectOptions.Count <span data-i18n="admin.subjectsUnit">subjects</span></span>
+            </div>
+            
+            @if (Model.SubjectOptions.Count == 0)
+            {
+                <div class="ops-empty">
+                    <strong data-i18n="admin.noSubjects">No subjects found.</strong>
+                    <p data-i18n="admin.createSubjectPrompt">Create a subject above.</p>
+                </div>
+            }
+            else
+            {
+                <div class="ops-table-wrap">
+                    <table class="ops-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="admin.thSubject">SUBJECT</th>
+                                <th data-i18n="admin.thLeader">LEADER</th>
+                                <th data-i18n="admin.thStatus">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var subject in Model.SubjectOptions)
+                        {
+                            <tr class="@(subject.IsActive ? "" : "ops-muted-row")">
+                                <td data-label="SUBJECT">
+                                    <strong>@subject.DisplayName</strong>
+                                </td>
+                                <td data-label="LEADER">
+                                    @if (string.IsNullOrWhiteSpace(subject.OwnerName))
+                                    {
+                                        <span class="ops-muted" data-i18n="admin.noneLeader">None</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@subject.OwnerName <br><small>@subject.OwnerEmail</small></span>
+                                    }
+                                </td>
+                                <td data-label="STATUS">
+                                    @if (subject.IsActive)
+                                    {
+                                        <span class="ops-chip" style="background-color: var(--rbl-green-light); color: var(--rbl-green-dark);" data-i18n="admin.active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ops-chip" style="background-color: var(--rbl-red-light); color: var(--rbl-red-dark);" data-i18n="admin.inactive">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </section>
     }
 </section>

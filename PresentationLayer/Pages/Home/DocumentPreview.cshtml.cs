@@ -13,20 +13,20 @@ public sealed class DocumentPreviewModel : HomePageModelBase
 {
     public DocumentPreviewModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             return NotFound(new { error = "Document not found." });
@@ -49,7 +49,7 @@ public sealed class DocumentPreviewModel : HomePageModelBase
         }
 
         var subjectOwner = await ResolveSubjectOwnerAsync(document.Subject, cancellationToken);
-        var chunks = await _repository.GetDocumentChunksAsync(document.Id, cancellationToken);
+        var chunks = await _knowledge.GetDocumentChunksAsync(document.Id, cancellationToken);
         var preview = new DocumentPreviewViewModel
         {
             Id = document.Id,

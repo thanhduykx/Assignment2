@@ -13,14 +13,14 @@ public sealed class ViewDocumentModel : HomePageModelBase
 {
     public ViewDocumentModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -29,7 +29,7 @@ public sealed class ViewDocumentModel : HomePageModelBase
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             return NotFound();

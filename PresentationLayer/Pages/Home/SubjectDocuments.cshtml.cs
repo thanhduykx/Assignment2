@@ -15,7 +15,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
 
     public SubjectDocumentsModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
@@ -23,7 +23,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue,
         IDocumentStatusNotifier documentStatusNotifier)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
         _documentStatusNotifier = documentStatusNotifier;
     }
@@ -48,7 +48,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
 
         try
         {
-            await _repository.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
+            await _knowledge.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
             TempData["Success"] = "Da luu mon hoc.";
         }
         catch (Exception ex)
@@ -66,7 +66,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteSubjectAsync(id, cancellationToken);
+        await _knowledge.DeleteSubjectAsync(id, cancellationToken);
         TempData["Success"] = "Da xoa mon hoc.";
         return RedirectToPage("/Home/Index");
     }
@@ -80,7 +80,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
                 return Forbid();
             }
 
-            await _repository.UpsertChapterAsync(model.Id, model.SubjectId, model.Title, model.SortOrder, cancellationToken);
+            await _knowledge.UpsertChapterAsync(model.Id, model.SubjectId, model.Title, model.SortOrder, cancellationToken);
             TempData["Success"] = "Da luu chuong.";
         }
         catch (Exception ex)
@@ -98,13 +98,19 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteChapterAsync(chapterId, cancellationToken);
+        await _knowledge.DeleteChapterAsync(chapterId, cancellationToken);
         TempData["Success"] = "Da xoa chuong.";
         return RedirectToPage("/Home/SubjectDocuments", new { id });
     }
 
     public async Task<IActionResult> OnPostUploadAsync(Guid id, [FromForm] DocumentUploadViewModel model, CancellationToken cancellationToken)
     {
+        if (base.IsAdmin())
+        {
+            TempData["Error"] = "Admin không được phép upload tài liệu. Chỉ giảng viên mới có quyền upload.";
+            return RedirectToPage("/Home/SubjectDocuments", new { id });
+        }
+
         if ((model.File is null || model.File.Length == 0) && string.IsNullOrWhiteSpace(model.SourceUrl))
         {
             TempData["Error"] = "Hay chon file PDF, DOCX, PPTX, TXT hoac nhap URL bai giang truoc khi index.";
@@ -155,7 +161,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
             }
 
             TempData["Success"] = "Da nhan tai lieu va dang index.";
-            var indexedDocument = await _repository.GetDocumentAsync(result.DocumentId, cancellationToken);
+            var indexedDocument = await _knowledge.GetDocumentAsync(result.DocumentId, cancellationToken);
             if (indexedDocument is not null)
             {
                 await SyncCourseCatalogFromDocumentsAsync(new[] { indexedDocument }, cancellationToken);
@@ -175,7 +181,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostDeleteDocumentAsync(Guid id, Guid documentId, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(documentId, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(documentId, cancellationToken);
         if (document is null)
         {
             TempData["Error"] = "Khong tim thay tai lieu de xoa.";
@@ -187,7 +193,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteDocumentAsync(documentId, cancellationToken);
+        await _knowledge.DeleteDocumentAsync(documentId, cancellationToken);
         TryDeleteStoredFile(document);
         TempData["Success"] = $"Da xoa tai lieu {document.FileName}.";
         return RedirectToPage("/Home/SubjectDocuments", new { id });
@@ -195,7 +201,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostReindexDocumentAsync(Guid id, Guid documentId, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(documentId, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(documentId, cancellationToken);
         if (document is null)
         {
             TempData["Error"] = "Khong tim thay tai lieu de re-index.";
@@ -207,7 +213,7 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
+        await _knowledge.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
         await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
         await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
         TempData["Success"] = $"Da dua {document.FileName} vao hang doi re-index.";
@@ -220,11 +226,11 @@ public sealed class SubjectDocumentsModel : HomePageModelBase
         IReadOnlyList<CourseSubject> allCourseCatalog;
         try
         {
-            accessibleDocuments = await _repository.GetDocumentsAsync(
+            accessibleDocuments = await _knowledge.GetDocumentsAsync(
                 BuildDocumentAccessScope(DocumentAccessMode.DocumentUi),
                 null,
                 cancellationToken);
-            allCourseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            allCourseCatalog = await _knowledge.GetCourseCatalogAsync(cancellationToken);
         }
         catch (Exception ex) when (IsDataAccessTimeout(ex))
         {

@@ -12,14 +12,14 @@ public sealed class EditDocumentModel : HomePageModelBase
 {
     public EditDocumentModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -45,13 +45,13 @@ public sealed class EditDocumentModel : HomePageModelBase
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             return NotFound();
         }
 
-        if (!await CanManageDocumentAsync(document, cancellationToken))
+        if (!await CanEditDocumentAsync(document, cancellationToken))
         {
             return Forbid();
         }
@@ -64,15 +64,15 @@ public sealed class EditDocumentModel : HomePageModelBase
     {
         try
         {
-            var existing = await _repository.GetDocumentAsync(Id, cancellationToken)
+            var existing = await _knowledge.GetDocumentAsync(Id, cancellationToken)
                 ?? throw new InvalidOperationException("Document not found.");
-            if (!await CanManageDocumentAsync(existing, cancellationToken)
+            if (!await CanEditDocumentAsync(existing, cancellationToken)
                 || !await CanManageSubjectAsync(Subject, cancellationToken))
             {
                 return Forbid();
             }
 
-            var document = await _repository.UpdateDocumentMetadataAsync(
+            var document = await _knowledge.UpdateDocumentMetadataAsync(
                 Id,
                 FileName,
                 Subject,
@@ -85,7 +85,7 @@ public sealed class EditDocumentModel : HomePageModelBase
         catch (Exception ex)
         {
             TempData["Error"] = ToVietnameseDocumentError(ex.Message);
-            var existing = await _repository.GetDocumentAsync(Id, cancellationToken);
+            var existing = await _knowledge.GetDocumentAsync(Id, cancellationToken);
             if (existing is not null)
             {
                 ContentType = existing.ContentType;
@@ -96,7 +96,7 @@ public sealed class EditDocumentModel : HomePageModelBase
                 UploadedByEmail = existing.UploadedByEmail;
             }
 
-            CourseCatalog = FilterCourseCatalogForCurrentUser(await _repository.GetCourseCatalogAsync(cancellationToken)).ToList();
+            CourseCatalog = FilterCourseCatalogForCurrentUser(await _knowledge.GetCourseCatalogAsync(cancellationToken)).ToList();
             return Page();
         }
     }
@@ -113,6 +113,6 @@ public sealed class EditDocumentModel : HomePageModelBase
         FileSizeBytes = document.FileSizeBytes;
         UploadedByName = document.UploadedByName;
         UploadedByEmail = document.UploadedByEmail;
-        CourseCatalog = FilterCourseCatalogForCurrentUser(await _repository.GetCourseCatalogAsync(cancellationToken)).ToList();
+        CourseCatalog = FilterCourseCatalogForCurrentUser(await _knowledge.GetCourseCatalogAsync(cancellationToken)).ToList();
     }
 }

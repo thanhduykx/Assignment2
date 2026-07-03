@@ -58,18 +58,18 @@
 <section class="ops-page ops-documents-page ops-subject-detail-page">
     <a class="ops-back-link" asp-page="/Home/Index">
         <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-        Quay l&#7841;i danh s&#225;ch m&#244;n
+        <span data-i18n="documents.backToCatalog">Quay lại danh sách môn</span>
     </a>
 
     <header class="ops-page-header">
         <div>
-            <span class="ops-eyebrow">Course documents</span>
+            <span class="ops-eyebrow" data-i18n="documents.eyebrow">Course documents</span>
             <h1>@Model.Subject.DisplayName</h1>
-            <p>@(string.IsNullOrWhiteSpace(Model.Subject.Description) ? "Qu&#7843;n l&#253; ch&#432;&#417;ng, file v&#224; link b&#224;i gi&#7843;ng c&#7911;a m&#244;n n&#224;y." : Model.Subject.Description)</p>
+            <p>@(string.IsNullOrWhiteSpace(Model.Subject.Description) ? Html.Raw("<span data-i18n=\"documents.defaultDescription\">Quản lý chương, file và link bài giảng của môn này.</span>") : Html.Raw(Model.Subject.Description))</p>
         </div>
         <div class="ops-subject-header-actions">
-            <span class="ops-chip">@Model.Subject.DocumentCount t&#224;i li&#7879;u</span>
-            <span class="ops-chip">@Model.Subject.Chapters.Count ch&#432;&#417;ng</span>
+            <span class="ops-chip">@Model.Subject.DocumentCount <span data-i18n="documents.documentsUnit">tài liệu</span></span>
+            <span class="ops-chip">@Model.Subject.Chapters.Count <span data-i18n="documents.chaptersUnit">chương</span></span>
             @if (!string.IsNullOrWhiteSpace(Model.Subject.OwnerName))
             {
                 <span class="ops-chip">Owner: @PersonLabel(Model.Subject.OwnerName, "Unassigned")</span>
@@ -93,97 +93,105 @@
     <section class="ops-subject-detail-grid">
         @if (Model.IsAdmin && Model.IsRealCatalogSubject)
         {
-            <section class="ops-panel ops-subject-manage-panel">
+            <section class="ops-panel ops-subject-manage-panel" style="display: flex; flex-direction: column; gap: 12px;">
+                <form asp-page-handler="SaveSubject" method="post" id="editSubjectForm" style="display:none;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="@Model.Subject.SubjectId" />
+                </form>
+                <form asp-page-handler="DeleteSubject" method="post" id="deleteSubjectForm" data-confirm-i18n="documents.deleteSubjectConfirm" data-confirm="Xóa môn này và toàn bộ chương bên trong? Thao tác này không thể hoàn tác." style="display:none;">
+                    @Html.AntiForgeryToken()
+                </form>
+
                 <div class="ops-panel-head">
                     <div>
                         <span class="ops-eyebrow">Subject</span>
-                        <h2>S&#7917;a th&#244;ng tin m&#244;n</h2>
+                        <h2 data-i18n="documents.editSubjectInfo">Sửa thông tin môn</h2>
                     </div>
                 </div>
-                <div class="ops-row-actions">
-                    <form asp-page-handler="SaveSubject" method="post" class="ops-subject-edit-form">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="Id" value="@Model.Subject.SubjectId" />
-                        <label class="ops-field">
-                            <span>M&#227; m&#244;n</span>
-                            <input name="Code" value="@Model.Subject.Code" />
-                        </label>
-                        <label class="ops-field">
-                            <span>M&#244; t&#7843;</span>
-                            <input name="Description" value="@Model.Subject.Description" />
-                        </label>
-                        <button type="submit" class="ops-button ops-button--primary">L&#432;u m&#244;n</button>
-                    </form>
-                    <form asp-page-handler="DeleteSubject" method="post" data-confirm="Xoa mon nay va toan bo chuong ben trong? Thao tac nay khong the hoan tac.">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="ops-button ops-button--secondary">X&#243;a m&#244;n</button>
-                    </form>
+                
+                <label class="ops-field" style="width: 100%;">
+                    <span data-i18n="documents.subjectCode">Mã môn</span>
+                    <input form="editSubjectForm" name="Code" value="@Model.Subject.Code" style="width: 100%;" />
+                </label>
+                <label class="ops-field" style="width: 100%;">
+                    <span data-i18n="documents.subjectDesc">Mô tả</span>
+                    <input form="editSubjectForm" name="Description" value="@Model.Subject.Description" style="width: 100%;" />
+                </label>
+
+                <div class="ops-subject-actions" style="margin-top: auto; display: flex; gap: 8px; justify-content: flex-end; width: 100%;">
+                    <button type="submit" form="deleteSubjectForm" class="ops-button ops-button--secondary" data-i18n="documents.deleteSubject">Xóa môn</button>
+                    <button type="submit" form="editSubjectForm" class="ops-button ops-button--primary" data-i18n="documents.saveSubject">Lưu môn</button>
                 </div>
             </section>
         }
 
-        <form asp-page-handler="SaveChapter" method="post" class="ops-panel ops-subject-manage-panel">
+        <form asp-page-handler="SaveChapter" method="post" class="ops-panel ops-subject-manage-panel" style="display: flex; flex-direction: column; gap: 12px;">
             @Html.AntiForgeryToken()
             <input type="hidden" name="SubjectId" value="@Model.Subject.SubjectId" />
             <div class="ops-panel-head">
                 <div>
                     <span class="ops-eyebrow">Chapter</span>
-                    <h2>Th&#234;m ch&#432;&#417;ng/m&#7909;c</h2>
+                    <h2 data-i18n="documents.addChapter">Thêm chương/mục</h2>
                 </div>
             </div>
-            <label class="ops-field">
-                <span>T&#234;n ch&#432;&#417;ng/m&#7909;c</span>
-                <input name="Title" placeholder="VD: Chapter 1 / Muc 1.1" required />
+            <label class="ops-field" style="width: 100%;">
+                <span data-i18n="documents.chapterTitle">Tên chương/mục</span>
+                <input name="Title" placeholder="VD: Chapter 1 / Muc 1.1" data-i18n-placeholder="documents.chapterTitlePlaceholder" required style="width: 100%;" />
             </label>
-            <label class="ops-field">
-                <span>Th&#7913; t&#7921;</span>
-                <input name="SortOrder" type="number" value="@(Model.Subject.Chapters.Count + 1)" />
+            <label class="ops-field" style="width: 100%;">
+                <span data-i18n="documents.sortOrder">Thứ tự</span>
+                <input name="SortOrder" type="number" value="@(Model.Subject.Chapters.Count + 1)" style="width: 100%;" />
             </label>
-            <button type="submit" class="ops-button ops-button--primary">Th&#234;m ch&#432;&#417;ng</button>
+            <div style="margin-top: auto; display: flex; justify-content: flex-end; width: 100%;">
+                <button type="submit" class="ops-button ops-button--primary" data-i18n="documents.addChapterBtn">Thêm chương</button>
+            </div>
         </form>
 
-        <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-panel ops-subject-manage-panel ops-subject-upload-panel">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="Language" value="vi" data-language-field />
-            <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
-            <div class="ops-panel-head">
-                <div>
-                    <span class="ops-eyebrow">Upload</span>
-                    <h2>Th&#234;m t&#224;i li&#7879;u</h2>
+        @if (Model.IsLecturer)
+        {
+            <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-panel ops-subject-manage-panel ops-subject-upload-panel">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Language" value="vi" data-language-field />
+                <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
+                <div class="ops-panel-head">
+                    <div>
+                        <span class="ops-eyebrow">Upload</span>
+                        <h2 data-i18n="documents.addDocument">Thêm tài liệu</h2>
+                    </div>
                 </div>
-            </div>
-            <label class="ops-field">
-                <span>Ch&#432;&#417;ng/m&#7909;c</span>
-                <input name="Chapter" placeholder="VD: Chapter 1 / Muc 1.1" required />
-            </label>
-            <label class="ops-field">
-                <span>File t&#224;i li&#7879;u</span>
-                <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-            </label>
-            <label class="ops-field">
-                <span>Ho&#7863;c URL b&#224;i gi&#7843;ng</span>
-                <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-            </label>
-            <button type="submit" class="ops-button ops-button--primary">
-                <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                Index t&#224;i li&#7879;u
-            </button>
-        </form>
+                <label class="ops-field">
+                    <span data-i18n="documents.chapterLabel">Chương/mục</span>
+                    <input name="Chapter" placeholder="VD: Chapter 1 / Muc 1.1" data-i18n-placeholder="documents.chapterTitlePlaceholder" required />
+                </label>
+                <label class="ops-field">
+                    <span data-i18n="documents.documentFile">File tài liệu</span>
+                    <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                </label>
+                <label class="ops-field">
+                    <span data-i18n="documents.orLectureUrl">Hoặc URL bài giảng</span>
+                    <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                </label>
+                <button type="submit" class="ops-button ops-button--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                    <span data-i18n="documents.indexDocumentBtn">Index tài liệu</span>
+                </button>
+            </form>
+        }
     </section>
 
     <section class="ops-panel">
         <div class="ops-panel-head">
             <div>
                 <span class="ops-eyebrow">Documents</span>
-                <h2>Ch&#432;&#417;ng v&#224; t&#224;i li&#7879;u</h2>
+                <h2 data-i18n="documents.chaptersAndDocuments">Chương và tài liệu</h2>
             </div>
         </div>
 
         @if (Model.Subject.Chapters.Count == 0)
         {
             <div class="ops-empty">
-                <strong>M&#244;n n&#224;y ch&#432;a c&#243; ch&#432;&#417;ng/m&#7909;c.</strong>
-                <p>Th&#234;m ch&#432;&#417;ng tr&#432;&#7899;c, sau &#273;&#243; upload t&#224;i li&#7879;u v&#224;o &#273;&#250;ng m&#7909;c.</p>
+                <strong data-i18n="documents.noChapters">Môn này chưa có chương/mục.</strong>
+                <p data-i18n="documents.noChaptersHint">Thêm chương trước, sau đó upload tài liệu vào đúng mục.</p>
             </div>
         }
         else
@@ -196,7 +204,7 @@
                             <span class="material-symbols-outlined" aria-hidden="true">folder_open</span>
                             <span class="ops-folder-main">
                                 <strong>@chapter.Title</strong>
-                                <small>@chapter.Documents.Count t&#224;i li&#7879;u</small>
+                                <small>@chapter.Documents.Count <span data-i18n="documents.documentsUnit">tài liệu</span></small>
                             </span>
                         </summary>
 
@@ -211,41 +219,44 @@
                                     <input type="hidden" name="SubjectId" value="@Model.Subject.SubjectId" />
                                     <input name="Title" value="@chapter.Title" required />
                                     <input name="SortOrder" type="number" value="@chapter.SortOrder" />
-                                    <button type="submit" class="ops-mini-button">Update</button>
+                                    <button type="submit" class="ops-mini-button" data-i18n="documents.updateBtn">Update</button>
                                 </form>
                                 @if (chapter.ChapterId.HasValue)
                                 {
-                                    <form asp-page-handler="DeleteChapter" method="post" data-confirm="Xoa chuong/muc nay? Thao tac nay khong the hoan tac.">
+                                    <form asp-page-handler="DeleteChapter" method="post" data-confirm-i18n="documents.deleteChapterConfirm" data-confirm="Xóa chương/mục này? Thao tác này không thể hoàn tác.">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="chapterId" value="@chapter.ChapterId" />
-                                        <button type="submit" class="ops-mini-button ops-mini-button--danger">Delete</button>
+                                        <button type="submit" class="ops-mini-button ops-mini-button--danger" data-i18n="documents.deleteBtn">Delete</button>
                                     </form>
                                 }
                             </div>
 
-                            <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="Language" value="vi" data-language-field />
-                                <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
-                                <input type="hidden" name="Chapter" value="@chapter.Title" />
+                            @if (Model.IsLecturer)
+                            {
+                                <form asp-page-handler="Upload" method="post" enctype="multipart/form-data" class="ops-tree-upload">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Language" value="vi" data-language-field />
+                                    <input type="hidden" name="Subject" value="@Model.Subject.DisplayName" />
+                                    <input type="hidden" name="Chapter" value="@chapter.Title" />
 
-                                <label class="ops-field">
-                                    <span>Th&#234;m file v&#224;o @chapter.Title</span>
-                                    <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
-                                </label>
-                                <label class="ops-field">
-                                    <span>Ho&#7863;c URL b&#224;i gi&#7843;ng</span>
-                                    <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
-                                </label>
-                                <button type="submit" class="ops-button ops-button--primary">
-                                    <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-                                    Th&#234;m t&#224;i li&#7879;u
-                                </button>
-                            </form>
+                                    <label class="ops-field">
+                                        <span><span data-i18n="documents.addFileTo">Thêm file vào</span> @chapter.Title</span>
+                                        <input name="File" type="file" accept=".pdf,.docx,.pptx,.txt" />
+                                    </label>
+                                    <label class="ops-field">
+                                        <span data-i18n="documents.orLectureUrl">Hoặc URL bài giảng</span>
+                                        <input name="SourceUrl" type="url" placeholder="https://example.com/lecture" />
+                                    </label>
+                                    <button type="submit" class="ops-button ops-button--primary">
+                                        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                        Th&#234;m t&#224;i li&#7879;u
+                                    </button>
+                                </form>
+                            }
 
                             @if (chapter.Documents.Count == 0)
                             {
-                                <p class="ops-muted">Ch&#432;a c&#243; t&#224;i li&#7879;u trong ch&#432;&#417;ng/m&#7909;c n&#224;y.</p>
+                                <p class="ops-muted"><span data-i18n="documents.emptyChapter">Chưa có tài liệu trong chương/mục này.</span></p>
                             }
                             else
                             {
@@ -261,23 +272,26 @@
                                             <div class="ops-row-actions" data-document-actions>
                                                 @if (document.Status == DocumentIndexStatus.Indexed)
                                                 {
-                                                    <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem" data-document-preview-url="/Home/DocumentPreview/@document.Id">Xem</button>
+                                                    <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="documents.previewBtn" data-document-preview-url="/Home/DocumentPreview/@document.Id" data-i18n="documents.previewBtn">Xem</button>
                                                 }
                                                 else
                                                 {
-                                                    <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="Xem" disabled title="@StatusTitle(document)">Xem</button>
+                                                    <button type="button" class="ops-mini-button" data-document-preview-action data-document-preview-label="documents.previewBtn" disabled title="@StatusTitle(document)" data-i18n="documents.previewBtn">Xem</button>
                                                 }
-                                                <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id">S&#7917;a</a>
-                                                <form asp-page-handler="ReindexDocument" method="post" data-confirm="Re-index tai lieu nay?">
+                                                @if (Model.CanManageDocumentAction(document, Model.Subject))
+                                                {
+                                                    <a class="ops-mini-button" asp-page="/Home/EditDocument" asp-route-id="@document.Id" data-i18n="documents.editBtn">Sửa</a>
+                                                    <form asp-page-handler="ReindexDocument" method="post" data-confirm-i18n="documents.reindexConfirm" data-confirm="Re-index tài liệu này?">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="documentId" value="@document.Id" />
-                                                    <button type="submit" class="ops-mini-button">Re-index</button>
+                                                    <button type="submit" class="ops-mini-button" data-i18n="documents.reindexBtn">Re-index</button>
                                                 </form>
-                                                <form asp-page-handler="DeleteDocument" method="post" data-confirm="Xoa tai lieu nay khoi kho index? Thao tac nay khong the hoan tac.">
+                                                <form asp-page-handler="DeleteDocument" method="post" data-confirm-i18n="documents.deleteConfirm" data-confirm="Xóa tài liệu này khỏi kho index? Thao tác này không thể hoàn tác.">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="documentId" value="@document.Id" />
-                                                    <button type="submit" class="ops-mini-button ops-mini-button--danger">X&#243;a</button>
+                                                    <button type="submit" class="ops-mini-button ops-mini-button--danger" data-i18n="documents.deleteDocBtn">Xóa</button>
                                                 </form>
+                                                }
                                             </div>
                                         </div>
                                     }
@@ -295,8 +309,8 @@
         <section class="rbl-document-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="documentPreviewTitle">
             <header class="rbl-document-preview-header">
                 <div>
-                    <span class="rbl-section-label">Indexed content</span>
-                    <h2 id="documentPreviewTitle">T&#224;i li&#7879;u</h2>
+                    <span class="rbl-section-label" data-i18n="documents.indexedContent">Indexed content</span>
+                    <h2 id="documentPreviewTitle" data-i18n="documents.previewTitle">Tài liệu</h2>
                     <p id="documentPreviewMeta"></p>
                 </div>
                 <button type="button" class="rbl-icon-button" aria-label="Close preview" data-document-preview-close>
@@ -304,7 +318,7 @@
                 </button>
             </header>
             <div id="documentPreviewBody" class="rbl-document-preview-body">
-                <p class="rbl-catalog-muted">&#272;ang t&#7843;i n&#7897;i dung &#273;&#227; index...</p>
+                <p class="rbl-catalog-muted"><span data-i18n="documents.loadingContent">Đang tải nội dung đã index...</span></p>
             </div>
         </section>
     </div>

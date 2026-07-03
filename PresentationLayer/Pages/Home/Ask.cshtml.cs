@@ -16,14 +16,14 @@ public sealed class AskModel : HomePageModelBase
 {
     public AskModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -44,12 +44,12 @@ public sealed class AskModel : HomePageModelBase
         {
             var currentUser = await GetCurrentUserAccountAsync(cancellationToken);
             var chatScope = BuildDocumentAccessScope(DocumentAccessMode.Chat);
-            var allowedSubjects = await _repository.GetIndexedSubjectsAsync(chatScope, cancellationToken);
+            var allowedSubjects = await _knowledge.GetIndexedSubjectsAsync(chatScope, cancellationToken);
             var displayName = User.FindFirstValue(ClaimTypes.Name)
                 ?? User.FindFirstValue(ClaimTypes.Email)?.Split('@')[0];
             if (currentUser is not null)
             {
-                var existingSession = await _repository.GetSessionAsync(sessionId, cancellationToken);
+                var existingSession = await _knowledge.GetSessionAsync(sessionId, cancellationToken);
                 if (existingSession?.OwnerUserId is { } ownerUserId && ownerUserId != currentUser.Id)
                 {
                     sessionId = Guid.NewGuid();

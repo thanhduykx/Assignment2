@@ -15,14 +15,14 @@ public sealed class StarChatSessionModel : HomePageModelBase
 {
     public StarChatSessionModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -35,7 +35,7 @@ public sealed class StarChatSessionModel : HomePageModelBase
 
         try
         {
-            var session = await _repository.SetSessionStarredAsync(
+            var session = await _knowledge.SetSessionStarredAsync(
                 sessionId,
                 request.IsStarred,
                 cancellationToken,

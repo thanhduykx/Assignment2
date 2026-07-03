@@ -1,0 +1,1 @@
+<ItemGroup><Reference Include="Microsoft.Data.SqlClient"><HintPath>C:\Assignment2\PresentationLayer\bin\Debug\net9.0\Microsoft.Data.SqlClient.dll</HintPath></Reference></ItemGroup>
