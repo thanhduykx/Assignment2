@@ -12,14 +12,14 @@ public sealed class ChatModel : HomePageModelBase
 {
     public ChatModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -36,10 +36,10 @@ public sealed class ChatModel : HomePageModelBase
         IReadOnlyList<IndexedDocument> indexedDocuments;
         try
         {
-            subjectOptions = await _repository.GetIndexedSubjectsAsync(chatScope, cancellationToken);
+            subjectOptions = await _knowledge.GetIndexedSubjectsAsync(chatScope, cancellationToken);
             indexedDocuments = CurrentRole() == AppRoles.Student
                 ? Array.Empty<IndexedDocument>()
-                : await _repository.GetDocumentsAsync(
+                : await _knowledge.GetDocumentsAsync(
                     chatScope,
                     new DocumentListQuery(StatusFilter: DocumentIndexStatus.Indexed),
                     cancellationToken);
@@ -56,7 +56,7 @@ public sealed class ChatModel : HomePageModelBase
         {
             ChatSessions = currentUser is null
                 ? Array.Empty<ChatSessionSummary>()
-                : await _repository.GetSessionSummariesForOwnerAsync(currentUser.Id, cancellationToken);
+                : await _knowledge.GetSessionSummariesForOwnerAsync(currentUser.Id, cancellationToken);
         }
         catch (Exception ex) when (IsDataAccessTimeout(ex))
         {

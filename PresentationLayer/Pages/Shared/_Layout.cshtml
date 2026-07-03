@@ -23,6 +23,7 @@
     
     var hideAssistantLauncher = ViewData["HideAssistantLauncher"] as bool? ?? false;
     var hideSidebarOnlineUsers = ViewData["HideSidebarOnlineUsers"] as bool? ?? false;
+    var showStudentTableNav = ViewData["ShowStudentTable"] as bool? ?? false;
     var shellTitleI18n = ViewData["ShellTitleI18n"] as string;
     var chatNavClass = activeNav == "chat" ? "rbl-nav-link is-active" : "rbl-nav-link";
     var coursesNavClass = activeNav == "courses" ? "rbl-nav-link is-active" : "rbl-nav-link";
@@ -154,10 +155,13 @@
                                 <span class="material-symbols-outlined" aria-hidden="true">school</span>
                                 <span data-i18n="admin.navLecturerTable">Lecturer table</span>
                             </a>
+                            @if (showStudentTableNav)
+                            {
                             <a class="@(AdminSublinkClass("student-table"))" asp-page="/Admin/Index" asp-route-section="student-table">
                                 <span class="material-symbols-outlined" aria-hidden="true">face</span>
                                 <span data-i18n="admin.navStudentTable">Student table</span>
                             </a>
+                            }
                             <a class="@(AdminSublinkClass("create-account"))" asp-page="/Admin/Index" asp-route-section="create-account">
                                 <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
                                 <span data-i18n="admin.navCreateAccount">Create account</span>
