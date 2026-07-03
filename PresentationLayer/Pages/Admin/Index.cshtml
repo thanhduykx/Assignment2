@@ -591,9 +591,7 @@
                             <tr>
                                 <th data-i18n="admin.thSubject">SUBJECT</th>
                                 <th data-i18n="admin.thLeader">LEADER</th>
-                                <th data-i18n="admin.thStudents">STUDENTS</th>
                                 <th data-i18n="admin.thStatus">STATUS</th>
-                                <th data-i18n="admin.thActions">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -613,9 +611,6 @@
                                         <span>@subject.OwnerName <br><small>@subject.OwnerEmail</small></span>
                                     }
                                 </td>
-                                <td data-label="STUDENTS">
-                                    <span>@subject.StudentCount</span>
-                                </td>
                                 <td data-label="STATUS">
                                     @if (subject.IsActive)
                                     {
@@ -625,23 +620,6 @@
                                     {
                                         <span class="ops-chip" style="background-color: var(--rbl-red-light); color: var(--rbl-red-dark);" data-i18n="admin.inactive">Inactive</span>
                                     }
-                                </td>
-                                <td data-label="ACTIONS">
-                                    <form asp-page-handler="ToggleSubjectActiveStatus" method="post" style="margin: 0; padding: 0;"
-                                          data-confirm-vi="@(subject.IsActive ? $"Bạn có chắc muốn xóa môn {subject.DisplayName} hay không?" : $"Khôi phục môn {subject.DisplayName}?")"
-                                          data-confirm-en="@(subject.IsActive ? $"Are you sure you want to delete subject {subject.DisplayName}?" : $"Restore subject {subject.DisplayName}?")">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="SubjectId" value="@subject.Id" />
-                                        <input type="hidden" name="IsActive" value="@(subject.IsActive ? "false" : "true")" />
-                                        @if (subject.IsActive)
-                                        {
-                                            <button type="submit" class="ops-mini-button ops-mini-button--danger" data-i18n="admin.deactivate">Deactivate</button>
-                                        }
-                                        else
-                                        {
-                                            <button type="submit" class="ops-mini-button" data-i18n="admin.activate">Activate</button>
-                                        }
-                                    </form>
                                 </td>
                             </tr>
                         }
