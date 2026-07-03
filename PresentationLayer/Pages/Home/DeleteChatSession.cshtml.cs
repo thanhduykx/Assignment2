@@ -15,14 +15,14 @@ public sealed class DeleteChatSessionModel : HomePageModelBase
 {
     public DeleteChatSessionModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -35,7 +35,7 @@ public sealed class DeleteChatSessionModel : HomePageModelBase
 
         try
         {
-            var deleted = await _repository.DeleteSessionAsync(sessionId, cancellationToken, BuildChatSessionOwnerInfo());
+            var deleted = await _knowledge.DeleteSessionAsync(sessionId, cancellationToken, BuildChatSessionOwnerInfo());
             return deleted
                 ? new JsonResult(new { deleted = true, sessionId })
                 : NotFound(new { error = "Chat session not found." });

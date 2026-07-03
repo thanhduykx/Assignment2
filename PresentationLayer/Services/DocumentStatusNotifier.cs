@@ -36,16 +36,16 @@ public interface IDocumentStatusNotifier
 public sealed class SignalRDocumentStatusNotifier : IDocumentStatusNotifier
 {
     private readonly IHubContext<DocumentStatusHub> _hubContext;
-    private readonly IKnowledgeService _repository;
+    private readonly IKnowledgeService _knowledge;
     private readonly ILogger<SignalRDocumentStatusNotifier> _logger;
 
     public SignalRDocumentStatusNotifier(
         IHubContext<DocumentStatusHub> hubContext,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         ILogger<SignalRDocumentStatusNotifier> logger)
     {
         _hubContext = hubContext;
-        _repository = repository;
+        _knowledge = knowledge;
         _logger = logger;
     }
 
@@ -53,7 +53,7 @@ public sealed class SignalRDocumentStatusNotifier : IDocumentStatusNotifier
     {
         try
         {
-            var document = await _repository.GetDocumentAsync(documentId, cancellationToken);
+            var document = await _knowledge.GetDocumentAsync(documentId, cancellationToken);
             if (document is null)
             {
                 return;

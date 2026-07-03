@@ -14,14 +14,14 @@ public sealed class CourseWorkspaceModel : HomePageModelBase
     private static readonly Regex SentenceRegex = new(@"(?<=[.!?。])\s+|\r?\n+", RegexOptions.Compiled);
     public CourseWorkspaceModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -42,8 +42,8 @@ public sealed class CourseWorkspaceModel : HomePageModelBase
             }
 
             var documentScope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
-            var documents = await _repository.GetDocumentsAsync(documentScope, null, cancellationToken);
-            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            var documents = await _knowledge.GetDocumentsAsync(documentScope, null, cancellationToken);
+            var catalog = await _knowledge.GetCourseCatalogAsync(cancellationToken);
             var visibleCatalog = BuildSynchronizedCourseCatalogForView(FilterCourseCatalogForCurrentUser(catalog), documents);
             var subject = visibleCatalog.FirstOrDefault(item => item.Id == id);
             if (subject is null)
@@ -64,7 +64,7 @@ public sealed class CourseWorkspaceModel : HomePageModelBase
                 .Where(label => !string.IsNullOrWhiteSpace(label))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            var chunks = await _repository.GetChunksAsync(documentScope, subjectLabels, cancellationToken);
+            var chunks = await _knowledge.GetChunksAsync(documentScope, subjectLabels, cancellationToken);
             chunks = chunks
                 .Where(chunk => SubjectMatchesFilter(chunk.Subject, subject.DisplayName)
                                 || SubjectMatchesFilter(chunk.Subject, subject.Code))

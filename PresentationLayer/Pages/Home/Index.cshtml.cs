@@ -18,7 +18,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public IndexModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
@@ -29,7 +29,7 @@ public sealed class IndexModel : HomePageModelBase
         ITextChunker chunker,
         IChunkRetrievalEnrichmentService chunkEnrichment,
         IDocumentStatusNotifier documentStatusNotifier)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
         _embeddingService = embeddingService;
         _chunker = chunker;
@@ -83,15 +83,15 @@ public sealed class IndexModel : HomePageModelBase
         IReadOnlyList<Guid> staleDocumentIds = Array.Empty<Guid>();
         try
         {
-            accessibleDocuments = await _repository.GetDocumentsAsync(scope, null, cancellationToken);
-            documents = await _repository.GetDocumentsAsync(
+            accessibleDocuments = await _knowledge.GetDocumentsAsync(scope, null, cancellationToken);
+            documents = await _knowledge.GetDocumentsAsync(
                 scope,
                 new DocumentListQuery(normalizedQuery, normalizedSubjectFilter, normalizedStatusFilter),
                 cancellationToken);
-            allCourseCatalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            allCourseCatalog = await _knowledge.GetCourseCatalogAsync(cancellationToken);
             if (userIsAdmin)
             {
-                staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
+                staleDocumentIds = await _knowledge.GetStaleIndexedDocumentIdsAsync(
                     _embeddingService.ModelName,
                     _embeddingService.Dimensions,
                     EffectiveChunkingStrategy,
@@ -178,7 +178,7 @@ public sealed class IndexModel : HomePageModelBase
 
         try
         {
-            await _repository.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
+            await _knowledge.UpsertSubjectAsync(model.Id, model.Code, model.Code, model.Description, cancellationToken);
             TempData["Success"] = "Đã lưu môn học.";
         }
         catch (Exception ex)
@@ -196,7 +196,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteSubjectAsync(id, cancellationToken);
+        await _knowledge.DeleteSubjectAsync(id, cancellationToken);
         TempData["Success"] = "Đã xóa môn học.";
         return RedirectToPage("/Home/Index");
     }
@@ -210,7 +210,7 @@ public sealed class IndexModel : HomePageModelBase
                 return Forbid();
             }
 
-            await _repository.UpsertChapterAsync(model.Id, model.SubjectId, model.Title, model.SortOrder, cancellationToken);
+            await _knowledge.UpsertChapterAsync(model.Id, model.SubjectId, model.Title, model.SortOrder, cancellationToken);
             TempData["Success"] = "Đã lưu chương.";
         }
         catch (Exception ex)
@@ -228,7 +228,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteChapterAsync(id, cancellationToken);
+        await _knowledge.DeleteChapterAsync(id, cancellationToken);
         TempData["Success"] = "Đã xóa chương.";
         return RedirectToPage("/Home/Index");
     }
@@ -301,7 +301,7 @@ public sealed class IndexModel : HomePageModelBase
                 ? "Đã nhận tài liệu và đang index."
                 : "The document has been queued for indexing.";
 
-            var indexedDocument = await _repository.GetDocumentAsync(result.DocumentId, cancellationToken);
+            var indexedDocument = await _knowledge.GetDocumentAsync(result.DocumentId, cancellationToken);
             if (indexedDocument is not null)
             {
                 await SyncCourseCatalogFromDocumentsAsync(new[] { indexedDocument }, cancellationToken);
@@ -321,7 +321,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostDeleteDocumentAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             TempData["Error"] = "Không tìm thấy tài liệu để xóa.";
@@ -333,7 +333,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.DeleteDocumentAsync(id, cancellationToken);
+        await _knowledge.DeleteDocumentAsync(id, cancellationToken);
         TryDeleteStoredFile(document);
         TempData["Success"] = $"Đã xóa tài liệu {document.FileName}.";
         return RedirectToPage("/Home/Index");
@@ -341,7 +341,7 @@ public sealed class IndexModel : HomePageModelBase
 
     public async Task<IActionResult> OnPostReindexDocumentAsync(Guid id, CancellationToken cancellationToken)
     {
-        var document = await _repository.GetDocumentAsync(id, cancellationToken);
+        var document = await _knowledge.GetDocumentAsync(id, cancellationToken);
         if (document is null)
         {
             TempData["Error"] = "Khong tim thay tai lieu de re-index.";
@@ -353,7 +353,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        await _repository.MarkDocumentIndexProcessingAsync(id, cancellationToken);
+        await _knowledge.MarkDocumentIndexProcessingAsync(id, cancellationToken);
         await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(id, CancellationToken.None);
         await _indexJobQueue.EnqueueAsync(id, cancellationToken);
         TempData["Success"] = $"Da dua {document.FileName} vao hang doi re-index.";
@@ -367,7 +367,7 @@ public sealed class IndexModel : HomePageModelBase
             return Forbid();
         }
 
-        var staleDocumentIds = await _repository.GetStaleIndexedDocumentIdsAsync(
+        var staleDocumentIds = await _knowledge.GetStaleIndexedDocumentIdsAsync(
             _embeddingService.ModelName,
             _embeddingService.Dimensions,
             EffectiveChunkingStrategy,
@@ -377,10 +377,10 @@ public sealed class IndexModel : HomePageModelBase
         var enqueuedCount = 0;
         foreach (var documentId in staleDocumentIds)
         {
-            var document = await _repository.GetDocumentAsync(documentId, cancellationToken);
+            var document = await _knowledge.GetDocumentAsync(documentId, cancellationToken);
             if (document != null && await CanManageDocumentAsync(document, cancellationToken))
             {
-                await _repository.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
+                await _knowledge.MarkDocumentIndexProcessingAsync(documentId, cancellationToken);
                 await _documentStatusNotifier.NotifyDocumentStatusChangedAsync(documentId, CancellationToken.None);
                 await _indexJobQueue.EnqueueAsync(documentId, cancellationToken);
                 enqueuedCount++;

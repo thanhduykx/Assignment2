@@ -13,7 +13,8 @@
     var isBulkImport = section == IndexModel.AdminSection.BulkImport;
     var isCreateSubject = section == IndexModel.AdminSection.CreateSubject;
     var isLecturerTable = section == IndexModel.AdminSection.LecturerTable;
-    var isStudentTable = section == IndexModel.AdminSection.StudentTable;
+    var showStudentTable = false;
+    var isStudentTable = showStudentTable && section == IndexModel.AdminSection.StudentTable;
 
     var users = Model.Users
         .OrderBy(user => user.Role)
@@ -358,6 +359,13 @@
                         <tbody>
                         @foreach (var lecturer in lecturers)
                         {
+                            var assignedSubjectIds = lecturer.AssignedSubjectDetails
+                                .Select(subject => subject.Id)
+                                .ToHashSet();
+                            var availableSubjects = Model.SubjectOptions
+                                .Where(subject => !subject.OwnerUserId.HasValue && !assignedSubjectIds.Contains(subject.Id))
+                                .ToList();
+
                             <tr>
                                 <td data-label="NAME" style="width: 260px;">
                                     <div class="ops-user-cell" style="min-width: 0;">
@@ -399,12 +407,8 @@
                                         <form asp-page-handler="RegisterLecturerSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(lecturer)?">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="UserId" value="@lecturer.Id" />
-                                            <select name="RoleType" required aria-label="Vai trò" style="margin-right: 4px;">
-                                                <option value="Teaching" data-i18n="admin.teachingLecturerRole">Giảng viên giảng dạy</option>
-                                                <option value="Leader" data-i18n="admin.leaderRole">Trưởng bộ môn</option>
-                                            </select>
-                                            <select name="SubjectId" required disabled="@(Model.SubjectOptions.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
-                                                @if (Model.SubjectOptions.Count == 0)
+                                            <select name="SubjectId" required disabled="@(availableSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(lecturer)">
+                                                @if (availableSubjects.Count == 0)
                                                 {
                                                     <option value="" data-i18n="admin.noSubjectsAvailable">Không có môn nào</option>
                                                 }
@@ -412,12 +416,12 @@
                                                 {
                                                     <option value="" data-i18n="admin.selectSubjectAssign">Chọn môn để đăng ký</option>
                                                 }
-                                                @foreach (var subject in Model.SubjectOptions)
+                                                @foreach (var subject in availableSubjects)
                                                 {
                                                     <option value="@subject.Id">@subject.DisplayName</option>
                                                 }
                                             </select>
-                                            <button type="submit" class="ops-mini-button" disabled="@(Model.SubjectOptions.Count == 0)" style="white-space: nowrap; min-width: 80px;" data-i18n="admin.assignButton">Đăng ký</button>
+                                            <button type="submit" class="ops-mini-button" disabled="@(availableSubjects.Count == 0)" style="white-space: nowrap; min-width: 80px;" data-i18n="admin.assignButton">Đăng ký</button>
                                         </form>
                                     </div>
                                 </td>
@@ -465,6 +469,13 @@
                         <tbody>
                         @foreach (var student in students)
                         {
+                            var assignedSubjectIds = student.AssignedSubjectDetails
+                                .Select(subject => subject.Id)
+                                .ToHashSet();
+                            var availableSubjects = Model.SubjectOptions
+                                .Where(subject => subject.OwnerUserId.HasValue && !assignedSubjectIds.Contains(subject.Id))
+                                .ToList();
+
                             <tr>
                                 <td data-label="NAME" style="width: 260px;">
                                     <div class="ops-user-cell" style="min-width: 0;">
@@ -503,8 +514,8 @@
                                         <form asp-page-handler="RegisterStudentSubject" method="post" class="ops-assign-form" data-confirm="Đăng ký môn đã chọn cho @DisplayName(student)?">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="UserId" value="@student.Id" />
-                                            <select name="SubjectId" required disabled="@(Model.SubjectOptions.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(student)">
-                                                @if (Model.SubjectOptions.Count == 0)
+                                            <select name="SubjectId" required disabled="@(availableSubjects.Count == 0)" aria-label="Đăng ký môn cho @DisplayName(student)">
+                                                @if (availableSubjects.Count == 0)
                                                 {
                                                     <option value="" data-i18n="admin.noSubjectsAvailable">Không có môn nào</option>
                                                 }
@@ -512,12 +523,12 @@
                                                 {
                                                     <option value="" data-i18n="admin.selectSubjectAssign">Chọn môn để đăng ký</option>
                                                 }
-                                                @foreach (var subject in Model.SubjectOptions)
+                                                @foreach (var subject in availableSubjects)
                                                 {
                                                     <option value="@subject.Id">@subject.DisplayName</option>
                                                 }
                                             </select>
-                                            <button type="submit" class="ops-mini-button" disabled="@(Model.SubjectOptions.Count == 0)" style="white-space: nowrap; min-width: 80px;" data-i18n="admin.assignButton">Đăng ký</button>
+                                            <button type="submit" class="ops-mini-button" disabled="@(availableSubjects.Count == 0)" style="white-space: nowrap; min-width: 80px;" data-i18n="admin.assignButton">Đăng ký</button>
                                         </form>
                                     </div>
                                 </td>

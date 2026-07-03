@@ -13,14 +13,14 @@ public sealed class CoursesModel : HomePageModelBase
 {
     public CoursesModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -37,8 +37,8 @@ public sealed class CoursesModel : HomePageModelBase
         try
         {
             var scope = BuildDocumentAccessScope(DocumentAccessMode.DocumentUi);
-            var documents = await _repository.GetDocumentsAsync(scope, null, cancellationToken);
-            var catalog = await _repository.GetCourseCatalogAsync(cancellationToken);
+            var documents = await _knowledge.GetDocumentsAsync(scope, null, cancellationToken);
+            var catalog = await _knowledge.GetCourseCatalogAsync(cancellationToken);
             var visibleCatalog = BuildSynchronizedCourseCatalogForView(FilterCourseCatalogForCurrentUser(catalog), documents);
 
             Courses = visibleCatalog

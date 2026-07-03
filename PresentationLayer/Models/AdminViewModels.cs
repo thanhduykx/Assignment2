@@ -60,14 +60,12 @@ public sealed class RegisterLecturerSubjectViewModel
 {
     public Guid UserId { get; set; }
     public Guid SubjectId { get; set; }
-    public string RoleType { get; set; } = "Teaching"; // "Leader" or "Teaching"
 }
 
 public sealed class UnregisterLecturerSubjectViewModel
 {
     public Guid UserId { get; set; }
     public Guid SubjectId { get; set; }
-    public string RoleType { get; set; } = "Teaching"; // "Leader" or "Teaching"
 }
 
 public sealed class CreateAdminSubjectViewModel

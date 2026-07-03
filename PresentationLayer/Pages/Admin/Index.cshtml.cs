@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using BusinessObjects;
-using DataAccessLayer.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -23,20 +22,17 @@ public sealed class IndexModel : PageModel
 {
     private readonly IUserAccountStore _users;
     private readonly IKnowledgeService _knowledge;
-    private readonly IKnowledgeRepository _repository;
     private readonly IAccountEmailSender _emailSender;
     private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(
         IUserAccountStore users,
         IKnowledgeService knowledge,
-        IKnowledgeRepository repository,
         IAccountEmailSender emailSender,
         ILogger<IndexModel> logger)
     {
         _users = users;
         _knowledge = knowledge;
-        _repository = repository;
         _emailSender = emailSender;
         _logger = logger;
     }
@@ -686,31 +682,21 @@ public sealed class IndexModel : PageModel
                 .FirstOrDefault(item => item.Id == model.SubjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
 
-            if (model.RoleType == "Leader")
+            if (subject.OwnerUserId.HasValue && subject.OwnerUserId.Value != lecturer.Id)
             {
-                // Gán làm Trưởng bộ môn (Subject Leader) — OwnerUserId
-                if (subject.OwnerUserId.HasValue && subject.OwnerUserId.Value != lecturer.Id)
-                {
-                    TempData["Error"] = $"Trưởng bộ môn {subject.DisplayName} đã được gán cho {FormatSubjectOwner(subject)}. Vui lòng gỡ trước khi chuyển.";
-                    return RedirectToPage("/Admin/Index");
-                }
-
-                await _knowledge.UpsertSubjectAsync(
-                    subject.Id,
-                    subject.Code,
-                    subject.Name,
-                    subject.Description,
-                    cancellationToken,
-                    new SubjectOwnerInfo(lecturer.Id, lecturer.FullName, lecturer.Email));
-
-                TempData["Success"] = $"Đã gán {DisplayName(lecturer)} làm trưởng bộ môn {subject.DisplayName}.";
+                TempData["Error"] = $"Trưởng bộ môn {subject.DisplayName} đã được gán cho {FormatSubjectOwner(subject)}. Vui lòng gỡ trước khi chuyển.";
+                return RedirectToPage("/Admin/Index");
             }
-            else
-            {
-                // Gán làm Giảng viên giảng dạy (Teaching Lecturer) — bảng trung gian
-                await _repository.AddSubjectLecturerAsync(subject.Id, lecturer.Id, cancellationToken);
-                TempData["Success"] = $"Đã thêm {DisplayName(lecturer)} vào danh sách giảng viên giảng dạy môn {subject.DisplayName}.";
-            }
+
+            await _knowledge.UpsertSubjectAsync(
+                subject.Id,
+                subject.Code,
+                subject.Name,
+                subject.Description,
+                cancellationToken,
+                new SubjectOwnerInfo(lecturer.Id, lecturer.FullName, lecturer.Email));
+
+            TempData["Success"] = $"Đã gán {DisplayName(lecturer)} làm trưởng bộ môn {subject.DisplayName}.";
         }
         catch (Exception ex) when (ex is InvalidOperationException)
         {
@@ -740,19 +726,16 @@ public sealed class IndexModel : PageModel
                 .FirstOrDefault(item => item.Id == model.SubjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
 
-            // Call a single repository method that handles both:
-            // 1. Remove teaching lecturer from rag_subject_lecturers (junction table)
-            // 2. If this lecturer is also the Subject Leader (OwnerUserId), revoke that role too
-            await _repository.RemoveSubjectLecturerAsync(subject.Id, lecturer.Id, cancellationToken);
+            await _knowledge.RemoveSubjectLecturerAsync(subject.Id, lecturer.Id, cancellationToken);
 
             var leaderRevoked = subject.OwnerUserId == lecturer.Id;
             if (leaderRevoked)
             {
-                TempData["Success"] = $"Đã gỡ {DisplayName(lecturer)} khỏi danh sách giảng dạy và thu hồi quyền trưởng bộ môn của môn {subject.DisplayName}.";
+                TempData["Success"] = $"Đã thu hồi quyền trưởng bộ môn {subject.DisplayName} của {DisplayName(lecturer)}.";
             }
             else
             {
-                TempData["Success"] = $"Đã gỡ {DisplayName(lecturer)} khỏi danh sách giảng dạy môn {subject.DisplayName}.";
+                TempData["Success"] = $"{DisplayName(lecturer)} không phải trưởng bộ môn {subject.DisplayName}.";
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException)
@@ -778,15 +761,14 @@ public sealed class IndexModel : PageModel
 
             if (!model.IsActive)
             {
-                // Verify no teachers and no students before deactivating
-                var teachingLecturerIds = await _repository.GetSubjectLecturerIdsAsync(subject.Id, cancellationToken);
-                if (subject.OwnerUserId.HasValue || teachingLecturerIds.Count > 0)
+                // Verify no subject leader and no students before deactivating.
+                if (subject.OwnerUserId.HasValue)
                 {
-                    TempData["Error"] = $"Không thể Deactivate môn {subject.DisplayName} vì đang có giáo viên phụ trách.";
+                    TempData["Error"] = $"Không thể Deactivate môn {subject.DisplayName} vì đang có trưởng bộ môn phụ trách.";
                     return RedirectToPage("/Admin/Index");
                 }
                 
-                var enrolledStudentIds = await _repository.GetSubjectStudentIdsAsync(subject.Id, cancellationToken);
+                var enrolledStudentIds = await _knowledge.GetSubjectStudentIdsAsync(subject.Id, cancellationToken);
                 if (enrolledStudentIds.Count > 0)
                 {
                     TempData["Error"] = $"Không thể Deactivate môn {subject.DisplayName} vì đang có học sinh đăng ký.";
@@ -794,7 +776,7 @@ public sealed class IndexModel : PageModel
                 }
             }
 
-            await _repository.SetSubjectActiveStatusAsync(subject.Id, model.IsActive, cancellationToken);
+            await _knowledge.SetSubjectActiveStatusAsync(subject.Id, model.IsActive, cancellationToken);
             TempData["Success"] = $"Đã {(model.IsActive ? "Activate" : "Deactivate")} môn {subject.DisplayName}.";
         }
         catch (Exception ex) when (ex is InvalidOperationException)
@@ -825,14 +807,13 @@ public sealed class IndexModel : PageModel
                 .FirstOrDefault(item => item.Id == model.SubjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
 
-            var teachingLecturerIds = await _repository.GetSubjectLecturerIdsAsync(subject.Id, cancellationToken);
-            if (!subject.OwnerUserId.HasValue && teachingLecturerIds.Count == 0)
+            if (!subject.OwnerUserId.HasValue)
             {
-                TempData["Error"] = $"Không thể gán học sinh vào môn {subject.DisplayName} vì chưa có giáo viên phụ trách.";
+                TempData["Error"] = $"Không thể gán học sinh vào môn {subject.DisplayName} vì chưa có trưởng bộ môn phụ trách.";
                 return RedirectToPage("/Admin/Index", new { section = "student-table" });
             }
 
-            await _repository.AddSubjectStudentAsync(subject.Id, student.Id, cancellationToken);
+            await _knowledge.AddSubjectStudentAsync(subject.Id, student.Id, cancellationToken);
             TempData["Success"] = $"Đã thêm {DisplayName(student)} vào lớp học môn {subject.DisplayName}.";
         }
         catch (Exception ex) when (ex is InvalidOperationException)
@@ -863,7 +844,7 @@ public sealed class IndexModel : PageModel
                 .FirstOrDefault(item => item.Id == model.SubjectId)
                 ?? throw new InvalidOperationException("Subject not found.");
 
-            await _repository.RemoveSubjectStudentAsync(subject.Id, student.Id, cancellationToken);
+            await _knowledge.RemoveSubjectStudentAsync(subject.Id, student.Id, cancellationToken);
             TempData["Success"] = $"Đã gỡ {DisplayName(student)} khỏi danh sách học môn {subject.DisplayName}.";
         }
         catch (Exception ex) when (ex is InvalidOperationException)
@@ -907,13 +888,12 @@ public sealed class IndexModel : PageModel
         var normalizedRoleFilter = roleFilter?.Trim();
         var adminCount = users.Count(user => user.Role == AppRoles.Admin);
 
-        // 1. Dùng Dictionary để ánh xạ Môn học cho Giảng viên và gán cờ IsLeader
+        // 1. Dùng Dictionary để ánh xạ Môn học cho người dùng và gán cờ IsLeader.
         var subjectMap = new Dictionary<Guid, Dictionary<Guid, AdminAssignedSubjectViewModel>>();
 
-        // 2. Lặp qua danh sách môn học để gom nhóm Giảng viên (tối ưu hơn lặp qua toàn bộ User)
+        // 2. Lặp qua danh sách môn học để gom nhóm trưởng bộ môn và học sinh.
         foreach (var subject in subjects)
         {
-            // Nguồn A: Trưởng bộ môn (OwnerUserId)
             if (subject.OwnerUserId.HasValue)
             {
                 var leaderId = subject.OwnerUserId.Value;
@@ -926,25 +906,7 @@ public sealed class IndexModel : PageModel
                 };
             }
 
-            // Nguồn B: Các giảng viên giảng dạy từ bảng trung gian
-            // Hàm này nhận vào SubjectId và nhả ra danh sách UserId
-            var teachingLecturerIds = await _repository.GetSubjectLecturerIdsAsync(subject.Id, cancellationToken);
-            foreach (var lecturerId in teachingLecturerIds)
-            {
-                if (!subjectMap.ContainsKey(lecturerId)) subjectMap[lecturerId] = new();
-                if (!subjectMap[lecturerId].ContainsKey(subject.Id))
-                {
-                    subjectMap[lecturerId][subject.Id] = new AdminAssignedSubjectViewModel
-                    {
-                        Id = subject.Id,
-                        DisplayName = subject.DisplayName,
-                        IsLeader = false
-                    };
-                }
-            }
-
-            // Nguồn C: Học sinh (từ bảng subject_students)
-            var enrolledStudentIds = await _repository.GetSubjectStudentIdsAsync(subject.Id, cancellationToken);
+            var enrolledStudentIds = await _knowledge.GetSubjectStudentIdsAsync(subject.Id, cancellationToken);
             foreach (var studentId in enrolledStudentIds)
             {
                 if (!subjectMap.ContainsKey(studentId)) subjectMap[studentId] = new();

@@ -12,14 +12,14 @@ public sealed class ChatSessionModel : HomePageModelBase
 {
     public ChatSessionModel(
         ILogger<HomePageModelBase> logger,
-        IKnowledgeService repository,
+        IKnowledgeService knowledge,
         IDocumentIndexingService indexingService,
         IWebPageTextExtractor webPageTextExtractor,
         IRagChatService chatService,
         IUserAccountStore users,
         IWebHostEnvironment environment,
         IDocumentIndexJobQueue indexJobQueue)
-        : base(logger, repository, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
+        : base(logger, knowledge, indexingService, webPageTextExtractor, chatService, users, environment, indexJobQueue)
     {
     }
 
@@ -31,7 +31,7 @@ public sealed class ChatSessionModel : HomePageModelBase
             return NotFound(new { error = "Chat session not found." });
         }
 
-        var session = await _repository.GetSessionForOwnerAsync(id, currentUser.Id, cancellationToken);
+        var session = await _knowledge.GetSessionForOwnerAsync(id, currentUser.Id, cancellationToken);
         if (session is null)
         {
             return NotFound(new { error = "Chat session not found." });
