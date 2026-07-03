@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccessLayer", "DataAcce
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicesLayer", "ServicesLayer\ServicesLayer.csproj", "{A3222ED1-0E98-4175-B760-29AB2F073418}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessObjects", "BusinessObjects\BusinessObjects.csproj", "{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,18 +55,6 @@ Global
 		{A3222ED1-0E98-4175-B760-29AB2F073418}.Release|x64.Build.0 = Release|Any CPU
 		{A3222ED1-0E98-4175-B760-29AB2F073418}.Release|x86.ActiveCfg = Release|Any CPU
 		{A3222ED1-0E98-4175-B760-29AB2F073418}.Release|x86.Build.0 = Release|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Debug|x64.Build.0 = Debug|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Debug|x86.Build.0 = Debug|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Release|x64.ActiveCfg = Release|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Release|x64.Build.0 = Release|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Release|x86.ActiveCfg = Release|Any CPU
-		{8D30B92B-ECD0-4A01-82FC-27F8E7D7BCFD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

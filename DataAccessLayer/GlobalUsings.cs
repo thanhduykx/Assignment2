@@ -1,1 +1,1 @@
-global using BusinessObjects;
+global using DataAccessLayer.Models;

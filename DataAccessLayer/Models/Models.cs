@@ -1,4 +1,4 @@
-namespace BusinessObjects;
+namespace DataAccessLayer.Models;
 
 public static class DocumentIndexStatus
 {
