@@ -3,8 +3,28 @@
   "WorkspaceRootPath": "D:\\Summer 2026\\Assignment2\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\onlineusers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\pages\\home\\onlineusers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\error.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\pages\\home\\error.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\courses.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\pages\\home\\courses.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\services\\documentindexworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\services\\documentindexworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\services\\useraccountstore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\services\\useraccountstore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\models\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\models\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -17,10 +37,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\courses.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\pages\\home\\courses.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\onlineusers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\pages\\home\\onlineusers.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\courseworkspace.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -73,10 +89,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\pages\\home\\chat.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\pages\\home\\chat.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|d:\\summer 2026\\assignment2\\presentationlayer\\models\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{85544FD0-A3AF-458C-808C-721C3C07A0FF}|PresentationLayer\\Group07MVC.csproj|solutionrelative:presentationlayer\\models\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -86,7 +98,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -102,32 +114,57 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
+              "Title": "Courses.cshtml.cs",
+              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Courses.cshtml.cs",
+              "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Courses.cshtml.cs",
+              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Courses.cshtml.cs",
+              "RelativeToolTip": "PresentationLayer\\Pages\\Home\\Courses.cshtml.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAQwBQAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-26T09:11:15.812Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "DocumentIndexWorker.cs",
+              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Services\\DocumentIndexWorker.cs",
+              "RelativeDocumentMoniker": "PresentationLayer\\Services\\DocumentIndexWorker.cs",
+              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Services\\DocumentIndexWorker.cs",
+              "RelativeToolTip": "PresentationLayer\\Services\\DocumentIndexWorker.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAYwA8AAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-26T09:06:59.383Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UserAccountStore.cs",
+              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Services\\UserAccountStore.cs",
+              "RelativeDocumentMoniker": "PresentationLayer\\Services\\UserAccountStore.cs",
+              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Services\\UserAccountStore.cs",
+              "RelativeToolTip": "PresentationLayer\\Services\\UserAccountStore.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-26T09:05:48.668Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "Error.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Error.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Error.cshtml",
               "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Error.cshtml",
               "RelativeToolTip": "PresentationLayer\\Pages\\Home\\Error.cshtml",
-              "ViewState": "AgIAAA0CAAAAAAAAAAAAABECAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAOcDAAAAAAAAAAAYwPYDAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-06-26T08:48:03.59Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Index.cshtml",
-              "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Index.cshtml",
-              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Index.cshtml",
-              "RelativeToolTip": "PresentationLayer\\Pages\\Home\\Index.cshtml",
-              "ViewState": "AgIAAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-23T09:21:05.214Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 7,
               "Title": "HomePageModelBase.cs",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\HomePageModelBase.cs",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\HomePageModelBase.cs",
@@ -139,19 +176,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "OnlineUsers.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\OnlineUsers.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\OnlineUsers.cshtml",
               "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\OnlineUsers.cshtml",
               "RelativeToolTip": "PresentationLayer\\Pages\\Home\\OnlineUsers.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAABYAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-23T09:20:30.417Z"
+              "WhenOpened": "2026-06-23T09:20:30.417Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 9,
               "Title": "CourseWorkspace.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\CourseWorkspace.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\CourseWorkspace.cshtml",
@@ -163,7 +201,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 8,
               "Title": "Courses.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Courses.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Courses.cshtml",
@@ -175,7 +213,31 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UserAccount.cs",
+              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Models\\UserAccount.cs",
+              "RelativeDocumentMoniker": "PresentationLayer\\Models\\UserAccount.cs",
+              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Models\\UserAccount.cs",
+              "RelativeToolTip": "PresentationLayer\\Models\\UserAccount.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T08:39:45.451Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 6,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Index.cshtml",
+              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Index.cshtml",
+              "RelativeToolTip": "PresentationLayer\\Pages\\Home\\Index.cshtml",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-23T09:21:05.214Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
               "Title": "ChatSessions.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\ChatSessions.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\ChatSessions.cshtml",
@@ -187,7 +249,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 14,
               "Title": "Index.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Admin\\Index.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Admin\\Index.cshtml",
@@ -199,7 +261,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 16,
               "Title": "ResetPassword.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Account\\ResetPassword.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Account\\ResetPassword.cshtml",
@@ -211,7 +273,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 17,
               "Title": "Logout.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Account\\Logout.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Account\\Logout.cshtml",
@@ -223,7 +285,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 12,
               "Title": "Chat.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Chat.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Chat.cshtml",
@@ -235,7 +297,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 13,
               "Title": "Ask.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Ask.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Ask.cshtml",
@@ -247,7 +309,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 11,
               "Title": "ChatSession.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\ChatSession.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\ChatSession.cshtml",
@@ -259,7 +321,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 19,
               "Title": "ViewDocument.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\ViewDocument.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\ViewDocument.cshtml",
@@ -271,7 +333,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 15,
               "Title": "AccessDenied.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Account\\AccessDenied.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Account\\AccessDenied.cshtml",
@@ -283,7 +345,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 18,
               "Title": "Login.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Account\\Login.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Account\\Login.cshtml",
@@ -295,7 +357,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 20,
               "Title": "ChangePassword.cshtml",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Account\\ChangePassword.cshtml",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Account\\ChangePassword.cshtml",
@@ -307,7 +369,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 21,
               "Title": "Chat.cshtml.cs",
               "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Pages\\Home\\Chat.cshtml.cs",
               "RelativeDocumentMoniker": "PresentationLayer\\Pages\\Home\\Chat.cshtml.cs",
@@ -316,18 +378,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-23T08:48:34.72Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "UserAccount.cs",
-              "DocumentMoniker": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Models\\UserAccount.cs",
-              "RelativeDocumentMoniker": "PresentationLayer\\Models\\UserAccount.cs",
-              "ToolTip": "D:\\Summer 2026\\Assignment2\\PresentationLayer\\Models\\UserAccount.cs",
-              "RelativeToolTip": "PresentationLayer\\Models\\UserAccount.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAfAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-23T08:39:45.451Z"
             }
           ]
         }
