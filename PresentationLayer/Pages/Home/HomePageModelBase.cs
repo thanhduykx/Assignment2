@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.Text;
-using DataAccessLayer.Models;
+using BusinessObjects;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PresentationLayer.Models;
 using PresentationLayer.Security;

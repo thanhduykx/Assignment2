@@ -1,6 +1,6 @@
 using DataAccessLayer;
 using System.Text;
-using DataAccessLayer.Models;
+using BusinessObjects;
 using DataAccessLayer.Repositories;
 
 namespace ServicesLayer;
