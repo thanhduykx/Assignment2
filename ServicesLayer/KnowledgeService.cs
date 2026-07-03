@@ -1,5 +1,5 @@
 using DataAccessLayer;
-using DataAccessLayer.Models;
+using BusinessObjects;
 using DataAccessLayer.Repositories;
 
 namespace ServicesLayer;

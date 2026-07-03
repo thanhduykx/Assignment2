@@ -1,4 +1,4 @@
-using DataAccessLayer.Models;
+using BusinessObjects;
 
 namespace PresentationLayer.Models;
 
