@@ -4,48 +4,75 @@
     ViewData["Title"] = "Error";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<style>
+    .error-container {
+        max-width: 650px;
+        margin: 60px auto;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        border-top: 5px solid #dc3545; /* Vạch đỏ phía trên */
+    }
 
-@if (Model.ShowRequestId)
-{
+        .error-container h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .error-container h2 {
+            font-size: 1.2rem;
+            color: #6c757d !important; /* Làm dịu màu chữ H2 xuống một chút */
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .error-container h3 {
+            font-size: 1.4rem;
+            color: #343a40;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid #eaeaea; /* Đường kẻ phân cách */
+        }
+
+        .error-container p {
+            color: #555555;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .error-container code {
+            background: #f8f9fa;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #d63384;
+            font-weight: bold;
+            font-size: 1rem;
+            border: 1px solid #e9ecef;
+        }
+</style>
+
+<div class="error-container">
+    <h1 class="text-danger">Error.</h1>
+    <h2 class="text-danger">An error occurred while processing your request.</h2>
+
+    @if (Model.ShowRequestId)
+    {
+        <p>
+            <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        </p>
+    }
+
+    <h3>Development Mode</h3>
     <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        Swapping to <strong>Development</strong> mode will display more detailed information about the error that occurred.
     </p>
-}
-
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> mode will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>Development mode shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, set <strong>Hosting:Environment</strong> to <strong>Development</strong> in <strong>appsettings.json</strong>
-    and restart the app.
-</p>
-
-@{
-    ViewData["Title"] = "Error";
-}
-
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
-
-@if (Model.ShowRequestId)
-{
     <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        <strong>Development mode shouldn't be enabled for deployed applications.</strong>
+        It can result in displaying sensitive information from exceptions to end users.
+        For local debugging, set <strong>Hosting:Environment</strong> to <strong>Development</strong> in <strong>appsettings.json</strong>
+        and restart the app.
     </p>
-}
-
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> mode will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>Development mode shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, set <strong>Hosting:Environment</strong> to <strong>Development</strong> in <strong>appsettings.json</strong>
-    and restart the app.
-</p>
+</div>
