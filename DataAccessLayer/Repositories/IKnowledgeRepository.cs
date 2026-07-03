@@ -1,4 +1,6 @@
-namespace BusinessObjects;
+using BusinessObjects;
+
+namespace DataAccessLayer.Repositories;
 
 public interface IKnowledgeRepository
 {
